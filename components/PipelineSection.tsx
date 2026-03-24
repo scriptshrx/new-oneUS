@@ -139,22 +139,25 @@ export default function PipelineSection() {
               preserveAspectRatio="none"
               viewBox="0 0 1000 2"
               style={{ width: '100%', height: '2px' }}
+              suppressHydrationWarning
             >
               {/* Static baseline */}
               <line x1="0" y1="1" x2="1000" y2="1" stroke="currentColor" strokeWidth="1" opacity="0.15" />
 
+              {/* Glow effect */}
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
               {/* Animated connecting line with glow */}
               {animatingLine && (
                 <>
-                  {/* Glow effect */}
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
                   {/* Animated line */}
                   <line
                     x1={`${(animatingLine.from / (pipelineNodes.length - 1)) * 1000}`}
@@ -174,9 +177,6 @@ export default function PipelineSection() {
                     r="4"
                     fill="oklch(0.621 0.153 301.1)"
                     filter="url(#glow)"
-                    style={{
-                      boxShadow: '0 0 12px oklch(0.621 0.153 301.1)',
-                    }}
                   />
                 </>
               )}
