@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useLayoutEffect } from 'react';
 
 interface PipelineNode {
   label: string;
@@ -38,8 +38,14 @@ function PipelineCircle({ node, index, isActivated }: { node: PipelineNode; inde
 export default function PipelineSection() {
   const [activeCircles, setActiveCircles] = useState<boolean[]>([]);
   const [animatingLine, setAnimatingLine] = useState<{ from: number; to: number; progress: number } | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
+
+  // Ensure hydration is complete before starting animations
+  useLayoutEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const pipelineNodes: PipelineNode[] = [
     { label: 'Patient Intake', description: 'Automated form submission' },
@@ -50,6 +56,8 @@ export default function PipelineSection() {
   ];
 
   useEffect(() => {
+    if (!isHydrated) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -74,7 +82,7 @@ export default function PipelineSection() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [isHydrated]);
 
   const animateSequence = () => {
     let currentIndex = 0;
@@ -133,54 +141,55 @@ export default function PipelineSection() {
         {/* Pipeline Visualization */}
         <div className="mt-12 sm:mt-16 lg:mt-20">
           <div className="relative flex items-center justify-between gap-2 sm:gap-4 lg:gap-6 px-2 sm:px-4">
-            {/* SVG for animated line */}
-            <svg
-              className="absolute top-8 sm:top-10 lg:top-12 left-0 right-0 h-0.5 pointer-events-none"
-              preserveAspectRatio="none"
-              viewBox="0 0 1000 2"
-              style={{ width: '100%', height: '2px' }}
-              suppressHydrationWarning
-            >
-              {/* Static baseline */}
-              <line x1="0" y1="1" x2="1000" y2="1" stroke="currentColor" strokeWidth="1" opacity="0.15" />
+            {/* Baseline */}
+            <div className="absolute top-8 sm:top-10 lg:top-12 left-0 right-0 h-0.5 bg-border/20 pointer-events-none" />
 
-              {/* Glow effect */}
-              <defs>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
+            {/* SVG for animated line - only renders after hydration */}
+            {isHydrated && (
+              <svg
+                className="absolute top-8 sm:top-10 lg:top-12 left-0 right-0 h-0.5 pointer-events-none"
+                preserveAspectRatio="none"
+                viewBox="0 0 1000 2"
+                style={{ width: '100%', height: '2px' }}
+              >
+                {/* Glow effect */}
+                <defs>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
 
-              {/* Animated connecting line with glow */}
-              {animatingLine && (
-                <>
-                  {/* Animated line */}
-                  <line
-                    x1={`${(animatingLine.from / (pipelineNodes.length - 1)) * 1000}`}
-                    y1="1"
-                    x2={`${animatingLine.from / (pipelineNodes.length - 1) * 1000 + (animatingLine.to / (pipelineNodes.length - 1) - animatingLine.from / (pipelineNodes.length - 1)) * 1000 * animatingLine.progress}`}
-                    y2="1"
-                    stroke="oklch(0.621 0.153 301.1)"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    filter="url(#glow)"
-                  />
+                {/* Animated connecting line with glow */}
+                {animatingLine && (
+                  <>
+                    {/* Animated line */}
+                    <line
+                      x1={`${(animatingLine.from / (pipelineNodes.length - 1)) * 1000}`}
+                      y1="1"
+                      x2={`${animatingLine.from / (pipelineNodes.length - 1) * 1000 + (animatingLine.to / (pipelineNodes.length - 1) - animatingLine.from / (pipelineNodes.length - 1)) * 1000 * animatingLine.progress}`}
+                      y2="1"
+                      stroke="oklch(0.621 0.153 301.1)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      filter="url(#glow)"
+                    />
 
-                  {/* Glowing particle head */}
-                  <circle
-                    cx={`${animatingLine.from / (pipelineNodes.length - 1) * 1000 + (animatingLine.to / (pipelineNodes.length - 1) - animatingLine.from / (pipelineNodes.length - 1)) * 1000 * animatingLine.progress}`}
-                    cy="1"
-                    r="4"
-                    fill="oklch(0.621 0.153 301.1)"
-                    filter="url(#glow)"
-                  />
-                </>
-              )}
-            </svg>
+                    {/* Glowing particle head */}
+                    <circle
+                      cx={`${animatingLine.from / (pipelineNodes.length - 1) * 1000 + (animatingLine.to / (pipelineNodes.length - 1) - animatingLine.from / (pipelineNodes.length - 1)) * 1000 * animatingLine.progress}`}
+                      cy="1"
+                      r="4"
+                      fill="oklch(0.621 0.153 301.1)"
+                      filter="url(#glow)"
+                    />
+                  </>
+                )}
+              </svg>
+            )}
 
             {/* Pipeline circles */}
             {pipelineNodes.map((node, index) => (

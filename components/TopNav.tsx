@@ -34,11 +34,18 @@ export default function TopNav() {
             </Link>
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Button variant="default" size="default">
-              Book Demo
-            </Button>
+          {/* CTA Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="ghost" size="default">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="default" size="default">
+                Sign Up
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -67,9 +74,18 @@ export default function TopNav() {
             <Link href="#pricing" className="block text-foreground/80 hover:text-brand py-2 transition-colors">
               Pricing
             </Link>
-            <Button variant="default" size="default" className="w-full mt-4">
-              Book Demo
-            </Button>
+            <div className="flex gap-3 pt-4 flex-col">
+              <Link href="/login" className="w-full">
+                <Button variant="ghost" size="default" className="w-full">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/register" className="w-full">
+                <Button variant="default" size="default" className="w-full">
+                  Sign Up
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
       </div>
