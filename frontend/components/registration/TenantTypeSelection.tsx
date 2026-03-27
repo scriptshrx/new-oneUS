@@ -35,7 +35,7 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
         {/* Clinic Option */}
         <button
           onClick={() => handleSelect('clinic')}
-          className={`group relative p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
+          className={`group relative p-8 -mx-6 sm:-mx-0 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
             selectedType === 'clinic'
               ? 'border-accent bg-gray-900 shadow-lg shadow-accent/20'
               : 'border-border/30  hover:border-primary/90 hover:bg-primary/40 bg-primary/10 '
@@ -104,10 +104,10 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
         {/* Referring Hospital Option */}
         <button
           onClick={() => handleSelect('referring-hospital')}
-          className={`group relative p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
+          className={`group relative p-8 -mx-6 sm:-mx-0 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
             selectedType === 'referring-hospital'
-              ? 'border-accent bg-accent/10 shadow-lg shadow-accent/20'
-              : 'border-border/30 bg-card/30 hover:border-accent/50 hover:bg-card/50'
+              ? 'border-accent bg-gray-900 shadow-lg shadow-accent/20'
+              : 'border-border/30  hover:border-primary/90 hover:bg-primary/40 bg-primary/10 '
           }`}
         >
           {/* Glow effect on hover/select */}
@@ -125,15 +125,15 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
             <div className={`w-16 h-16 rounded-xl flex items-center justify-center mb-6 transition-all ${
               selectedType === 'referring-hospital'
                 ? 'bg-accent/20 border border-accent'
-                : 'bg-accent/10 border border-accent/20 group-hover:border-accent'
+                : 'bg-primary/80 border border-accent/20 group-hover:border-accent'
             }`}>
               <Building2 className={`w-8 h-8 transition-colors ${
-                selectedType === 'referring-hospital' ? 'text-accent' : 'text-accent/70 group-hover:text-accent'
+                selectedType === 'referring-hospital' ? 'text-white/80' : 'text-white'
               }`} />
             </div>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-foreground mb-3 text-left">
+            <h2 className="text-2xl font-bold text-accent mb-3 text-left">
               Referring Hospital
             </h2>
 
@@ -145,25 +145,25 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
             {/* Features */}
             <ul className="space-y-2 mb-8 text-left">
               <li className="flex items-center gap-2 text-sm text-foreground/60">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                 <span>Submit patient referrals</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-foreground/60">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                 <span>Insurance verification</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-foreground/60">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                 <span>Prior authorization tracking</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-foreground/60">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                 <span>Real-time patient status updates</span>
               </li>
             </ul>
 
             {/* CTA */}
-            <div className="flex items-center gap-2 text-accent font-semibold group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center gap-2 text-primary font-bold group-hover:translate-x-1 transition-transform">
               <span>Register Hospital</span>
               <ArrowRight className="w-4 h-4" />
             </div>
