@@ -29,15 +29,22 @@ export const metadata: Metadata = {
   },
 }
 
+// ⛔ DO NOT IMPORT CLIENT COMPONENTS ABOVE THIS LINE
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // ✅ Import client components inside the function (allowed)
+  const ThemeProvider = require("@/components/theme-provider").ThemeProvider
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

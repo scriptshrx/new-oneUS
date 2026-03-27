@@ -129,7 +129,7 @@ function DevOngoingScreen() {
             marginBottom: '40px',
           }}
         >
-          This page is currently being built. Check back soon — something great is on its way.
+          This page is currently being built. Check back soon ~ Engr. Mark.
         </p>
         <div
           style={{

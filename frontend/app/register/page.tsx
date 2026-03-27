@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import SignupHeader from '@/components/SignupHeader';
-import ProgressIndicator from '@/components/ProgressIndicator';
-import ClinicInfoForm, { ClinicInfo } from '@/components/ClinicInfoForm';
-import EligibilityForm, { EligibilityData } from '@/components/EligibilityForm';
-import AccountSetupForm, { AccountData } from '@/components/AccountSetupForm';
-import SuccessScreen from '@/components/SuccessScreen';
-import Link from 'next/link';
+import { useState } from 'react';
+import TopNav from '@/components/TopNav';
+import TenantTypeSelection from '@/components/registration/TenantTypeSelection';
+import ClinicRegistrationForm from '@/components/registration/ClinicRegistrationForm';
+import ReferringHospitalRegistrationForm from '@/components/registration/ReferringHospitalRegistrationForm';
 
-type Step = 1 | 2 | 3 | 4;
+type TenantType = 'clinic' | 'referring-hospital' | null;
+type RegistrationStep = 'type-selection' | 'form';
+
+interface RegistrationState {
+  tenantType: TenantType;
+  step: RegistrationStep;
+  formData: Record<string, any>;
+}
 
 function DevOngoingScreen() {
   return (
@@ -193,106 +197,97 @@ function DevOngoingScreen() {
 }
 
 export default function RegisterPage() {
-  const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [clinicInfo, setClinicInfo] = useState<ClinicInfo | null>(null);
-  const [eligibilityData, setEligibilityData] = useState<EligibilityData | null>(null);
-  const [accountData, setAccountData] = useState<AccountData | null>(null);
-  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [state, setState] = useState<RegistrationState>({
+    tenantType: null,
+    step: 'type-selection',
+    formData: {},
+  });
 
-  useEffect(() => {
-    const user = localStorage.getItem('user');
-    setAuthorized(user === 'ezehmark');
-  }, []);
-
-  // Avoid flash of content before localStorage is read
-  if (authorized === null) return null;
-  if (!authorized) return <DevOngoingScreen />;
-
-  const stepLabels = ['Clinic Info', 'Eligibility', 'Account Setup', 'Confirmation'];
-
-  const handleClinicInfoNext = (data: ClinicInfo) => {
-    setClinicInfo(data);
-    setCurrentStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleTenantTypeSelect = (type: TenantType) => {
+    setState(prev => ({
+      ...prev,
+      tenantType: type,
+      step: 'form',
+    }));
   };
 
-  const handleEligibilityNext = (data: EligibilityData) => {
-    setEligibilityData(data);
-    setCurrentStep(3);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleFormSubmit = (formData: Record<string, any>) => {
+    setState(prev => ({
+      ...prev,
+      formData,
+    }));
+    // TODO: Handle form submission - call API
+    // Then redirect to email verification or success
   };
 
-  const handleAccountSetupNext = (data: AccountData) => {
-    setAccountData(data);
-    setCurrentStep(4);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleBackToEligibility = () => {
-    setCurrentStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleBackClick = () => {
+    setState(prev => {
+      if (prev.step === 'form') {
+        return {
+          ...prev,
+          step: 'type-selection',
+          tenantType: null,
+        };
+      }
+      return prev;
+    });
   };
 
   return (
-    <div className="h-full bg-background pt-4 md:pt-18">
-      <Link href="/" className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-gray-600 to-foreground bg-clip-text top-4 left-4 absolute fixed z-[500] text-transparent">
-        Register
-      </Link>
+    <main className="w-full min-h-screen bg-gradient-to-b from-background via-background to-background/95">
+      <TopNav />
+      
+      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Progress Indicator */}
+          <div className="mb-12">
+            <div className="flex items-center justify-center gap-2 sm:gap-4">
+              {/* Step 1: Type Selection */}
+              <div className={`flex flex-col items-center ${state.step !== 'type-selection' ? 'opacity-50' : ''}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                  state.step === 'type-selection' ? 'bg-accent text-background' : 
+                  state.step === 'form' ? 'bg-accent/30 text-accent border border-accent' : 'bg-muted text-muted-foreground'
+                }`}>
+                  1
+                </div>
+                <span className="text-xs mt-2 text-foreground/60">Register Type</span>
+              </div>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 mt-20 md:mt-2">
-        <ProgressIndicator currentStep={currentStep} totalSteps={4} stepLabels={stepLabels} />
+              <div className={`w-6 sm:w-8 h-0.5 ${state.step === 'form' ? 'bg-accent/30' : 'bg-muted'}`} />
 
-        <div className="bg-card border border-border/20 rounded-lg sm:rounded-xl p-6 sm:p-8 lg:p-10">
-          {currentStep === 1 && (
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 sm:mb-3">
-                Tell us about your clinic
-              </h1>
-              <p className="text-muted-foreground text-base sm:text-lg mb-8 sm:mb-10">
-                Help us understand your clinic's needs and verify your eligibility for Scriptish.
-              </p>
-              <ClinicInfoForm onNext={handleClinicInfoNext} />
+              {/* Step 2: Form */}
+              <div className={`flex flex-col items-center ${state.step !== 'form' ? 'opacity-50' : ''}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                  state.step === 'form' ? 'bg-accent text-background' : 'bg-muted text-muted-foreground'
+                }`}>
+                  2
+                </div>
+                <span className="text-xs mt-2 text-foreground/60">Details</span>
+              </div>
             </div>
-          )}
+          </div>
 
-          {currentStep === 2 && (
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 sm:mb-3">
-                Eligibility Check
-              </h1>
-              <p className="text-muted-foreground text-base sm:text-lg mb-8 sm:mb-10">
-                We need to confirm your clinic meets our platform requirements.
-              </p>
-              <EligibilityForm onNext={handleEligibilityNext} onBack={() => setCurrentStep(1)} />
-            </div>
-          )}
+          {/* Content Area */}
+          <div className="bg-card/50 backdrop-blur-sm border border-border/30 rounded-3xl p-8 sm:p-12 shadow-lg">
+            {state.step === 'type-selection' && (
+              <TenantTypeSelection onSelect={handleTenantTypeSelect} />
+            )}
 
-          {currentStep === 3 && (
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 sm:mb-3">
-                Create Your Account
-              </h1>
-              <p className="text-muted-foreground text-base sm:text-lg mb-8 sm:mb-10">
-                Set up your admin account to access the Scriptish platform.
-              </p>
-              <AccountSetupForm onNext={handleAccountSetupNext} onBack={handleBackToEligibility} />
-            </div>
-          )}
+            {state.step === 'form' && state.tenantType === 'clinic' && (
+              <ClinicRegistrationForm onSubmit={handleFormSubmit} onBack={handleBackClick} />
+            )}
 
-          {currentStep === 4 && accountData && (
-            <SuccessScreen email={accountData.email} />
-          )}
+            {state.step === 'form' && state.tenantType === 'referring-hospital' && (
+              <ReferringHospitalRegistrationForm onSubmit={handleFormSubmit} onBack={handleBackClick} />
+            )}
+          </div>
+
+          {/* Footer Info */}
+          <div className="mt-8 text-center text-foreground/60 text-sm">
+            <p>Already have an account? <a href="/login" className="text-accent hover:text-accent/80 transition-colors font-medium">Sign in here</a></p>
+          </div>
         </div>
-
-        <div className="mt-2 sm:mt-4 text-center text-sm text-muted-foreground">
-          <p>
-            Already have an account?{' '}
-            <a href="/login" className="text-brand hover:underline font-semibold">
-              Log in here
-            </a>
-          </p>
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

@@ -30,7 +30,7 @@ function PipelineCircle({ node, index, isActivated }: { node: PipelineNode; inde
         {index + 1}
       </div>
       <p className="text-xs sm:text-sm font-semibold text-foreground mt-3 sm:mt-4 text-center max-w-20 sm:max-w-24">{node.label}</p>
-      <p className="text-xs text-foreground/50 mt-1 text-center max-w-24 sm:max-w-32 hidden sm:block">{node.description}</p>
+     
     </div>
   );
 }
@@ -130,10 +130,10 @@ export default function PipelineSection() {
           <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-brand/10 border border-brand/30 text-brand text-xs sm:text-sm font-semibold mb-4">
             Streamlined Workflow
           </span>
-          <h2 className="text-3xl sm:text-5xl bg-gradient-to-r from-accent via-primary to-accent bg-clip-text lg:text-6xl font-bold text-transparent text-foreground mb-4 sm:mb-6 text-balance">
+          <h2 className="text-3xl sm:text-5xl bg-gradient-to-r from-accent via-primary to-accent dark:bg-gradient-to-r from-gray-300 via-primary to-gray-300 bg-clip-text lg:text-6xl font-bold text-transparent text-foreground mb-4 sm:mb-6 text-balance">
             How Scriptish Works
           </h2>
-          <p className="max-w-2xl mx-auto text-primary text-base sm:text-lg text-foreground/60 text-balance leading-relaxed">
+          <p className="max-w-2xl mx-auto text-primary text-base sm:text-lg text-foreground/60 dark:text-gray-400 leading-relaxed">
             Five simple steps to transform your clinic operations.
           </p>
         </div>
@@ -208,12 +208,12 @@ export default function PipelineSection() {
             {pipelineNodes.map((node, index) => (
               <div
                 key={index}
-                className={`p-4 sm:p-6 rounded-lg border border-border/20 bg-card/30 backdrop-blur-sm transition-all duration-500 transform ${
+                className={`p-4 sm:p-6 rounded-lg border border-border/20 bg-card/30 hover:bg-card/60 backdrop-blur-sm transition-all duration-500 transform ${
                   activeCircles[index] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-brand font-bold text-sm">
+                  <div className="w-8 h-8 rounded-full bg-primary/15 hover:bg-primary/30 border border-primary flex items-center justify-center text-brand font-bold text-sm">
                     {index + 1}
                   </div>
                   <h3 className="font-semibold text-primary text-sm sm:text-base">{node.label}</h3>

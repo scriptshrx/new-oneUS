@@ -1,0 +1,521 @@
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+interface ReferringHospitalRegistrationFormProps {
+  onSubmit: (data: Record<string, any>) => void;
+  onBack: () => void;
+}
+
+interface FormData {
+  name: string;
+  npiNumber: string;
+  taxId: string;
+  stateLicenseNumber: string;
+  primaryOfficeAddress: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  primaryPhone: string;
+  workEmail: string;
+  contactPersonFirstName: string;
+  contactPersonLastName: string;
+  contactPersonTitle: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
+}
+
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+];
+
+export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: ReferringHospitalRegistrationFormProps) {
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    npiNumber: '',
+    taxId: '',
+    stateLicenseNumber: '',
+    primaryOfficeAddress: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    primaryPhone: '',
+    workEmail: '',
+    contactPersonFirstName: '',
+    contactPersonLastName: '',
+    contactPersonTitle: '',
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateField = (fieldName: string, value: any): string | null => {
+    switch (fieldName) {
+      case 'name':
+        return !value?.trim() ? 'Hospital name is required' : null;
+      
+      case 'npiNumber':
+        return !value ? 'NPI number is required' :
+               !/^\d{10}$/.test(value.replace(/\D/g, '')) ? 'NPI must be 10 digits' : null;
+      
+      case 'taxId':
+        return !value?.trim() ? 'Tax ID / EIN is required' :
+               !/^\d{2}-\d{7}$/.test(value) ? 'Tax ID format: XX-XXXXXXX' : null;
+      
+      case 'stateLicenseNumber':
+        return !value?.trim() ? 'State license number is required' : null;
+      
+      case 'primaryOfficeAddress':
+        return !value?.trim() ? 'Office address is required' : null;
+      
+      case 'city':
+        return !value?.trim() ? 'City is required' : null;
+      
+      case 'state':
+        return !value ? 'State is required' : null;
+      
+      case 'zipCode':
+        return !value ? 'ZIP code is required' :
+               !/^\d{5}(-\d{4})?$/.test(value) ? 'Invalid ZIP code format' : null;
+      
+      case 'primaryPhone':
+        return !value ? 'Phone number is required' :
+               !/^\d{3}-\d{3}-\d{4}$/.test(value) ? 'Phone format: XXX-XXX-XXXX' : null;
+      
+      case 'workEmail':
+        return !value ? 'Work email is required' :
+               !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Invalid email format' :
+               /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|hotmail|outlook|mail)\..+$/.test(value) ? 'Please use your hospital email, not personal email' : null;
+      
+      case 'contactPersonFirstName':
+        return !value?.trim() ? 'First name is required' : null;
+      
+      case 'contactPersonLastName':
+        return !value?.trim() ? 'Last name is required' : null;
+      
+      case 'contactPersonTitle':
+        return !value?.trim() ? 'Title/Position is required' : null;
+      
+      default:
+        return null;
+    }
+  };
+
+  const handleChange = (fieldName: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+
+    if (touched.has(fieldName)) {
+      const error = validateField(fieldName, value);
+      setErrors(prev => ({
+        ...prev,
+        [fieldName]: error || undefined,
+      }));
+    }
+  };
+
+  const handleBlur = (fieldName: string) => {
+    setTouched(prev => new Set([...prev, fieldName]));
+    const error = validateField(fieldName, formData[fieldName as keyof FormData]);
+    setErrors(prev => ({
+      ...prev,
+      [fieldName]: error || undefined,
+    }));
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    const newTouched = new Set<string>();
+
+    Object.keys(formData).forEach(fieldName => {
+      const error = validateField(fieldName, formData[fieldName as keyof FormData]);
+      if (error) {
+        newErrors[fieldName] = error;
+        newTouched.add(fieldName);
+      }
+    });
+
+    setErrors(newErrors);
+    setTouched(newTouched);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      onSubmit(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getFieldError = (fieldName: string): boolean => {
+    return touched.has(fieldName) && !!errors[fieldName];
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Back Button */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors mb-8"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm font-medium">Back</span>
+      </button>
+
+      {/* Header */}
+      <div className="mb-10">
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          Hospital Information
+        </h2>
+        <p className="text-foreground/70">
+          Enter your hospital details for referral submissions. All marked fields are required.
+        </p>
+      </div>
+
+      {/* Form Sections */}
+      <div className="space-y-8">
+        {/* Basic Information */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground/90">Basic Information</h3>
+          
+          <div>
+            <Label htmlFor="name" className="block text-sm font-medium mb-2">
+              Agency Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="name"
+              placeholder="e.g., CarePlus Home Infusion"
+              value={formData.name}
+              onChange={e => handleChange('name', e.target.value)}
+              onBlur={() => handleBlur('name')}
+              className={`${getFieldError('name') ? 'border-destructive' : ''}`}
+            />
+            {getFieldError('name') && (
+              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> {errors.name}
+              </p>
+            )}
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="npiNumber" className="block text-sm font-medium mb-2">
+                NPI Number <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="npiNumber"
+                placeholder="10-digit NPI"
+                maxLength={10}
+                value={formData.npiNumber}
+                onChange={e => handleChange('npiNumber', e.target.value.replace(/\D/g, ''))}
+                onBlur={() => handleBlur('npiNumber')}
+                className={`${getFieldError('npiNumber') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('npiNumber') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.npiNumber}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="taxId" className="block text-sm font-medium mb-2">
+                Tax ID / EIN <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="taxId"
+                placeholder="XX-XXXXXXX"
+                value={formData.taxId}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  const formatted = val.length >= 9 ? `${val.slice(0, 2)}-${val.slice(2, 9)}` : val;
+                  handleChange('taxId', formatted);
+                }}
+                onBlur={() => handleBlur('taxId')}
+                className={`${getFieldError('taxId') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('taxId') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.taxId}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="stateLicenseNumber" className="block text-sm font-medium mb-2">
+                State License # <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="stateLicenseNumber"
+                placeholder="e.g., IL-A12345"
+                value={formData.stateLicenseNumber}
+                onChange={e => handleChange('stateLicenseNumber', e.target.value)}
+                onBlur={() => handleBlur('stateLicenseNumber')}
+                className={`${getFieldError('stateLicenseNumber') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('stateLicenseNumber') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.stateLicenseNumber}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Location */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground/90">Primary Office Location</h3>
+          
+          <div>
+            <Label htmlFor="primaryOfficeAddress" className="block text-sm font-medium mb-2">
+              Office Address <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="primaryOfficeAddress"
+              placeholder="123 Healthcare Drive"
+              value={formData.primaryOfficeAddress}
+              onChange={e => handleChange('primaryOfficeAddress', e.target.value)}
+              onBlur={() => handleBlur('primaryOfficeAddress')}
+              className={`${getFieldError('primaryOfficeAddress') ? 'border-destructive' : ''}`}
+            />
+            {getFieldError('primaryOfficeAddress') && (
+              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> {errors.primaryOfficeAddress}
+              </p>
+            )}
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="city" className="block text-sm font-medium mb-2">
+                City <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="city"
+                placeholder="Chicago"
+                value={formData.city}
+                onChange={e => handleChange('city', e.target.value)}
+                onBlur={() => handleBlur('city')}
+                className={`${getFieldError('city') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('city') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.city}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="state" className="block text-sm font-medium mb-2">
+                State <span className="text-destructive">*</span>
+              </Label>
+              <Select value={formData.state} onValueChange={val => {
+                handleChange('state', val);
+                setTouched(prev => new Set([...prev, 'state']));
+              }}>
+                <SelectTrigger className={`${getFieldError('state') ? 'border-destructive' : ''}`}>
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {US_STATES.map(state => (
+                    <SelectItem key={state} value={state}>{state}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getFieldError('state') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.state}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="zipCode" className="block text-sm font-medium mb-2">
+                ZIP Code <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="zipCode"
+                placeholder="60601"
+                value={formData.zipCode}
+                onChange={e => handleChange('zipCode', e.target.value)}
+                onBlur={() => handleBlur('zipCode')}
+                className={`${getFieldError('zipCode') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('zipCode') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.zipCode}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground/90">Contact Information</h3>
+          
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="primaryPhone" className="block text-sm font-medium mb-2">
+                Primary Phone <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="primaryPhone"
+                placeholder="312-555-0000"
+                value={formData.primaryPhone}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  const formatted = val.length >= 3 ? (
+                    val.length >= 6 ? `${val.slice(0, 3)}-${val.slice(3, 6)}-${val.slice(6, 10)}` :
+                    `${val.slice(0, 3)}-${val.slice(3, 6)}`
+                  ) : val;
+                  handleChange('primaryPhone', formatted);
+                }}
+                onBlur={() => handleBlur('primaryPhone')}
+                className={`${getFieldError('primaryPhone') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('primaryPhone') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.primaryPhone}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="workEmail" className="block text-sm font-medium mb-2">
+                Work Email <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="workEmail"
+                type="email"
+                placeholder="admin@agency.com"
+                value={formData.workEmail}
+                onChange={e => handleChange('workEmail', e.target.value)}
+                onBlur={() => handleBlur('workEmail')}
+                className={`${getFieldError('workEmail') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('workEmail') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.workEmail}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Person */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground/90">Contact Person for Account</h3>
+          <p className="text-sm text-foreground/70 mb-4">This person will be the primary contact for their account administration and BAA signing.</p>
+          
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="contactPersonFirstName" className="block text-sm font-medium mb-2">
+                First Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="contactPersonFirstName"
+                placeholder="John"
+                value={formData.contactPersonFirstName}
+                onChange={e => handleChange('contactPersonFirstName', e.target.value)}
+                onBlur={() => handleBlur('contactPersonFirstName')}
+                className={`${getFieldError('contactPersonFirstName') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('contactPersonFirstName') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.contactPersonFirstName}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="contactPersonLastName" className="block text-sm font-medium mb-2">
+                Last Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="contactPersonLastName"
+                placeholder="Smith"
+                value={formData.contactPersonLastName}
+                onChange={e => handleChange('contactPersonLastName', e.target.value)}
+                onBlur={() => handleBlur('contactPersonLastName')}
+                className={`${getFieldError('contactPersonLastName') ? 'border-destructive' : ''}`}
+              />
+              {getFieldError('contactPersonLastName') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.contactPersonLastName}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="contactPersonTitle" className="block text-sm font-medium mb-2">
+              Title/Position <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="contactPersonTitle"
+              placeholder="e.g., Chief Medical Officer, Executive Director"
+              value={formData.contactPersonTitle}
+              onChange={e => handleChange('contactPersonTitle', e.target.value)}
+              onBlur={() => handleBlur('contactPersonTitle')}
+              className={`${getFieldError('contactPersonTitle') ? 'border-destructive' : ''}`}
+            />
+            {getFieldError('contactPersonTitle') && (
+              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> {errors.contactPersonTitle}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Submit Buttons */}
+      <div className="flex gap-3 mt-10">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="flex-1"
+        >
+          {isSubmitting ? 'Processing...' : 'Continue to Email Verification'}
+        </Button>
+      </div>
+    </form>
+  );
+}

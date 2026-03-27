@@ -29,8 +29,7 @@ function FeatureCard({ icon, image, title, description, isVisible, bgColor, text
     >
       {/* Background icon */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-        {image?<img className='w-full h-full object-cover'
-        src={image}/>:
+        {image ? <img className='w-[50%] h-[70%] object-cover' src={image} /> :
         <div className="text-8xl sm:text-9xl font-bold select-none">{icon}</div>}
       </div>
 
@@ -54,42 +53,46 @@ export default function FeaturesSection() {
       icon: '🔐',
       title: 'Insurance Verification',
       description: 'Real-time EDI 270/271 integration for instant patient coverage verification and eligibility checks.',
-      bgColor: 'hsla(301, 100%, 55%, 0.05)',
-      textColor: 'hsl(301, 100%, 45%)',
-      textColor2:'hsla(301, 100%, 45%, 0.7)',
-      image:'/verifyScriptish.png'
+      bgColor: 'hsla(220, 100%, 55%, 0.05)',
+      textColor: 'hsl(220, 100%, 40%)',
+      textColor2:'hsla(220, 100%, 40%, 0.7)',
+      image:'/insuranceVerify.png'
     },
     {
       icon: '⚡',
-      title: 'Prior Auth Automation',
+      title: 'Automated Prior Auth',
       description: 'Automate the entire prior authorization process with intelligent workflow management.',
-      bgColor: 'hsla(186, 100%, 50%, 0.04)',
-      textColor: 'hsl(186, 100%, 35%)',
-      textColor2:'hsla(186, 100%, 35%, 0.7)'
+      bgColor: 'hsla(100, 100%, 50%, 0.05)',
+      textColor: 'hsl(100, 85%, 35%)',
+      textColor2:'hsla(100, 85%, 35%, 0.7)',
+      image:'/priorAuth.png'
     },
     {
       icon: '🏥',
       title: 'HIPAA Compliant',
       description: 'Enterprise-grade security with full HIPAA compliance and data encryption.',
-      bgColor: 'hsla(258, 85%, 55%, 0.04)',
-      textColor: 'hsl(258, 85%, 40%)',
-      textColor2:'hsla(258, 85%, 40%, 0.7)'
+      bgColor: 'hsla(210, 90%, 55%, 0.05)',
+      textColor: 'hsl(210, 90%, 35%)',
+      textColor2:'hsla(210, 90%, 35%, 0.7)',
+      image:'/medicalRecord.png'
     },
     {
       icon: '📱',
       title: 'Patient Portal',
       description: 'Seamless patient intake and appointment management with branded white-label solutions.',
-      bgColor: 'hsla(41, 100%, 55%, 0.04)',
-      textColor: 'hsl(41, 100%, 40%)',
-      textColor2:'hsla(41, 100%, 40%, 0.7)'
+      bgColor: 'hsla(210, 100%, 55%, 0.05)',
+      textColor: 'hsl(210, 100%, 40%)',
+      textColor2:'hsla(210, 100%, 40%, 0.7)',
+      image:'/patientPortal.png'
     },
     {
       icon: '🤖',
       title: 'AI Voice Agent',
       description: 'Intelligent voice assistant for patient intake, appointments, and follow-ups.',
-      bgColor: 'hsla(15, 100%, 55%, 0.04)',
-      textColor: 'hsl(15, 100%, 40%)',
-      textColor2:'hsla(15, 100%, 40%, 0.7)'
+      bgColor: 'hsla(260, 90%, 55%, 0.05)',
+      textColor: 'hsl(260, 90%, 40%)',
+      textColor2:'hsla(260, 90%, 40%, 0.7)',
+      image:'/aiVoiceAgent.png'
     },
     {
       icon: '📊',
@@ -139,7 +142,7 @@ export default function FeaturesSection() {
           <div className='flex items-center h-[40px] w-[180px] mx-auto rounded-full px-[2px] relative overflow-hidden justify-center mb-4'
           >
             <div className='h-[500%] absolute rotateInner2 w-[200%] bg-gradient-to-tr  from-transparent via-transparent to-primary'/>
-            <div className={`text-center items-center justify-center flex h-[38px] bg-background text-accent z-[400] rounded-full  self-center px-3 sm:px-4 py-1.5 sm:py-2 bg-brand/10 text-brand text-xs sm:text-sm w-full font-semibold`}>
+            <div className={`text-center items-center justify-center flex h-[38px] bg-background text-accent z-[400] rounded-full  self-center px-3 sm:px-4 py-1.5 sm:py-2 bg-brand/10 text-xs sm:text-sm w-full font-semibold`}>
             Powerful Features
             </div>
 
@@ -163,6 +166,7 @@ export default function FeaturesSection() {
               bgColor={feature.bgColor}
               textColor={feature.textColor}
               textColor2={feature.textColor2}
+              image={feature.image}
             />
           ))}
         </div>
