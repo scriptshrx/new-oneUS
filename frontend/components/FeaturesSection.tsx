@@ -28,7 +28,7 @@ function FeatureCard({ icon, image, title, description, isVisible, bgColor, text
       } as React.CSSProperties}
     >
       {/* Background icon */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
         {image ? <img className='w-[50%] h-[70%] object-cover' src={image} /> :
         <div className="text-8xl sm:text-9xl font-bold select-none">{icon}</div>}
       </div>
