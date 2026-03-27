@@ -18,18 +18,18 @@ const brandShades = [
 
 function PipelineCircle({ node, index, isActivated }: { node: PipelineNode; index: number; isActivated: boolean }) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center mt-0">
       <div
-        className="w-16 sm:w-20 lg:w-24 h-16 sm:h-20 lg:h-24 rounded-full border-2 flex items-center justify-center font-semibold text-sm sm:text-base lg:text-lg transition-all duration-700 border-brand"
+        className="w-12 sm:w-16 lg:w-20 xl:w-24 h-12 sm:h-16 lg:h-20 xl:h-24 rounded-full border-2 flex items-center justify-center font-semibold text-[30px] sm:text-[40px] lg:text-[60px] transition-all duration-700 border-brand"
         style={{
           backgroundColor: isActivated ? brandShades[index] : 'white',
           color: isActivated ? 'white' : 'oklch(0.30 0.005 106.7)',
-          boxShadow: isActivated ? `0 0 24px rgba(157, 78, 221, 0.3)` : 'none',
+          boxShadow: isActivated ? `0 0 24px rgba(157, 78, 221, 0.11)` : 'none',
         }}
       >
         {index + 1}
       </div>
-      <p className="text-xs sm:text-sm font-semibold text-foreground mt-3 sm:mt-4 text-center max-w-20 sm:max-w-24">{node.label}</p>
+      <p className="text-xs sm:text-sm font-semibold text-foreground mt-3 sm:mt-4 text-center max-w-16 sm:max-w-20 lg:max-w-24">{node.label}</p>
      
     </div>
   );
@@ -48,11 +48,11 @@ export default function PipelineSection() {
   }, []);
 
   const pipelineNodes: PipelineNode[] = [
-    { label: 'Patient Intake', description: 'form submission' },
-    { label: 'Insurance Check', description: 'Real-time verification' },
-    { label: 'Prior Auth', description: 'Intelligent system' },
-    { label: 'Approval', description: 'Instant confirmation' },
-    { label: 'Schedule', description: 'Auto appointment booking' },
+    { label: 'Patient Intake', description: 'Seamless form submission process, with support for document uploads' },
+    { label: 'Insurance Check', description: 'Automated and real-time verification of patient insurance'},
+    { label: 'Prior Auth', description: 'Zero-effort prior authorization process' },
+    { label: 'Approval', description: 'Auomated approval with instant confirmation' },
+    { label: 'Schedule', description: 'CRM based sheduling and automated appointment booking' },
   ];
 
   useEffect(() => {
@@ -124,7 +124,7 @@ export default function PipelineSection() {
   };
 
   return (
-    <section id="pipeline" ref={sectionRef} className="py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8">
+    <section id="pipeline" ref={sectionRef} className="py-16 sm:py-24 w-full lg:py-32 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12 sm:mb-16 lg:mb-20">
           <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-brand/10 border border-brand/30 text-brand text-xs sm:text-sm font-semibold mb-4">
@@ -140,14 +140,14 @@ export default function PipelineSection() {
 
         {/* Pipeline Visualization */}
         <div className="mt-12 sm:mt-16 lg:mt-20">
-          <div className="relative flex items-center justify-between gap-2 sm:gap-4 lg:gap-6 px-2 sm:px-4">
+          <div className="relative flex justify-between gap-2 sm:gap-4 lg:gap-6 px-2 sm:px-4">
             {/* Baseline */}
-            <div className="absolute top-8 sm:top-10 lg:top-12 left-0 right-0 h-0.5 bg-border/20 pointer-events-none" />
+            <div className="absolute top-6 sm:top-8 lg:top-12 left-0 right-0 h-0.5 bg-primary/20 pointer-events-none" />
 
             {/* SVG for animated line - only renders after hydration */}
             {isHydrated && (
               <svg
-                className="absolute top-8 sm:top-10 lg:top-12 left-0 right-0 h-0.5 pointer-events-none"
+                className="absolute top-6 sm:top-8 lg:top-12 left-0 right-0 h-0.5 pointer-events-none"
                 preserveAspectRatio="none"
                 viewBox="0 0 1000 2"
                 style={{ width: '100%', height: '2px' }}

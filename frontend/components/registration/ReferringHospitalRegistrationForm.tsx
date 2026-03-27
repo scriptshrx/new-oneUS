@@ -499,21 +499,22 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
       </div>
 
       {/* Submit Buttons */}
-      <div className="flex gap-3 mt-10">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onBack}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
+      <div className="flex flex-col md:flex-row gap-3 mt-10">
+       
         <Button
           type="submit"
           disabled={isSubmitting}
           className="flex-1"
         >
           {isSubmitting ? 'Processing...' : 'Continue to Email Verification'}
+        </Button>
+         <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          disabled={isSubmitting}
+        >
+          Cancel
         </Button>
       </div>
     </form>

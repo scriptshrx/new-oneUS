@@ -532,7 +532,15 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
       </div>
 
       {/* Submit Buttons */}
-      <div className="flex gap-3 mt-10">
+      <div className="flex gap-3 flex-col md:flex-row mt-10">
+        
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="flex-1"
+        >
+          {isSubmitting ? 'Processing...' : 'Continue to Email Verification'}
+        </Button>
         <Button
           type="button"
           variant="outline"
@@ -540,13 +548,6 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
           disabled={isSubmitting}
         >
           Cancel
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-1"
-        >
-          {isSubmitting ? 'Processing...' : 'Continue to Email Verification'}
         </Button>
       </div>
     </form>

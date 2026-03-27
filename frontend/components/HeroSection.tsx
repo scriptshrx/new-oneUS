@@ -238,7 +238,7 @@ export default function HeroSection() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-accent via-accent to-primary mb-4 sm:mb-6  text-transparent bg-clip-text leading-tight">
-            Operating System For Infusion{' '}
+            Operating System for Infusion{' '}
             <span className="text-primary enlargeBgText">
              Clinics
             </span>
@@ -250,8 +250,8 @@ export default function HeroSection() {
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-12 sm:mt-20 pt-12 sm:pt-20 border-t border-border/20">
-            <AnimatedStat value={500} suffix="+" label="Clinics Automated" icon={<Building2 size={80} strokeWidth={1.5} />} index={0} />
-            <AnimatedStat value={50} suffix="M+" label="Claims Processed" icon={<DollarSign size={80} strokeWidth={1.5} />} index={1} />
+            <AnimatedStat value={105} suffix="+" label="Clinics Automated" icon={<Building2 size={80} strokeWidth={1.5} />} index={0} />
+            <AnimatedStat value={22} suffix="M+" label="Claims Processed" icon={<DollarSign size={80} strokeWidth={1.5} />} index={1} />
             <AnimatedStat value={99.9} suffix="%" label="Uptime" icon={<Zap size={80} strokeWidth={1.5} />} index={2} />
           </div>
         </div>
