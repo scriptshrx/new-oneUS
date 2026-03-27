@@ -28,7 +28,7 @@ function FeatureCard({ icon, image, title, description, isVisible, bgColor, text
       } as React.CSSProperties}
     >
       {/* Background icon */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60">
         {image ? <img className='w-[50%] h-[70%] object-cover' src={image} /> :
         <div className="text-8xl sm:text-9xl font-bold select-none">{icon}</div>}
       </div>
@@ -53,7 +53,7 @@ export default function FeaturesSection() {
       icon: '🔐',
       title: 'Insurance Verification',
       description: 'Real-time EDI 270/271 integration for instant patient coverage verification and eligibility checks.',
-      bgColor: 'hsla(220, 100%, 55%, 0.03)',
+      bgColor: 'hsla(220, 100%, 55%, 0.05)',
       textColor: 'hsl(220, 100%, 40%)',
       textColor2:'hsla(220, 100%, 40%, 0.7)',
       image:'/insuranceVerify.png'
@@ -62,7 +62,7 @@ export default function FeaturesSection() {
       icon: '⚡',
       title: 'Automated Prior Auth',
       description: 'Automate the entire prior authorization process with intelligent workflow management.',
-      bgColor: 'hsla(100, 100%, 50%, 0.03)',
+      bgColor: 'hsla(100, 100%, 50%, 0.05)',
       textColor: 'hsl(100, 85%, 35%)',
       textColor2:'hsla(100, 85%, 35%, 0.7)',
       image:'/priorAuth.png'
@@ -71,7 +71,7 @@ export default function FeaturesSection() {
       icon: '🏥',
       title: 'HIPAA Compliant',
       description: 'Enterprise-grade security with full HIPAA compliance and data encryption.',
-      bgColor: 'hsla(210, 90%, 55%, 0.03)',
+      bgColor: 'hsla(210, 90%, 55%, 0.05)',
       textColor: 'hsl(210, 90%, 35%)',
       textColor2:'hsla(210, 90%, 35%, 0.7)',
       image:'/medicalRecord.png'
@@ -80,7 +80,7 @@ export default function FeaturesSection() {
       icon: '📱',
       title: 'Patient Portal',
       description: 'Seamless patient intake and appointment management with branded white-label solutions.',
-      bgColor: 'hsla(210, 100%, 55%, 0.03)',
+      bgColor: 'hsla(210, 100%, 55%, 0.05)',
       textColor: 'hsl(210, 100%, 40%)',
       textColor2:'hsla(210, 100%, 40%, 0.7)',
       image:'/patientPortal.png'
@@ -89,7 +89,7 @@ export default function FeaturesSection() {
       icon: '🤖',
       title: 'AI Voice Agent',
       description: 'Intelligent voice assistant for patient intake, appointments, and follow-ups.',
-      bgColor: 'hsla(260, 90%, 55%, 0.03)',
+      bgColor: 'hsla(260, 90%, 55%, 0.05)',
       textColor: 'hsl(260, 90%, 40%)',
       textColor2:'hsla(260, 90%, 40%, 0.7)',
       image:'/aiVoiceAgent.png'
@@ -98,7 +98,7 @@ export default function FeaturesSection() {
       icon: '📊',
       title: 'Analytics Dashboard',
       description: 'Real-time insights into clinic operations, claims, and patient metrics.',
-      bgColor: 'hsla(165, 100%, 50%, 0.03)',
+      bgColor: 'hsla(165, 100%, 50%, 0.05)',
       textColor: 'hsl(165, 100%, 30%)',
       textColor2:'hsla(165, 100%, 30%, 0.7)'
     },
