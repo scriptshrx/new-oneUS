@@ -219,7 +219,7 @@ export default function PipelineSection() {
                   <h3 className="font-semibold text-primary text-sm sm:text-base">{node.label}</h3>
                 </div>
                 <p className="text-xs sm:text-sm text-primary/60 leading-relaxed">
-                  Automated {node.description.toLowerCase()} that saves your team hours of manual work.
+                  {node.description}
                 </p>
               </div>
             ))}
