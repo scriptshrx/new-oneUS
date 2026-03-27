@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Building2, DollarSign, Zap } from 'lucide-react';
-import Particles from '@tsparticles/react';
-import { initParticlesEngine } from '@tsparticles/react';
-import { loadSlim } from '@tsparticles/slim';
-import type { Engine, ISourceOptions } from '@tsparticles/engine';
+// import Particles from '@tsparticles/react';
+// import { initParticlesEngine } from '@tsparticles/react';
+// import { loadSlim } from '@tsparticles/slim';
+// import type { Engine, ISourceOptions } from '@tsparticles/engine';
 
 interface StatItem {
   value: number;
@@ -65,19 +65,12 @@ function AnimatedStat({ value, suffix, label, icon, index = 0 }: StatItem) {
 
   return (
     <div ref={ref} className="relative group -mt-4">
-      <div className="absolute inset-0 rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/70" />
+      <div className="absolute inset-0 rounded-2xl overflow-hidden bg-primary/20 backdrop-blur-md border px-auto border-primary/70" />
       <div className="absolute inset-0 flex items-center justify-center perspective overflow-hidden rounded-2xl">
-        <div
-          className="transform transition-transform duration-300 group-hover:scale-125"
-          style={{
-            transform: 'perspective(1000px) rotateX(10deg) rotateY(-10deg) translateZ(50px)',
-          }}
-        >
-         
-        </div>
+       
       </div>
       <div className="relative z-10 p-6 sm:p-8">
-        <div className="text-2xl sm:text-4xl font-bold text-primary">
+        <div className="text-2xl sm:text-4xl font-bold text-accent">
           {displayValue==50?`$${displayValue}`:displayValue}
           <span className="text-primary/50">{suffix}</span>
         </div>
@@ -236,7 +229,7 @@ export default function HeroSection() {
               >
                 <div className="h-[500%] absolute rotateInner w-[200%] bg-gradient-to-tr from-transparent via-transparent to-primary" />
                 <div
-                  className={`text-center items-center justify-center flex h-[38px] bg-brand/10 dark:bg-accent/20 text-brand dark:text-accent-foreground z-[400] rounded-full dark:border self-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold`}
+                  className={`text-center items-center justify-center flex h-[38px] bg-accent/20 dark:bg-accent/20 text-accent dark:text-accent-foreground z-[400] rounded-full dark:border self-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold`}
                 >
                   {highlight}
                 </div>
