@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, EyeIcon, EyeOffIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -32,6 +32,8 @@ interface FormData {
   contactPersonFirstName: string;
   contactPersonLastName: string;
   contactPersonTitle: string;
+  password: string;
+  confirmPassword: string;
 }
 
 interface FormErrors {
@@ -61,10 +63,14 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
     contactPersonFirstName: '',
     contactPersonLastName: '',
     contactPersonTitle: '',
+    password: '',
+    confirmPassword: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateField = (fieldName: string, value: any): string | null => {
     switch (fieldName) {
@@ -112,6 +118,24 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
       
       case 'contactPersonTitle':
         return !value?.trim() ? 'Title/Position is required' : null;
+      
+      case 'password':
+        if (!value) {
+          return 'Password is required';
+        } else if (value.length < 8) {
+          return 'Password must be at least 8 characters';
+        } else if (!/[A-Z]/.test(value)) {
+          return 'Password must contain an uppercase letter';
+        } else if (!/[a-z]/.test(value)) {
+          return 'Password must contain a lowercase letter';
+        } else if (!/[0-9]/.test(value)) {
+          return 'Password must contain a number';
+        }
+        return null;
+      
+      case 'confirmPassword':
+        return !value ? 'Please confirm your password' : 
+               value !== (formData as any).password ? 'Passwords do not match' : null;
       
       default:
         return null;
@@ -426,6 +450,82 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
               {getFieldError('workEmail') && (
                 <p className="text-xs text-destructive mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" /> {errors.workEmail}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Account Security */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground/90">Account Security</h3>
+          
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="password" className="block text-sm font-medium mb-2">
+                Password <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter password"
+                  value={formData.password}
+                  onChange={e => handleChange('password', e.target.value)}
+                  onBlur={() => handleBlur('password')}
+                  className={`pr-10 ${getFieldError('password') ? 'border-destructive' : ''}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOffIcon className="w-4 h-4" />
+                  ) : (
+                    <EyeIcon className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {getFieldError('password') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.password}
+                </p>
+              )}
+              <p className="text-xs text-foreground/50 mt-2">
+                At least 8 characters with uppercase, lowercase, and number
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
+                Confirm Password <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirm password"
+                  value={formData.confirmPassword}
+                  onChange={e => handleChange('confirmPassword', e.target.value)}
+                  onBlur={() => handleBlur('confirmPassword')}
+                  className={`pr-10 ${getFieldError('confirmPassword') ? 'border-destructive' : ''}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOffIcon className="w-4 h-4" />
+                  ) : (
+                    <EyeIcon className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {getFieldError('confirmPassword') && (
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.confirmPassword}
                 </p>
               )}
             </div>

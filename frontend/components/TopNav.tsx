@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { usePathname } from 'next/navigation';
 
 export default function TopNav() {
   const [isOpen, setIsOpen] = useState(false);
+  const path = usePathname()
+  console.log(path)
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-700 backdrop-blur-md bg-gradient-to-l from-background via-background/30 to-primary/10 border-b border-border/20">
@@ -19,7 +22,8 @@ export default function TopNav() {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-8">
+          {(!path.includes('register') || !path.includes('login'))&&<>
+         <div className="hidden md:flex hidden space-x-8">
             <Link href="#features" className="text-chart-2 hover:text-brand transition-colors text-sm lg:text-base">
               Features
             </Link>
@@ -47,6 +51,7 @@ export default function TopNav() {
               </Button>
             </Link>
           </div>
+          </>}
 
           {/* Mobile Menu Button */}
           <button

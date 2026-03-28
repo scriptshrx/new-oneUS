@@ -70,7 +70,7 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
 
             {/* Description */}
             <p className="text-foreground/70 text-sm mb-6 text-left leading-relaxed">
-              In-house infusion center with treatment rooms or infusion chairs. Manage patient appointments, insurance verification, and treatment delivery in one platform.
+              In-house clinic center with infusion treatment rooms or infusion chairs. Manage patient appointments, insurance verification, and treatment delivery in one platform.
             </p>
 
             {/* Features */}
