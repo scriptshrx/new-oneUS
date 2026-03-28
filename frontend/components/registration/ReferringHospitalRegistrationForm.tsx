@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, AlertCircle, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { ArrowLeft, AlertCircle, EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react';
+import { authService } from '@/lib/authService';
 import {
   Select,
   SelectContent,
@@ -71,6 +72,7 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [apiError, setApiError] = useState<string>('');
 
   const validateField = (fieldName: string, value: any): string | null => {
     switch (fieldName) {
@@ -191,10 +193,45 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
     }
 
     setIsSubmitting(true);
+    setApiError('');
+    
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      onSubmit(formData);
-    } finally {
+      const registrationData = {
+        eligibilityGate: {
+          isUSAClinic: true,
+          clinicType: 'HOSPITAL',
+        },
+        hospital: {
+          name: formData.name,
+          npiNumber: formData.npiNumber,
+          taxId: formData.taxId,
+          stateLicenseNumber: formData.stateLicenseNumber,
+          address: formData.primaryOfficeAddress,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          primaryPhone: formData.primaryPhone,
+          workEmail: formData.workEmail,
+        },
+        admin: {
+          firstName: formData.contactPersonFirstName,
+          lastName: formData.contactPersonLastName,
+          title: formData.contactPersonTitle,
+          password: formData.password,
+        },
+      };
+
+      const response = await authService.registerHospital(registrationData);
+      
+      // Call onSubmit with the response data
+      onSubmit({
+        ...formData,
+        hospitalId: response.hospitalId || response.clinicId,
+        temporaryToken: response.temporaryToken,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      setApiError(errorMessage);
       setIsSubmitting(false);
     }
   };
@@ -224,6 +261,16 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
           Enter your hospital details for referral submissions. All marked fields are required.
         </p>
       </div>
+
+      {/* Error Alert */}
+      {apiError && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-red-900">{apiError}</p>
+          </div>
+        </div>
+      )}
 
       {/* Form Sections */}
       <div className="space-y-8">
@@ -606,7 +653,14 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
           disabled={isSubmitting}
           className="flex-1"
         >
-          {isSubmitting ? 'Processing...' : 'Continue to Email Verification'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            'Continue to Email Verification'
+          )}
         </Button>
          <Button
           type="button"

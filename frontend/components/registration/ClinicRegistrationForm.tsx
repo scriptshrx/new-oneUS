@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Check, AlertCircle, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { ArrowLeft, Check, AlertCircle, EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react';
+import { authService } from '@/lib/authService';
 import {
   Select,
   SelectContent,
@@ -79,6 +80,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [apiError, setApiError] = useState<string>('');
 
   const validateField = (fieldName: string, value: any): string | null => {
     const fieldLower = fieldName.toLowerCase();
@@ -223,11 +225,53 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
     }
 
     setIsSubmitting(true);
+    setApiError('');
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      onSubmit(formData);
-    } finally {
+      // Parse admin name from first/last if available, otherwise use clinic name
+      const adminName = `${(formData as any).adminFirstName || 'Admin'} ${(formData as any).adminLastName || 'User'}`;
+
+      // Extract first name from clinic admin info
+      const adminFirstName = (formData as any).adminFirstName || formData.name.split(' ')[0];
+      const adminLastName = (formData as any).adminLastName || 'Administrator';
+
+      const registrationData = {
+        eligibilityGate: {
+          isUSAClinic: true,
+          clinicType: 'IV_THERAPY', // Default, can be changed based on user selection
+        },
+        clinic: {
+          name: formData.name,
+          npiNumber: formData.npiNumber,
+          taxId: formData.taxId,
+          stateLicenseNumber: formData.stateLicenseNumber,
+          address: formData.streetAddress,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          primaryPhone: formData.primaryPhone,
+          workEmail: formData.workEmail,
+          infusionChairCount: parseInt(formData.infusionChairCount),
+          treatmentTypesOffered: formData.treatmentTypesOffered,
+        },
+        admin: {
+          firstName: adminFirstName,
+          lastName: adminLastName,
+          password: formData.password,
+        },
+      };
+
+      const response = await authService.registerClinic(registrationData);
+      
+      // Call onSubmit with the response data
+      onSubmit({
+        ...formData,
+        clinicId: response.clinicId,
+        temporaryToken: response.temporaryToken,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      setApiError(errorMessage);
       setIsSubmitting(false);
     }
   };
@@ -247,6 +291,17 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm font-medium">Back</span>
       </button>
+
+      {/* API Error Message */}
+      {apiError && (
+        <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-red-400 mb-1">Registration Error</p>
+            <p className="text-sm text-red-300/80">{apiError}</p>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="mb-10">
@@ -639,7 +694,14 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
           disabled={isSubmitting}
           className="flex-1"
         >
-          {isSubmitting ? 'Processing...' : 'Continue to Email Verification'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            'Continue to Email Verification'
+          )}
         </Button>
         <Button
           type="button"

@@ -6,21 +6,24 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { authService } from '@/lib/authService';
 
 interface BAASignatureStepProps {
   organizationName: string;
   temporaryToken: string;
+  email?: string;
   onComplete: () => void;
   onBack: () => void;
 }
 
-export default function BAASignatureStep({ organizationName, temporaryToken, onComplete, onBack }: BAASignatureStepProps) {
+export default function BAASignatureStep({ organizationName, temporaryToken, email = '', onComplete, onBack }: BAASignatureStepProps) {
   const [adminName, setAdminName] = useState('');
   const [adminTitle, setAdminTitle] = useState('');
   const [agreedToBAA, setAgreedToBAA] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string>('');
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -47,14 +50,31 @@ export default function BAASignatureStep({ organizationName, temporaryToken, onC
     }
 
     setIsSubmitting(true);
+    setApiError('');
+
     try {
-      // Simulate API call to sign BAA
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create signature data (in production, this would be an actual digital signature)
+      const signatureData = btoa(JSON.stringify({
+        adminName,
+        adminTitle,
+        timestamp: new Date().toISOString(),
+        organizationName,
+      }));
+
+      await authService.signBAA({
+        email: email || localStorage.getItem('workEmail') || 'admin@clinic.com',
+        signatureData,
+        adminName,
+        adminTitle,
+      });
+
       setIsComplete(true);
       setTimeout(() => {
         onComplete();
       }, 2000);
-    } finally {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign BAA. Please try again.';
+      setApiError(errorMessage);
       setIsSubmitting(false);
     }
   };
@@ -95,6 +115,17 @@ export default function BAASignatureStep({ organizationName, temporaryToken, onC
           Under US HIPAA law, we require a signed BAA before any patient data can be processed.
         </p>
       </div>
+
+      {/* API Error Message */}
+      {apiError && (
+        <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-red-400 mb-1">Signing Error</p>
+            <p className="text-sm text-red-300/80">{apiError}</p>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
         {/* BAA Document Preview */}

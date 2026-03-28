@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { authService } from '@/lib/authService';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 function DevOngoingScreen() {
   return (
@@ -161,6 +164,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -175,15 +179,25 @@ export default function LoginPage() {
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
       if (!email || !password) {
         setError('Please fill in all fields');
         setIsLoading(false);
         return;
       }
+
+      const response = await authService.login({
+        email,
+        password,
+      });
+
+      // Redirect to dashboard on successful login
+      router.push('/dashboard');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      setError(errorMessage);
       setIsLoading(false);
-      window.location.href = '/dashboard';
-    }, 1000);
+    }
   };
 
   return (
@@ -205,8 +219,12 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="p-3 sm:p-4 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-                  <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-red-400 mb-1">Login Error</p>
+                    <p className="text-sm text-red-300">{error}</p>
+                  </div>
                 </div>
               )}
 
@@ -273,10 +291,10 @@ export default function LoginPage() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Signing in...
-                  </div>
+                  </>
                 ) : (
                   'Sign In'
                 )}

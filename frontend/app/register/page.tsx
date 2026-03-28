@@ -5,9 +5,10 @@ import TopNav from '@/components/TopNav';
 import TenantTypeSelection from '@/components/registration/TenantTypeSelection';
 import ClinicRegistrationForm from '@/components/registration/ClinicRegistrationForm';
 import ReferringHospitalRegistrationForm from '@/components/registration/ReferringHospitalRegistrationForm';
+import EmailVerificationStep from '@/components/registration/EmailVerificationStep';
 
 type TenantType = 'clinic' | 'referring-hospital' | null;
-type RegistrationStep = 'type-selection' | 'form';
+type RegistrationStep = 'type-selection' | 'form' | 'email-verification';
 
 interface RegistrationState {
   tenantType: TenantType;
@@ -215,9 +216,13 @@ export default function RegisterPage() {
     setState(prev => ({
       ...prev,
       formData,
+      step: 'email-verification',
     }));
-    // TODO: Handle form submission - call API
-    // Then redirect to email verification or success
+  };
+
+  const handleEmailVerified = () => {
+    // After email verification, redirect to success or next step
+    window.location.href = '/dashboard';
   };
 
   const handleBackClick = () => {
@@ -253,16 +258,28 @@ export default function RegisterPage() {
                 <span className="text-xs mt-2 text-foreground/60">Register Type</span>
               </div>
 
-              <div className={`w-6 sm:w-8 h-0.5 ${state.step === 'form' ? 'bg-accent/30' : 'bg-muted'}`} />
+              <div className={`w-6 sm:w-8 h-0.5 ${state.step === 'form' || state.step === 'email-verification' ? 'bg-accent/30' : 'bg-muted'}`} />
 
               {/* Step 2: Form */}
-              <div className={`flex flex-col items-center ${state.step !== 'form' ? 'opacity-50' : ''}`}>
+              <div className={`flex flex-col items-center ${state.step !== 'form' && state.step !== 'email-verification' ? 'opacity-50' : ''}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
-                  state.step === 'form' ? 'bg-accent text-background' : 'bg-muted text-muted-foreground'
+                  state.step === 'form' || state.step === 'email-verification' ? 'bg-accent/30 text-accent border border-accent' : 'bg-muted text-muted-foreground'
                 }`}>
                   2
                 </div>
                 <span className="text-xs mt-2 text-foreground/60">Details</span>
+              </div>
+
+              <div className={`w-6 sm:w-8 h-0.5 ${state.step === 'email-verification' ? 'bg-accent/30' : 'bg-muted'}`} />
+
+              {/* Step 3: Email Verification */}
+              <div className={`flex flex-col items-center ${state.step !== 'email-verification' ? 'opacity-50' : ''}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                  state.step === 'email-verification' ? 'bg-accent text-background' : 'bg-muted text-muted-foreground'
+                }`}>
+                  3
+                </div>
+                <span className="text-xs mt-2 text-foreground/60">Verify Email</span>
               </div>
             </div>
           </div>
@@ -279,6 +296,15 @@ export default function RegisterPage() {
 
             {state.step === 'form' && state.tenantType === 'referring-hospital' && (
               <ReferringHospitalRegistrationForm onSubmit={handleFormSubmit} onBack={handleBackClick} />
+            )}
+
+            {state.step === 'email-verification' && (
+              <EmailVerificationStep
+                email={state.formData?.workEmail || state.formData?.email || ''}
+                temporaryToken={state.formData?.temporaryToken || ''}
+                onVerified={handleEmailVerified}
+                onBack={handleBackClick}
+              />
             )}
           </div>
 

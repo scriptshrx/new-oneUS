@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { authService } from '@/lib/authService';
 
 interface EmailVerificationStepProps {
   email: string;
@@ -28,24 +29,35 @@ export default function EmailVerificationStep({ email, temporaryToken, onVerifie
     }
 
     setIsSubmitting(true);
+    setError('');
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await authService.verifyEmail({
+        email,
+        verificationCode,
+      });
+
       setIsVerified(true);
       setTimeout(() => {
         onVerified();
       }, 1000);
-    } finally {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Verification failed. Please try again.';
+      setError(errorMessage);
       setIsSubmitting(false);
     }
   };
 
   const handleResendCode = async () => {
     setIsSubmitting(true);
+    setError('');
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setError('');
+      await authService.resendVerificationCode(email);
+      setError(''); // Clear error on success
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resend code. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
