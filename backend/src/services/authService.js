@@ -25,7 +25,7 @@ const {
 
 const registerClinic = async (input) => {
   // Check if clinic already exists
-  const existingClinic = await prisma.Clinic.findFirst({
+  const existingClinic = await prisma.clinic.findFirst({
     where: {
       OR: [
         { npiNumber: input.clinic.npiNumber },
@@ -39,7 +39,7 @@ const registerClinic = async (input) => {
   }
 
   // Create clinic
-  const clinic = await prisma.Clinic.create({
+  const clinic = await prisma.clinic.create({
     data: {
       name: input.clinic.name,
       npiNumber: input.clinic.npiNumber,
@@ -61,7 +61,7 @@ const registerClinic = async (input) => {
   // Create admin user if provided
   let user = null;
   if (input.admin) {
-    const existingUser = await prisma.User.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email: input.clinic.workEmail },
     });
 
@@ -71,7 +71,7 @@ const registerClinic = async (input) => {
 
     const passwordHash = await hashPassword(input.admin.password);
 
-    user = await prisma.User.create({
+    user = await prisma.user.create({
       data: {
         email: input.clinic.workEmail,
         passwordHash,
@@ -108,7 +108,7 @@ const registerClinic = async (input) => {
 };
 
 const verifyEmail = async (input) => {
-  const user = await prisma.User.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: input.email },
   });
 
@@ -122,7 +122,7 @@ const verifyEmail = async (input) => {
   }
 
   // Update user status
-  const updatedUser = await prisma.User.update({
+  const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: {
       status: 'PENDING_BAA_SIGNATURE',
@@ -138,7 +138,7 @@ const verifyEmail = async (input) => {
 };
 
 const signBAA = async (input) => {
-  const user = await prisma.User.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: input.email },
     include: { clinic: true },
   });
@@ -148,7 +148,7 @@ const signBAA = async (input) => {
   }
 
   // Update clinic status
-  const clinic = await prisma.Clinic.update({
+  const clinic = await prisma.clinic.update({
     where: { id: user.clinicId },
     data: {
       status: 'ACTIVE',
@@ -159,7 +159,7 @@ const signBAA = async (input) => {
   });
 
   // Update user status
-  const updatedUser = await prisma.User.update({
+  const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: {
       status: 'ACTIVE',
@@ -192,7 +192,7 @@ const signBAA = async (input) => {
 };
 
 const login = async (input) => {
-  const user = await prisma.User.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: input.email },
     include: { clinic: true },
   });
@@ -213,7 +213,7 @@ const login = async (input) => {
   }
 
   // Update last login
-  await prisma.User.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: { lastLogin: new Date() },
   });
@@ -246,7 +246,7 @@ const login = async (input) => {
 };
 
 const forgotPassword = async (input) => {
-  const user = await prisma.User.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: input.email },
   });
 
@@ -282,7 +282,7 @@ const resetPassword = async (input) => {
   }
 
   // Find user
-  const user = await prisma.User.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email },
   });
 
@@ -294,7 +294,7 @@ const resetPassword = async (input) => {
   const passwordHash = await hashPassword(input.newPassword);
 
   // Update password
-  await prisma.User.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: { passwordHash },
   });
@@ -307,7 +307,7 @@ const resetPassword = async (input) => {
 
 const registerHospital = async (input) => {
   // Check if hospital already exists
-  const existingHospital = await prisma.Hospital.findFirst({
+  const existingHospital = await prisma.hospital.findFirst({
     where: {
       OR: [
         { npiNumber: input.hospital.npiNumber },
@@ -321,7 +321,7 @@ const registerHospital = async (input) => {
   }
 
   // Create hospital
-  const hospital = await prisma.Hospital.create({
+  const hospital = await prisma.hospital.create({
     data: {
       name: input.hospital.name,
       npiNumber: input.hospital.npiNumber,
@@ -343,7 +343,7 @@ const registerHospital = async (input) => {
   // Create admin user for authentication
   let user = null;
   if (input.admin) {
-    const existingUser = await prisma.User.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email: input.hospital.workEmail },
     });
 
@@ -353,7 +353,7 @@ const registerHospital = async (input) => {
 
     const passwordHash = await hashPassword(input.admin.password);
 
-    user = await prisma.User.create({
+    user = await prisma.user.create({
       data: {
         email: input.hospital.workEmail,
         passwordHash,
