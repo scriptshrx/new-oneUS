@@ -2,6 +2,9 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+
+// Disable prerendering for authenticated pages
+export const dynamic = 'force-dynamic';
 import {
   CheckCircle,
   Clock,
@@ -134,7 +137,11 @@ export default function PatientDashboardPage() {
             <Button
               variant="outline"
               className="border-accent/30 text-accent hover:bg-accent/10 gap-2"
-              onClick={() => localStorage.clear()}
+              onClick={() => {
+                localStorage.removeItem('patientEmail');
+                localStorage.removeItem('authToken');
+                window.location.href = '/patient-portal/login';
+              }}
             >
               <LogOut className="w-4 h-4" />
               Logout
