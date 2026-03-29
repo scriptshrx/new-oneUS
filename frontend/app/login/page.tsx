@@ -195,11 +195,14 @@ export default function LoginPage() {
 
       // Store tenant information and route accordingly
       if (response.hospitalId) {
-        localStorage.setItem('hospitalId', response.hospitalId);
+        localStorage.setItem('hospital', JSON.stringify(response.org));
+        localStorage.setItem('hospitalAdmin',JSON.stringify(response.user))
         localStorage.setItem('tenantType', 'hospital');
         router.push('/hospital-dashboard');
       } else if (response.clinicId) {
         localStorage.setItem('clinicId', response.clinicId);
+        localStorage.setItem('clinic',JSON.stringify(response.org));
+        localStorage.setItem('clinicAdmin',JSON.stringify(response.user))
         localStorage.setItem('tenantType', 'clinic');
         router.push('/clinic-dashboard');
       } else {

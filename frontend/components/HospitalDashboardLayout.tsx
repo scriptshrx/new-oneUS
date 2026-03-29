@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Building2, BarChart3, Users, Settings, LogOut, Menu, X } from 'lucide-react';
 import { useState, useEffect, createContext, useContext, SetStateAction } from 'react';
-
+import { useRouter } from 'next/navigation';
 
 interface HospitalDashboardLayoutProps {
   children: React.ReactNode;
@@ -52,7 +52,7 @@ const navItems = [
 ];
 
 export default function HospitalDashboardLayout({ children }: HospitalDashboardLayoutProps) {
-  
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('overview');
   const[hospital,setHospital]=useState({})
@@ -117,8 +117,15 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
 
           {/* Footer */}
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/30">
-            <button className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-foreground/70 hover:bg-primary/30 hover:text-red-400 transition-all">
-              <LogOut className="w-5 h-5" />
+            <button 
+            onClick={()=>{
+              router.push('/login');
+              localStorage.removeItem('hospital');
+              localStorage.removeItem('hospitalAdmin');
+              
+            }}className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-foreground/70 hover:bg-primary/30 hover:text-red-400 transition-all">
+              <LogOut className="w-5 h-5"
+               />
               <span className="font-medium">Logout</span>
             </button>
           </div>
