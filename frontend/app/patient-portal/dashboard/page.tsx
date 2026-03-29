@@ -2,9 +2,6 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-
-// Disable prerendering for authenticated pages
-export const dynamic = 'force-dynamic';
 import {
   CheckCircle,
   Clock,
@@ -17,6 +14,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
+// Disable prerendering for authenticated pages
+export const dynamic = 'force-dynamic';
 
 interface PatientData {
   id: string;
