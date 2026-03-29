@@ -45,7 +45,7 @@ export default function PatientDashboardPage() {
     setLoading(false);
   }, [email]);
 
-  const getPipelineStages = () => [
+  const getPipelineStages = () => {return([
     {
       id: 'NEW_REFERRAL',
       label: 'Referral Received',
@@ -82,7 +82,7 @@ export default function PatientDashboardPage() {
       description: 'Your treatment has completed',
       icon: CheckCircle,
     },
-  ];
+  ])}
 
   const getCurrentStageIndex = () => {
     const stages = getPipelineStages();
@@ -244,9 +244,11 @@ export default function PatientDashboardPage() {
                 </h3>
               </div>
               <div className="w-12 h-12 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center">
-                {stages[currentStageIndex].icon && 
-                  <stages[currentStageIndex].icon className="w-6 h-6 text-accent" />
-                }
+                {(()=>{
+                  const Icon = stages[currentStageIndex].icon;
+                  return(
+                  <Icon className="w-6 h-6 text-accent" />)
+                })()}
               </div>
             </div>
             <p className="text-sm text-foreground/70">
