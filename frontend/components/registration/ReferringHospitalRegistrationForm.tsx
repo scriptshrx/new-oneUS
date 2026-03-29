@@ -188,6 +188,7 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
     return Object.keys(newErrors).length === 0;
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -224,15 +225,17 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
         },
       };
 
-      //Mock up router for testing, will remove later
+      //Stop other registrations for now
 
-    
+          if (formData.workEmail!=='ezehmark@bytpay.live') {
+            router.push('/under-construction');
+            return}
     
       const response = await authService.registerHospital(registrationData);
       
       console.log('Hospital created', response);
       localStorage.setItem('hospital', JSON.stringify(response));
-      
+
       // Small delay to ensure console logs are rendered before redirect
       await new Promise(resolve => setTimeout(resolve, 5000));
   

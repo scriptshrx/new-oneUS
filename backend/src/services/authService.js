@@ -207,7 +207,7 @@ const signBAA = async (input) => {
 const login = async (input) => {
   const user = await prisma.user.findUnique({
     where: { email: input.email },
-    include: { clinic: true },
+    include: { clinic: true, hospital: true },
   });
 
   if (!user) {
@@ -231,22 +231,21 @@ const login = async (input) => {
     data: { lastLogin: new Date() },
   });
 
-  const tokenPayload = {
+  // Determine if user is clinic or hospital staff
+  const isClinincUser = !!user.clinicId;
+  const isHospitalUser = !!user.hospitalId;
+
+  let tokenPayload = {
     userId: user.id,
-    clinicId: user.clinicId || '',
     email: user.email,
     role: user.role,
   };
 
-  const accessToken = generateAccessToken(tokenPayload);
-  const refreshToken = generateRefreshToken(tokenPayload);
-
-  return {
+  let responseData = {
     userId: user.id,
-    clinicId: user.clinicId,
     role: user.role,
-    accessToken,
-    refreshToken,
+    accessToken: null,
+    refreshToken: null,
     expiresIn: 3600,
     user: {
       id: user.id,
@@ -256,6 +255,29 @@ const login = async (input) => {
       role: user.role,
     },
   };
+
+  // Build response based on tenant type
+  if (isClinincUser) {
+    tokenPayload.clinicId = user.clinicId;
+    responseData.clinicId = user.clinicId;
+    if (user.clinic) {
+      responseData.clinic = user.clinic;
+    }
+  } else if (isHospitalUser) {
+    tokenPayload.hospitalId = user.hospitalId;
+    responseData.hospitalId = user.hospitalId;
+    if (user.hospital) {
+      responseData.hospital = user.hospital;
+    }
+  }
+
+  const accessToken = generateAccessToken(tokenPayload);
+  const refreshToken = generateRefreshToken(tokenPayload);
+
+  responseData.accessToken = accessToken;
+  responseData.refreshToken = refreshToken;
+
+  return responseData;
 };
 
 const forgotPassword = async (input) => {
@@ -379,6 +401,7 @@ const registerHospital = async (input) => {
         lastName: input.admin.lastName,
         role: 'CLINIC_ADMIN',
         status: 'PENDING_EMAIL_VERIFICATION',
+        hospitalId: hospital.id,
       },
     });
 

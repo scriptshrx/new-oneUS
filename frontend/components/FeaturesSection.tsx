@@ -136,7 +136,7 @@ export default function FeaturesSection() {
   }, []);
 
   return (
-    <section id="features" ref={sectionRef} className="py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8">
+    <section id="features" ref={sectionRef} className="py-16 sm:py-24 md:-mt-8 lg:py-32 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12 sm:mb-16 lg:mb-20">
           <div className='flex items-center h-[40px] w-[180px] mx-auto rounded-full px-[2px] relative overflow-hidden justify-center mb-4'

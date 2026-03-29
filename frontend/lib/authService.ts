@@ -12,11 +12,24 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   userId: string;
-  clinicId: string;
+  clinicId?: string;
+  hospitalId?: string;
   role: string;
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  clinic?: {
+    id: string;
+    name: string;
+    npiNumber: string;
+    [key: string]: any;
+  };
+  hospital?: {
+    id: string;
+    name: string;
+    npiNumber: string;
+    [key: string]: any;
+  };
   user: {
     id: string;
     email: string;
@@ -130,7 +143,14 @@ class AuthService {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('clinicId', data.clinicId);
+      
+      // Store tenant information
+      if (data.clinicId) {
+        localStorage.setItem('clinicId', data.clinicId);
+      }
+      if (data.hospitalId) {
+        localStorage.setItem('hospitalId', data.hospitalId);
+      }
       
       return data;
     } catch (error) {

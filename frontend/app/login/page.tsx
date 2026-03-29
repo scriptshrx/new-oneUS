@@ -191,8 +191,19 @@ export default function LoginPage() {
         password,
       });
 
-      // Redirect to dashboard on successful login
-      router.push('/dashboard');
+      // Store tenant information and route accordingly
+      if (response.hospitalId) {
+        localStorage.setItem('hospitalId', response.hospitalId);
+        localStorage.setItem('tenantType', 'hospital');
+        router.push('/hospital-dashboard');
+      } else if (response.clinicId) {
+        localStorage.setItem('clinicId', response.clinicId);
+        localStorage.setItem('tenantType', 'clinic');
+        router.push('/clinic-dashboard');
+      } else {
+        // Fallback to dashboard if neither tenant type is present
+        router.push('/dashboard');
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
       setError(errorMessage);

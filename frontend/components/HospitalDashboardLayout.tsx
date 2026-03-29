@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Building2, BarChart3, Users, Settings, LogOut, Menu, X } from 'lucide-react';
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, SetStateAction } from 'react';
 
 
 interface HospitalDashboardLayoutProps {
@@ -14,6 +14,8 @@ type ViewType = 'overview' | 'referrals' | 'analytics' | 'partners';
 interface DashboardContextType {
   currentView: ViewType;
   setCurrentView: (view: ViewType) => void;
+  hospital:object,
+  setHospital:()=>void
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -81,8 +83,8 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
             <button onClick={() => setCurrentView('overview')} className="flex items-center gap-2">
               <Building2 className="w-8 h-8 text-accent" />
               <div>
-                <h2 className="font-bold text-foreground">Scriptish</h2>
-                <p className="text-xs text-foreground/50">Hospital</p>
+                <h2 className="font-bold text-foreground">{hospital.name}</h2>
+                <p className="text-xs text-foreground/50">NPI: {hospital.npiNumber}</p>
               </div>
             </button>
           </div>

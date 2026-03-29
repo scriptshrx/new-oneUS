@@ -213,12 +213,12 @@ export default function PipelineSection() {
                 }`}
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/15 hover:bg-primary/30 border border-primary flex items-center justify-center text-brand font-bold text-sm">
+                  <div className="w-8 h-8 rounded-full bg-primary/15 hover:bg-primary/30 border border-primary flex items-center justify-center text-accent font-bold text-sm">
                     {index + 1}
                   </div>
                   <h3 className="font-semibold text-primary text-sm sm:text-base">{node.label}</h3>
                 </div>
-                <p className="text-xs sm:text-sm text-primary/80 leading-relaxed">
+                <p className="text-xs sm:text-sm text-accent/80 font-semi-bold leading-relaxed">
                   {node.description}
                 </p>
               </button>

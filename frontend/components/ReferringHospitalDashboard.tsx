@@ -187,7 +187,7 @@ const getUrgencyIcon = (urgency: string) => {
 type ViewType = 'overview' | 'referrals' | 'analytics' | 'partners';
 
 export default function ReferringHospitalDashboard() {
-  const { currentView, setCurrentView } = useDashboardView();
+  const { currentView, hospital, setHospital, setCurrentView } = useDashboardView();
   const [selectedClinic, setSelectedClinic] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');

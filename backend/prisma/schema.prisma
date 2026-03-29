@@ -27,6 +27,10 @@ model User {
   clinic                Clinic?   @relation("ClinicStaff", fields: [clinicId], references: [id])
   clinicId              String?   @map("clinic_id")
 
+  // Hospital relationship (admin/staff)
+  hospital              Hospital? @relation("HospitalStaff", fields: [hospitalId], references: [id])
+  hospitalId            String?   @map("hospital_id")
+
   // Patient relationship
   patient               Patient?  @relation("PatientUser", fields: [patientId], references: [id])
   patientId             String?   @unique @map("patient_id")
@@ -43,6 +47,7 @@ model User {
   lastLogin             DateTime? @map("last_login")
 
   @@index([clinicId])
+  @@index([hospitalId])
   @@index([email])
   @@map("users")
 }
@@ -179,6 +184,7 @@ model Hospital {
   activatedAt           DateTime? @map("activated_at")
 
   // Relationships
+  staff                 User[] @relation("HospitalStaff")
   referralPhysicians    ReferralPhysicianHospital[]
 
   createdAt             DateTime  @default(now()) @map("created_at")
