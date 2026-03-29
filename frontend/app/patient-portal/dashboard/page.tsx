@@ -1,6 +1,5 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
   CheckCircle,
@@ -28,25 +27,30 @@ interface PatientData {
 }
 
 export default function PatientDashboardPage() {
-  const searchParams = useSearchParams();
-  const email = searchParams.get('email') || localStorage.getItem('patientEmail') || '';
-  
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
-    // Mock patient data for demo
-    // In production, fetch from backend using email
-    setPatientData({
-      id: 'patient_123',
-      firstName: 'John',
-      lastName: 'Smith',
-      pipelineStage: 'PA_PENDING',
-      clinicName: 'Bright Infusion Clinic',
-      nextAppointment: '2026-04-15',
-    });
-    setLoading(false);
-  }, [email]);
+    // Get email from searchParams or localStorage
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get('email') || localStorage.getItem('patientEmail') || '';
+      setEmail(emailParam);
+
+      // Mock patient data for demo
+      // In production, fetch from backend using email
+      setPatientData({
+        id: 'patient_123',
+        firstName: 'John',
+        lastName: 'Smith',
+        pipelineStage: 'PA_PENDING',
+        clinicName: 'Bright Infusion Clinic',
+        nextAppointment: '2026-04-15',
+      });
+      setLoading(false);
+    }
+  }, []);
 
   const getPipelineStages = () => {return([
     {
