@@ -58,7 +58,7 @@ animation: enlargeBg 2s ease infinite;
   /* Light mode colorss */
   --bg: rgb(255,255,255);
   --text: oklch(0.30 0.005 106.7);
-  --brand: oklch(0.621 0.153 301.1);
+  --brand: rgb(196, 130, 255);
   
   --background: var(--bg);
   --foreground: var(--text);
