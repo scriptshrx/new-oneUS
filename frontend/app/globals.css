@@ -72,7 +72,7 @@ animation: enlargeBg 2s ease infinite;
   --secondary-foreground: var(--text);
   --muted: oklch(0.94 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.65 0.12 140);
+  --accent: rgb(30,142,90);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.57 0.24 30);
   --destructive-foreground: oklch(0.985 0 0);

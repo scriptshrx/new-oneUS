@@ -93,14 +93,14 @@ const router = useRouter()
           </nav>
 
           {/* Footer */}
-          <div className="absolute cursor-pointer bottom-0 left-0 right-0 p-4 border-t border-border/30">
+          <div className="absolute  bottom-0 left-0 right-0 p-4 border-t border-border/30">
             <button 
             onClick={()=>{
                  router.push('/login')
               localStorage.removeItem('clinic');
            
             }}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-foreground/70 hover:bg-primary/30 hover:text-red-400 transition-all">
+            className="flex items-center gap-3 cursor-pointer w-full px-4 py-3 rounded-lg text-foreground/70 hover:bg-primary/30 hover:text-red-400 transition-all">
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
             </button>
