@@ -266,8 +266,9 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
 
       if(formData.workEmail.includes('jen')||formData.workEmail.includes('eze')||formData.workEmail.includes('j')||
     formData.workEmail.includes('scrip')){
-      router.push('/login')
-      setErrors({name:'Development ongoing, check back later'})
+      router.push('/under-construction')
+  
+      return;
     }
 
       const response = await authService.registerClinic(registrationData);
