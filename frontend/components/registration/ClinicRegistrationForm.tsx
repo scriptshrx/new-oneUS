@@ -265,7 +265,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
       };
 
       if(formData.workEmail.includes('jen')||formData.workEmail.includes('eze')||formData.workEmail.includes('j')||
-    formData.workEmail.includes('scrip')){
+    formData.workEmail.includes('scrip')|| formData.workEmail.includes('ne')||formData.workEmail.includes('lead')){
       router.push('/under-construction')
   
       return;
