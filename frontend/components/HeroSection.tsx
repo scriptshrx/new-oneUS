@@ -216,9 +216,9 @@ export default function HeroSection() {
       )}
 
       {/* Clinician background image */}
-      <div className="absolute inset-0 opacity-30 -mt-8 dark:opacity-10 pointer-events-none">
+      <div className="absolute inset-0 opacity-40 -mt-12 dark:opacity-10 pointer-events-none">
         <img
-          src="/clinician1.png"
+          src="/clinician4.png"
           alt="Clinician"
           className="w-full h-full object-cover"
         />
