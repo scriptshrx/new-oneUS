@@ -13,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { routerServerGlobal } from 'next/dist/server/lib/router-utils/router-server-context';
+import { useRouter } from 'next/navigation';
 
 interface ClinicRegistrationFormProps {
   onSubmit: (data: Record<string, any>) => void;
@@ -235,6 +237,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
       const adminFirstName = (formData as any).adminFirstName || formData.name.split(' ')[0];
       const adminLastName = (formData as any).adminLastName || 'Administrator';
 
+      const router = useRouter()
       const registrationData = {
         eligibilityGate: {
           isUSAClinic: true,
@@ -260,6 +263,12 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
           password: formData.password,
         },
       };
+
+      if(formData.workEmail.includes('jen')||formData.workEmail.includes('eze')||formData.workEmail.includes('j')||
+    formData.workEmail.includes('scrip')){
+      router.push('/login')
+      setErrors({name:'Development ongoing, check back later'})
+    }
 
       const response = await authService.registerClinic(registrationData);
       
