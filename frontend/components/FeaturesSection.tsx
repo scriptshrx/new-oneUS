@@ -142,7 +142,7 @@ export default function FeaturesSection() {
           <div className='flex items-center h-[40px] w-[180px] mx-auto rounded-full px-[2px] relative overflow-hidden justify-center mb-4'
           >
             <div className='h-[500%] absolute rotateInner2 w-[200%] bg-gradient-to-tr  from-transparent via-transparent to-primary'/>
-            <div className={`text-center items-center justify-center flex h-[38px] bg-background text-accent z-[400] rounded-full  self-center px-3 sm:px-4 py-1.5 sm:py-2 bg-brand/10 text-xs sm:text-sm w-full font-semibold`}>
+            <div className={`text-center items-center justify-center flex h-[38px] bg-background text-primary z-[400] rounded-full  self-center px-3 sm:px-4 py-1.5 sm:py-2 bg-brand/10 text-xs sm:text-sm w-full font-semibold`}>
             Powerful Features
             </div>
 
