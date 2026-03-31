@@ -380,9 +380,15 @@ export default function ReferringHospitalDashboard() {
                             <h3 className="font-semibold text-foreground truncate">
                               {clinic.name}
                             </h3>
-                            <p className="text-xs text-foreground/75 truncate font-medium">
-                              {clinic.specialty}
-                            </p>
+                            <div className='flex grid-cols-3 w-full bg-red-400 gap-2'>
+
+                              {clinic.treatmentTypesOfferd?.length>0&&
+                              clinic.treatmentTypesOffered.map(treatment=>
+                              <button key={treatment} 
+                              className="text-xs text-foreground/75 truncate font-medium">
+                              {treatment}
+                            </button>)}
+                            </div>
                           </div>
                           <div
                             className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${

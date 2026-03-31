@@ -9,7 +9,7 @@ const authMiddleware = (req, res, next) => {
       return;
     }
 
-    const payload = verifyTemporaryToken(token);
+    const payload = verifyAccessToken(token);
     if (!payload) {
       res.status(401).json({ error: 'Invalid or expired token' });
       return;
@@ -31,7 +31,7 @@ const temporaryTokenMiddleware = (req, res, next) => {
       return;
     }
 
-    const payload = verifyAccessToken(token);
+    const payload = verifyTemporaryToken(token);
     if (!payload) {
       res.status(401).json({ error: 'Invalid or expired token' });
       return;

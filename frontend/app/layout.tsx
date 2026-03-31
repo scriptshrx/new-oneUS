@@ -38,12 +38,15 @@ export default function RootLayout({
 }>) {
   // ✅ Import client components inside the function (allowed)
   const ThemeProvider = require("@/components/theme-provider").ThemeProvider
+  const ProtectedLayout = require("@/app/ProtectedLayout").default
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
-          {children}
+          <ProtectedLayout>
+            {children}
+          </ProtectedLayout>
         </ThemeProvider>
         <Analytics />
       </body>

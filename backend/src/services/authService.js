@@ -450,8 +450,17 @@ const logout = async (userId) => {
 
 const refreshAccessToken = async (userPayload) => {
   try {
-    // Generate new access token using the payload from the verified refresh token
+    // Generate new access token and refresh token using the payload from the verified refresh token
     const newAccessToken = generateAccessToken({
+      userId: userPayload.userId,
+      email: userPayload.email,
+      role: userPayload.role,
+      ...(userPayload.clinicId && { clinicId: userPayload.clinicId }),
+      ...(userPayload.hospitalId && { hospitalId: userPayload.hospitalId }),
+    });
+
+    // Rotate refresh token for better security
+    const newRefreshToken = generateRefreshToken({
       userId: userPayload.userId,
       email: userPayload.email,
       role: userPayload.role,
@@ -461,6 +470,7 @@ const refreshAccessToken = async (userPayload) => {
 
     return {
       accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
       expiresIn: 3600,
     };
   } catch (error) {
