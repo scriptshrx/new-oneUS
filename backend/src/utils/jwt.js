@@ -31,15 +31,17 @@ const verifyAccessToken = (token) => {
       userId: decoded.userId,
       exp: new Date(decoded.exp * 1000).toISOString(),
       iat: new Date(decoded.iat * 1000).toISOString(),
-      expiresIn: Math.round((decoded.exp - decoded.iat) / 60) + ' minutes'
+      nowUTC: new Date().toISOString(),
+      expiresInSeconds: decoded.exp - Math.floor(Date.now() / 1000)
     });
     return decoded;
   } catch (error) {
     console.error('❌ [JWT] Access token verification failed:', {
-      error: error.message,
-      name: error.name,
+      errorName: error.name,
+      errorMessage: error.message,
       tokenPreview: token ? token.substring(0, 50) + '...' : 'none',
-      secret: process.env.JWT_SECRET ? '***set***' : '***NOT SET***'
+      secretSet: !!process.env.JWT_SECRET,
+      secretPreview: process.env.JWT_SECRET ? process.env.JWT_SECRET.substring(0, 10) + '...' : 'NOT SET'
     });
     return null;
   }

@@ -289,6 +289,11 @@ const login = async (input) => {
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
 
+  console.log('🔐 [login] Tokens generated for user:', {
+    userId: tokenPayload.userId,
+    email: tokenPayload.email
+  });
+
   responseData.accessToken = accessToken;
   responseData.refreshToken = refreshToken;
 
