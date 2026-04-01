@@ -440,7 +440,7 @@ const registerHospital = async (input) => {
   };
 
   const temporaryToken = generateTemporaryToken(tokenPayload, '600'); // 10 minutes
-const accessToken = generateAccessToken('tokenPayload','3600')
+const accessToken = generateAccessToken('tokenPayload')
   return {
     ...hospital,
     temporaryToken,
