@@ -10,12 +10,30 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(
-  cors({
-    origin: 'https://new-scriptish.vercel.app' || 'http://localhost:3000',
-    credentials: true,
-  })
-);
+
+// CORS configuration
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://new-scriptish.vercel.app',
+      'https://scriptishrxnewmark.onrender.com',
+      process.env.FRONTEND_URL,
+    ].filter(Boolean); // Remove undefined values
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 
 // Health check
 app.get('/health', (req, res) => {
