@@ -373,7 +373,7 @@ export default function ReferringHospitalDashboard() {
                     {clinics.length>0&&clinics.map((clinic) => (
                       <div
                         key={clinic.id}
-                        className="group/clinic p-4 rounded-xl border border-border/20 bg-background/50 hover:border-accent/10 hover:bg-primary/20 transition-all cursor-pointer"
+                        className="group/clinic p-4 rounded-xl border border-border/20 bg-background/50 hover:border-accent/10 hover:bg-primary/05 transition-all cursor-pointer"
                       >
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="flex-1 min-w-0">
@@ -395,22 +395,22 @@ export default function ReferringHospitalDashboard() {
                           </div>
                           
                         </div>
-                        <div>Treatments offered</div>
+                        <div className='font-bold text-xs'>Treatments offered</div>
 
                                <div className='flex w-full p-2 overflow-hidden overflow-x-auto gap-2'>
                                 
                               {clinic.treatmentTypesOffered?.length>0&&
                               clinic.treatmentTypesOffered.map((treatment)=>
                               <button key={treatment} 
-                              className="text-xs text-accent rounded-lg shadow-sm bg-accent/10 p-2 font-medium">
-                              {treatment}
+                              className="text-xs text-accent whitespace-nowrap rounded-lg shadow-sm bg-accent/10 p-2 px-3 font-medium">
+                              {treatment.replace('_',' ')}
                             </button>)}
                             </div>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-foreground/75 font-medium">
+                          <span className="text-foreground/75  font-medium">
                             Refs: {clinic.referralCount}
                           </span>
-                          <Eye className="w-4 h-4 text-accent opacity-0 group-hover/clinic:opacity-100 transition-opacity" />
+                          {/* <Eye className="w-4 h-4 text-accent opacity-0 group-hover/clinic:opacity-100 transition-opacity" /> */}
                         </div>
                       </div>
                     ))}

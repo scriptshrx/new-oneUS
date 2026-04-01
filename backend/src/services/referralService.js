@@ -1,5 +1,7 @@
 const prisma = require('../db/client');
 const { NotFoundError, ValidationError, ConflictError } = require('../middleware/errorHandler');
+const { generateVerificationCode } = require('../utils/password');
+const { sendPatientPortalLoginLink } = require('../utils/email');
 
 const createReferral = async (input, hospitalId) => {
   // Validate required fields
@@ -92,6 +94,19 @@ const createReferral = async (input, hospitalId) => {
   const patientVerificationCode = generateVerificationCode();
   const tokenStorage = require('../utils/tokenStorage');
   tokenStorage.storeVerificationToken(patient.emailAddress, patientVerificationCode);
+
+  // Send patient portal login email with verification code
+  try {
+    await sendPatientPortalLoginLink(
+      patient.emailAddress,
+      `${patient.firstName} ${patient.lastName}`,
+      patientVerificationCode
+    );
+    console.log(`✅ Patient portal login email sent to ${patient.emailAddress}`);
+  } catch (error) {
+    console.error(`⚠️ Failed to send patient portal email to ${patient.emailAddress}:`, error);
+    // Don't fail the referral creation if email fails, just log it
+  }
 
   return {
     referralId: referral.id,
@@ -197,10 +212,6 @@ const updateReferralStatus = async (referralId, status, clinicId) => {
   });
 
   return updated;
-};
-
-const generateVerificationCode = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 module.exports = {

@@ -4,12 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import ReferralCreationForm from '@/components/registration/ReferralCreationForm';
-
-const MOCK_CLINIC_PARTNERS = [
-  { id: 'clinic_1', name: 'Bright Infusion Clinic' },
-  { id: 'clinic_2', name: 'Ketamine Wellness Center' },
-  { id: 'clinic_3', name: 'NAD+ Recovery Clinic' },
-];
+import { useDashboardView } from '@/components/HospitalDashboardLayout';
 
 interface ReferralsViewProps {
   onBack?: () => void;
@@ -17,10 +12,17 @@ interface ReferralsViewProps {
 
 export default function ReferralsView({ onBack }: ReferralsViewProps) {
   const [showForm, setShowForm] = useState(true);
+  const { clinics } = useDashboardView();
 
   const handleBack = () => {
     setShowForm(false);
   };
+
+  // Transform clinics to clinic partners format for the form
+  const clinicPartners = clinics.map(clinic => ({
+    id: clinic.id,
+    name: clinic.name,
+  }));
 
   return (
     <>
@@ -49,7 +51,7 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
         {showForm ? (
           <ReferralCreationForm
             hospitalId="hospital_123"
-            clinicPartners={MOCK_CLINIC_PARTNERS}
+            clinicPartners={clinicPartners}
             onBack={() => {
               setShowForm(false);
             }}

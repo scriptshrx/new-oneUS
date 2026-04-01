@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+const API_BASE_URL = 'https://scriptishrxnewmark.onrender.com/v1';
+
 const URGENCY_LEVELS = [
   { id: 'ROUTINE', label: 'Routine' },
   { id: 'URGENT', label: 'Urgent' },
@@ -187,7 +189,7 @@ export default function ReferralCreationPage({
         },
       };
 
-      const response = await fetch('/v1/referrals', {
+      const response = await fetch(`${API_BASE_URL}/referrals`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -534,18 +536,13 @@ export default function ReferralCreationPage({
             <Label className="block text-sm font-medium mb-2">
               Primary Diagnosis (ICD-10) <span className="text-destructive">*</span>
             </Label>
-            <Select value={formData.primaryDiagnosis} onValueChange={(val) => handleChange('primaryDiagnosis', val)}>
-              <SelectTrigger className="bg-background/50 border-border/30 text-foreground">
-                <SelectValue placeholder="Select or type diagnosis code" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-border/30 max-h-60">
-                {ICD_10_COMMON.map((icd) => (
-                  <SelectItem key={icd.code} value={icd.code}>
-                    {icd.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              type="text"
+              placeholder="E.g., F41.1 - Generalized Anxiety Disorder"
+              value={formData.primaryDiagnosis}
+              onChange={(e) => handleChange('primaryDiagnosis', e.target.value)}
+              className="bg-background/50 border-border/30"
+            />
             {errors.primaryDiagnosis && (
               <p className="text-xs text-destructive mt-1">{errors.primaryDiagnosis}</p>
             )}
