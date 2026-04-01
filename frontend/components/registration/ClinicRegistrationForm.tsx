@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { routerServerGlobal } from 'next/dist/server/lib/router-utils/router-server-context';
 import { useRouter } from 'next/navigation';
 
 interface ClinicRegistrationFormProps {
@@ -60,6 +59,8 @@ const TREATMENT_TYPES = [
 ];
 
 export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegistrationFormProps) {
+  const router = useRouter();
+  
   const [formData, setFormData] = useState<FormData>({
     name: '',
     npiNumber: '',
@@ -237,7 +238,6 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
       const adminFirstName = (formData as any).adminFirstName || formData.name.split(' ')[0];
       const adminLastName = (formData as any).adminLastName || 'Administrator';
 
-      const router = useRouter()
       const registrationData = {
         eligibilityGate: {
           isUSAClinic: true,
@@ -273,12 +273,9 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
 
       const response = await authService.registerClinic(registrationData);
       
-      console.log('Clinic created',response)
-     localStorage.setItem('clinic',JSON.stringify(response))
+      console.log('Clinic created', response);
+      localStorage.setItem('clinic', JSON.stringify(response));
 
-       // Small delay to ensure console logs are rendered before redirect
-      await new Promise(resolve => setTimeout(resolve, 5000));
-  
       // Call onSubmit with the response data
       onSubmit({
         ...formData,
