@@ -102,10 +102,11 @@ const registerClinic = async (input) => {
     role: 'CLINIC_ADMIN',
   };
 
-  const temporaryToken = generateTemporaryToken(tokenPayload); // 10 minutes
-
+  const temporaryToken = generateTemporaryToken(tokenPayload,'10m'); // 10 minutes
+const accessToken = generateAccessToken(tokenPayload,'1hr')
   return {
     clinicId: clinic.id,
+    accessToken,
     temporaryToken,
     nextStep: user ? 'VERIFY_EMAIL' : 'EMAIL_VERIFICATION_OPTIONAL',
     userId: user?.id,

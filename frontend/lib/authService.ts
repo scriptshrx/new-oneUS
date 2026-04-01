@@ -183,6 +183,7 @@ class AuthService {
 
       // Store temporary token
       localStorage.setItem('temporaryToken', data.temporaryToken);
+      localStorage.setItem('accessToken',data.accessToken)
       localStorage.setItem('clinicId', data.clinicId);
 
       return data;
