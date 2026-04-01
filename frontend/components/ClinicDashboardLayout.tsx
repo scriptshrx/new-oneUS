@@ -116,7 +116,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   const [patientsLoading, setPatientsLoading] = useState(true);
   const [patientsError, setPatientsError] = useState<string | null>(null);
   const router = useRouter();
-
+const[clinic,setClinic]=useState<object | null>(null)
   // Fetch patients referred to this clinic
   useEffect(() => {
     const fetchReferredPatients = async () => {
@@ -124,7 +124,10 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         setPatientsLoading(true);
         setPatientsError(null);
         
-        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/referrals`, {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/v1';
+        console.log('Fetching referrals from:', `${apiUrl}/referrals`);
+        
+        const response = await fetchWithAuth(`${apiUrl}/referrals`, {
           method: 'GET',
         });
 
@@ -133,8 +136,16 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         }
 
         const data = await response.json();
+        console.log('Referrals response:', data);
+        
         // Extract referrals from response
         const referrals = Array.isArray(data) ? data : data.referrals || [];
+        
+        if (!referrals || referrals.length === 0) {
+          console.log('No referrals found');
+          setPatients([]);
+          return;
+        }
         
         // Flatten referral data into Patient interface
         const flattenedPatients: Patient[] = referrals.map((referral: any) => {
@@ -190,6 +201,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
           };
         });
         
+        console.log('Flattened patients:', flattenedPatients);
         setPatients(flattenedPatients);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to fetch patients';
@@ -199,6 +211,20 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         setPatientsLoading(false);
       }
     };
+
+    // Hydrate clinic from localStorage 
+    if (typeof window !== 'undefined') {
+      const clinicCache = localStorage.getItem('clinic');
+      if (clinicCache) {
+        try {
+          const clinic = JSON.parse(clinicCache);
+          setClinic(clinic);
+          console.log('Clinic hydrated successfully:', clinic);
+        } catch (e) {
+          console.error('Failed to parse clinic data:', e);
+        }
+      }
+    }
 
     fetchReferredPatients();
   }, []);
@@ -216,8 +242,8 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
             <button onClick={() => setCurrentView('overview')} className="flex items-center gap-2">
               <Building2 className="w-8 h-8 text-accent" />
               <div>
-                <h2 className="font-bold text-foreground">Scriptish</h2>
-                <p className="text-xs text-foreground/50">Clinic</p>
+                <h2 className="font-bold text-foreground">{clinic?.name}</h2>
+                <p className="text-xs text-foreground/50">NPI:{clinic?.npiNumber}</p>
               </div>
             </button>
           </div>
