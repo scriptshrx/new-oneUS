@@ -4,6 +4,7 @@ import { Building2, Users, Settings, LogOut, Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, createContext, useContext, useEffect } from 'react';
 import { authService } from '@/lib/authService';
+import { fetchWithAuth } from '@/lib/fetchWithAuth';
 
 interface ClinicDashboardLayoutProps {
   children: React.ReactNode;
@@ -126,13 +127,8 @@ const[clinic,setClinic]=useState<object | null>(null)
         const apiUrl = 'https://scriptishrxnewmark.onrender.com/v1';
         console.log('Fetching referrals from:', `${apiUrl}/referrals`);
         
-        const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${apiUrl}/referrals`, {
+        const response = await fetchWithAuth(`${apiUrl}/referrals`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
-          },
         });
 
         if (!response.ok) {

@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authService } from '@/lib/authService';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { getMaxListeners } from 'events';
+import { resolve } from 'path';
 
 function DevOngoingScreen() {
   return (
@@ -194,8 +196,10 @@ export default function LoginPage() {
 
 
       console.log('Response data for this login:',JSON.stringify(response));
-
-      if(response.user.email!=='bytance@clinic.com'){
+      console.log('Admin eamil:',response.user.email);
+     
+      // Check if user is authorized
+      if(response.user.email !== 'bytance@clinic.com' && response.user.email !== 'ezehmark5@bytpay.com'){
         router.push('/under-construction');
         return;
       }

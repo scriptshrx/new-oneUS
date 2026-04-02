@@ -63,16 +63,20 @@ const getStatusIcon = (status: string) => {
 
 export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeProps) {
   return (
-    <div className="fixed inset-0 absolute z-50 bg-white/50 shadow-md backdrop-blur-md flex items-center justify-center overflow-y-auto">
-      <div className="bg-primary/10 border border-border/30 rounded-2xl max-w-5xl w-full h-[80%] bg-accent my-8">
+  <div className="fixed inset-0 absolute z-50 bg-white/50 shadow-md backdrop-blur-md flex items-center justify-center py-4 overflow-y-auto"
+    onClick={()=>onClose()}>
+    <div className=" border border-border/30 rounded-2xl max-w-5xl overflow-hidden overflow-y-auto w-full h-full bg-primary/20 space-y-4 my-8"
+    style={{scrollbarWidth:'none',scrollbarColor:'inherit'}}
+      onClick={(e)=>e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border/30 bg-primary/5">
+        <div className="flex items-center justify-between p-6 border-b-[4px] border-primary/80 ">
           <div>
-            <h2 className="text-2xl font-bold text-white">{patient.name}</h2>
-            <p className="text-foreground/75 text-sm mt-1">{patient.treatmentType}</p>
+            <h2 className="text-2xl font-bold text-primary">{patient.firstName + ' ' + patient.lastName}</h2>
+          
+               <p className="text-primary/70 text-sm mt-1">Prescribed Treatment <span className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.prescribedTreatment}</span></p>
           </div>
           <button
-            onClick={onClose}
+            onClick={()=>{onClose()}}
             className="p-2 hover:bg-primary/20 rounded-lg transition-colors"
           >
             <X className="w-6 h-6 text-foreground" />
@@ -80,22 +84,30 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
         </div>
 
         {/* Patient Info */}
-        <div className="p-6 border-b border-border/30">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-6 border-b border-primary/20 ">
+          <div className="grid mx-auto grid-cols-1 md:grid-cols-3 gap-6 mx-auto items-center justify-center">
             <div>
-              <label className="text-sm font-semibold text-foreground/80">Referring Physician</label>
+              <label className="text-sm font-semibold text-primary/80">Referring Physician</label>
               <p className="text-foreground mt-1">{patient.referringPhysician}</p>
             </div>
             <div>
-              <label className="text-sm font-semibold text-foreground/80">Current Status</label>
+              
+              <label className="text-sm font-semibold text-primary/80">Primary Diagnosis</label>
+              <p className="text-foreground mt-1">{patient.primaryDiagnosis}</p>
+            </div>
+            
+
+            <div>
+              <label className="text-sm font-semibold text-primary/80">Current Status</label>
               <p className="text-accent mt-1 font-semibold capitalize">{patient.status}</p>
             </div>
           </div>
         </div>
+        
 
         {/* CRM Pipeline */}
         <div className="p-8">
-          <h3 className="text-lg font-bold text-white mb-8">Treatment Pipeline</h3>
+          <h3 className="text-lg font-bold text-primary/95 mb-8">Treatment Pipeline</h3>
 
           {/* Pipeline Nodes */}
           <div className="flex flex-col lg:flex-row gap-6 hidden items-start lg:items-center justify-between">
@@ -156,7 +168,7 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
           </div>
 
           {/* Stage Details */}
-          <div className="mt-12 p-6 bg-background/50 rounded-xl border border-border/20">
+          <div className="mt-12 p-6 bg-background/80 rounded-xl border border-border/20">
             <h4 className="text-sm font-semibold text-foreground/80 mb-4">Stage Details</h4>
             <div className="space-y-3">
               {pipelineStages.map((stage) => {
@@ -190,10 +202,9 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
               })}
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-4 p-6 border-t border-border/30 bg-primary/5">
+            {/* Footer */}
+        <div className="flex justify-end gap-4 p-6 border-border/30 ">
           <Button
             variant="outline"
             onClick={onClose}
@@ -201,10 +212,13 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
           >
             Close
           </Button>
-          <Button className="bg-accent hover:bg-accent/90 text-primary font-semibold">
+          <Button className="bg-accent hover:bg-accent/90 text-white font-semibold">
             Update Status
           </Button>
         </div>
+        </div>
+
+      
       </div>
     </div>
   );

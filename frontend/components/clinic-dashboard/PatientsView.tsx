@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Users, ArrowLeft, Plus, ZoomIn, Expand, LucideExpand, Maximize, Loader } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Users, ArrowLeft, Plus, ZoomIn, Expand, LucideExpand, Maximize, Loader, Fullscreen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PatientDetailModal from '@/components/PatientDetailModal';
 
@@ -36,9 +36,34 @@ const mockPatients = [
   },
 ];
 
+const pipelineStages = [
+  { id: 'new_referral', label: 'New Referral' },
+  { id: 'insurance', label: 'Insurance Verfication' },
+  { id: 'authorization', label: 'Prior Authorization' },
+  { id: 'scheduling', label: 'Scheduling' },
+  { id: 'treatment', label: 'Treatment' },
+  { id: 'followup', label: 'Follow-up' },
+];
+
+function getStageStatus(stageId: string, patientStatus: string) {
+  const order = pipelineStages.map(s => s.id);
+  const currentIdx = order.indexOf((patientStatus || '').toLowerCase());
+  const stageIdx = order.indexOf(stageId);
+  if (stageIdx < currentIdx) return 'completed';
+  if (stageIdx === currentIdx) return 'active';
+  return 'pending';
+}
+
+
+
 export default function PatientsView({ onBack, patientsLoading, patientsError, patients }: PatientsViewProps) {
   const [selectedPatient, setSelectedPatient] = useState<typeof mockPatients[0] | null>(null);
 
+  useEffect(()=>{
+  if(patients.length>0){
+    console.log('Patients:',patients)
+  }
+},[patients])
   return (
     <>
       {/* Header */}
@@ -60,7 +85,7 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
                 {patientsLoading&&<Loader className='h-5 w-5 animate-spin'/>}
               </div>
             </div>
-            <Button className="bg-accent hover:bg-accent/90 text-primary font-semibold gap-2 w-full sm:w-auto">
+            <Button className="bg-accent hover:bg-accent/90 text-white font-semibold gap-2 w-full sm:w-auto">
               <Plus className="w-4 h-4" />
               Intake Form
             </Button>
@@ -81,17 +106,42 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
 
               <div className="space-y-3">
                 {patients.length>0&& patients.map((patient) => (
-                  <div key={patient.id} className="bg-primary/20 border border-border/20 rounded-lg p-2 cursor-pointer px-4 hover:bg-primary/30 relative  transition-colors"
+                  <div key={patient.id} className="bg-background/60 border border-border/20 rounded-lg p-2 cursor-pointer px-4 hover:bg-background/60 relative  transition-colors"
                    onClick={() => setSelectedPatient(patient)}>
-                    <Maximize className='absolute h-4 w-4 text-accent/80 right-4 top-4'/>
+                    <Fullscreen className='absolute h-4 w-4 text-accent/80 right-4 top-4'/>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex-1">
-                        <p className="text-foreground font-semibold">{patient.name}</p>
-                        <p className="text-foreground/75 text-sm mt-1">{patient.treatmentType}</p>
-                        <p className="text-foreground/60 text-sm">{patient.referringPhysician}</p>
+                        <p className="text-primary/95 font-semibold">{patient.firstName + ' ' + patient.lastName}</p>
+                       <p className="text-foreground/75 text-sm font-bold mt-1">{patient.prescribedTreatment}</p>
+                       {/* CRM Pipeline */}
+                        <div className="flex items-center gap-2 my-3 overflow-x-auto overflow-hidden"
+                        style={{scrollbarWidth:'thin'}}>
+                          {pipelineStages.map((stage, idx) => {
+                            const status = getStageStatus(stage.id, patient.pipelineStage);
+                            return (
+                              <div key={stage.id} className="flex items-center">
+                                <div
+                                  className={`${
+                                    status === 'completed'
+                                      ? 'bg-accent text-white'
+                                      : status === 'active'
+                                      ? 'bg-primary text-accent border-2 border-accent'
+                                      : 'bg-border/30 text-foreground/40'
+                                  } rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors`}
+                                >{status=='pending'&&<div className='h-5 w-5 border-gray-300 border-l-primary'}
+                                  {stage.label}
+                                </div>
+                                {idx < pipelineStages.length - 1 && (
+                                  <div className="w-4 h-0.5 bg-border/50 mx-1" />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <p className="text-foreground/60 text-sm mt-1">Referring Physician: {patient.referringPhysician}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 rounded-full mr-8 text-xs font-semibold bg-accent/20 text-accent border border-accent/30 whitespace-nowrap">
+                        <span className="px-3 py-1 absolute top-3 right-2 rounded-full mr-8 text-xs font-semibold bg-accent/20 text-accent border border-accent/30 whitespace-nowrap">
                           {patient.status}
                         </span>
                 
