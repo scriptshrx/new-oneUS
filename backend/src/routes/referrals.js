@@ -39,7 +39,7 @@ router.get('/', authMiddleware, async (req, res, next) => {
     
     console.log('📋 [REFERRALS] GET /referrals endpoint called');
     console.log(req.user);
-    console.log('👤 [REFERRALS] User:', { userId: req.user.id, clinicId, role: req.user.role });
+    console.log('👤 [REFERRALS] User:', { userId: req.user.userId, clinicId, role: req.user.role });
     
     if (!clinicId) {
       console.error('❌ [REFERRALS] No clinic ID found for user');
