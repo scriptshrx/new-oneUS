@@ -37,7 +37,7 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
           onClick={() => handleSelect('clinic')}
           className={`group relative p-8 -mx-6 sm:-mx-0 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
             selectedType === 'clinic'
-              ? 'border-accent bg-gray-900 shadow-lg shadow-accent/20'
+              ? 'border-accent bg-gray-900/10 shadow-lg shadow-accent/20'
               : 'border-border/30  hover:border-primary/90 hover:bg-primary/40 bg-primary/10 '
           }`}
         >
@@ -106,7 +106,7 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
           onClick={() => handleSelect('referring-hospital')}
           className={`group relative p-8 -mx-6 sm:-mx-0 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
             selectedType === 'referring-hospital'
-              ? 'border-accent bg-gray-900 shadow-lg shadow-accent/20'
+              ? 'border-accent bg-gray-900/10 shadow-lg shadow-accent/20'
               : 'border-border/30  hover:border-primary/90 hover:bg-primary/40 bg-primary/10 '
           }`}
         >

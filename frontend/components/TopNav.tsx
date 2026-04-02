@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 
 export default function TopNav() {
   const [isOpen, setIsOpen] = useState(false);
+  const[selecetedNav,setSelectedNav]=useState('features')
   const path = usePathname()
   console.log(path)
 
@@ -16,7 +17,7 @@ export default function TopNav() {
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-accent/50 via-accent to-accent/50 text-transparent bg-clip-text ">
+            <Link href="/" className="text-xl moveBg sm:text-2xl font-bold bg-gradient-to-r from-primary/10 via-primary/80 to-primary/10 text-transparent bg-clip-text ">
               Scriptish
             </Link>
           </div>
@@ -24,16 +25,31 @@ export default function TopNav() {
           {/* Desktop Menu */}
           {(!path.includes('register') || !path.includes('login'))&&<>
          <div className="hidden md:flex hidden space-x-8">
-            <Link href="#features" className="text-chart-2 hover:text-brand transition-colors text-sm lg:text-base">
+            <Link 
+            onClick={()=>setSelectedNav('features')}
+
+            href="#features" className={` hover:text-brand transition-colors text-sm lg:text-base
+            ${selecetedNav=='features'?'text-chart-2':'text-forground/80'}`}>
               Features
             </Link>
-            <Link href="#testimonials" className="text-foreground/80 hover:text-brand transition-colors text-sm lg:text-base">
+            <Link 
+            onClick={()=>setSelectedNav('testimonials')}
+            href="#testimonials" className={`hover:text-brand transition-colors text-sm lg:text-base
+            ${selecetedNav=='testimonials'?'text-chart-2':'text-forground/80'}`}>
               Testimonials
             </Link>
-            <Link href="#pipeline" className="text-foreground/80 hover:text-brand transition-colors text-sm lg:text-base">
+            <Link
+            onClick={()=>setSelectedNav('how-it-works')}
+             href="#pipeline" className={`
+              ${selecetedNav=='how-it-works'?'text-chart-2':'text-forground/80'}
+              hover:text-brand transition-colors text-sm lg:text-base`}>
               How It Works
             </Link>
-            <Link href="#pricing" className="text-foreground/80 hover:text-brand transition-colors text-sm lg:text-base">
+            <Link 
+            onClick={()=>setSelectedNav('pricing')}
+            href="#pricing" className={`
+              ${selecetedNav=='pricing'?'text-chart-2':'text-forground/80'}
+               hover:text-brand transition-colors text-sm lg:text-base`}>
               Pricing
             </Link>
           </div>

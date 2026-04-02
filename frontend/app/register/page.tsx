@@ -83,9 +83,10 @@ export default function RegisterPage() {
   return (
     <main className="w-full min-h-screen bg-gradient-to-b from-background via-background to-background/95">
      
-       <Link href="/" className="text-xl sm:text-2xl absolute font-bold bg-gradient-to-r t-20 l-20 ml-8 mt-8 from-accent/50 via-accent to-accent/50 text-transparent bg-clip-text ">
+         <Link href="/" className="text-xl absolute top-4 left-4 sm:text-2xl font-bold bg-gradient-to-r from-primary/20 via-primary to-primary/20 text-transparent bg-clip-text ">
               Scriptish
             </Link>
+
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Progress Indicator */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -158,6 +158,7 @@ function DevOngoingScreen() {
 }
 
 export default function LoginPage() {
+  const cardRef = useRef(null)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -230,18 +231,30 @@ export default function LoginPage() {
     }
   };
 
+  
   return (
+    <>
+    <style>{`
+    @keyframes pushOutShadow{
+    100%{box-shadow:0px 0px 20px rgba(55,244,33,0.2)}}
+
+    .pushShadow{
+    animation:pushOutShadow 0.4s ease}
+      `
+      }
+    </style>
     <div className="min-h-screen bg-gradient-to-br from-background/50 to-primary/10 flex flex-col">
       <div className="flex items-center justify-center px-4 py-24 sm:py-16">
-        <Link
-          href="/"
-          className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text top-8 left-8 absolute text-transparent"
-        >
-          Scriptish
-        </Link>
+          <Link href="/" className="text-xl moveBg absolute top-4 left-4 sm:text-2xl font-bold bg-gradient-to-r from-primary/10 via-primary/80 to-primary/10 text-transparent bg-clip-text ">
+              Scriptish
+            </Link>
 
         <div className="w-full max-w-md">
-          <div className="bg-gradient-to-tr from-card via-card to-primary/10 border border-border/20 rounded-[20px] p-8 sm:p-10 shadow-lg">
+          <div 
+          class='cardClass'
+          ref={cardRef}
+          className="bg-gradient-to-tr from-card via-card to-primary/10 border border-border/20 rounded-[20px] p-8 sm:p-10  shadow-lg"
+        >
             <div className="mb-8">
               <h1 className="text-2xl sm:text-3xl font-bold text-accent mb-2">Welcome back</h1>
               <p className="text-primary/90 text-sm sm:text-base">Sign in to your Scriptish account</p>
@@ -267,7 +280,15 @@ export default function LoginPage() {
                   type="email"
                   placeholder="clinic@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {setEmail(e.target.value);
+                    // console.log('Typing event:',e.target)
+                    if(cardRef.current)
+                      {cardRef.current.classList.add('pushShadow');
+                        setTimeout(()=>
+                        cardRef.current.classList.remove('pushShadow'),400)
+                    }
+                    
+                  }}
                   className="w-full h-10 sm:h-11 bg-background/50"
                   disabled={isLoading}
                 />
@@ -288,7 +309,12 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {setPassword(e.target.value);
+                    if(cardRef.current)
+                      {cardRef.current.classList.add('pushShadow');
+                        setTimeout(()=>
+                          cardRef.current.classList.remove('pushShadow'),400)
+                    }}}
                     className="w-full h-10 sm:h-11 bg-background/50 pr-10"
                     disabled={isLoading}
                   />
@@ -362,5 +388,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

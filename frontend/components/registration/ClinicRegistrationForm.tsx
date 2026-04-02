@@ -272,6 +272,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
     }*/
 
       const response = await authService.registerClinic(registrationData);
+     console.log('Registration of clinic successul:',response)
 
       
      if(response.email!=='scriptishrxapp@app.com'){

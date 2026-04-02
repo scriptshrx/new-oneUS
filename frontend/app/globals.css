@@ -5,17 +5,22 @@
 
 @keyframes moveBg {
   0% {
-    background-position: 200% 50%;}
-   20%{background-position:100% 0%}
+    background-position: 200% 300%;
+  background-size: 200%;}
+   20%{background-position:300% 50%;
+    background-size: 200%;
+  
+}
   
   
   100% {
-    background-position: 0% 50%;
+    background-size: 200%;
+    background-position: 0% 0%;
   }
 }
 
 .moveBg{
-  animation: moveBg 2s ease infinite;
+  animation: moveBg 8s ease infinite;
 }
 
 @keyframes moveHighlight {

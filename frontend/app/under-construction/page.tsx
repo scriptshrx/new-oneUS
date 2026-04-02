@@ -1,6 +1,31 @@
+'use client'
+import{useState,useEffect, useRef} from 'react';
+
+
 export default function DevOngoingScreen() {
+
+  const radiaRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDListElement | null>(null)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setMousePos({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+ 
   return (
     <div
+    ref={containerRef}
       style={{
         minHeight: '100vh',
         display: 'flex',
@@ -18,7 +43,7 @@ export default function DevOngoingScreen() {
           position: 'absolute',
           inset: 0,
           backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+            'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(80deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
           backgroundSize: '60px 60px',
           pointerEvents: 'none',
         }}
@@ -26,13 +51,14 @@ export default function DevOngoingScreen() {
 
       {/* Glowing orb */}
       <div
+      ref={radiaRef}
         style={{
           position: 'absolute',
           width: '500px',
           height: '500px',
           borderRadius: '50%',
           background:
-            'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)',
+            'radial-gradient(circle, rgba(23, 24, 126, 0.83) 0%, transparent 70%)',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
