@@ -123,7 +123,7 @@ const[clinic,setClinic]=useState<object | null>(null)
         setPatientsLoading(true);
         setPatientsError(null);
         
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/v1';
+        const apiUrl = 'https://scriptishrxnewmark.onrender.com/v1';
         console.log('Fetching referrals from:', `${apiUrl}/referrals`);
         
         const accessToken = localStorage.getItem('accessToken');
