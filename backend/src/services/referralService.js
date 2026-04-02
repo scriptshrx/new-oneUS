@@ -142,7 +142,7 @@ const getReferrals = async (clinicId, filters = {}) => {
   }
 
   const referrals = await prisma.referral.findMany({
-    where,
+    where:{clinicId},
     include: {
       patient: true,
       clinic: true,
