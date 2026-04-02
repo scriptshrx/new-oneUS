@@ -485,7 +485,7 @@ export default function ReferringHospitalDashboard() {
                       </SelectTrigger>
                       <SelectContent className="bg-primary/10 backdrop-blur-md border-border/30">
                         <SelectItem value="all">All Clinics</SelectItem>
-                        {MOCK_CLINIC_PARTNERS.map((clinic) => (
+                        {clinics.map((clinic) => (
                           <SelectItem key={clinic.id} value={clinic.name}>
                             {clinic.name}
                           </SelectItem>
