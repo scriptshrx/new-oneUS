@@ -38,7 +38,7 @@ router.get('/', authMiddleware, async (req, res, next) => {
     const clinicId = req.user.clinicId;
     
     console.log('📋 [REFERRALS] GET /referrals endpoint called');
-    console.log(req);
+    console.log(req.user);
     console.log('👤 [REFERRALS] User:', { userId: req.user.id, clinicId, role: req.user.role });
     
     if (!clinicId) {
