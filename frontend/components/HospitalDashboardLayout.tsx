@@ -60,6 +60,7 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
   const [currentView, setCurrentView] = useState<ViewType>('overview');
   const [hospital, setHospital] = useState({});
   const [clinics, setClinics] = useState<any[]>([]);
+  const[loadingClinics,setLoadingClinics]=useState(false)
   
   useEffect(() => {
     if (window && typeof window !== 'undefined') {
@@ -75,7 +76,9 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
 
   // Fetch all clinics
   useEffect(() => {
+   
     const fetchClinics = async () => {
+       setLoadingClinics(true);
       console.log('🔍 [fetchClinics] Starting clinics fetch...');
       let allClinics = await authService.fetchAllClinics();
       
@@ -92,6 +95,7 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
           allClinics = await authService.fetchAllClinics();
           console.log('Clinic one treatmentTypesOffered:',allClinics[0].treatmentTypesOffered)
         } else {
+          setLoadingClinics(false)
           console.log('❌ [fetchClinics] Token refresh failed, redirecting to login');
           localStorage.removeItem('hospital');
           localStorage.removeItem('hospitalAdmin');
@@ -108,7 +112,7 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
     fetchClinics();
   }, [router]);
   return (
-    <DashboardContext.Provider value={{ currentView, setCurrentView, hospital, setHospital, clinics, setClinics }}>
+    <DashboardContext.Provider value={{ currentView, loadingClinics, setCurrentView, hospital, setHospital, clinics, setClinics }}>
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
         <div

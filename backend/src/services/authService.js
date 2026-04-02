@@ -98,6 +98,7 @@ const registerClinic = async (input) => {
   const tokenPayload = {
     userId: user?.id || '',
     clinicId: clinic.id,
+    
     email: input.clinic.workEmail,
     role: 'CLINIC_ADMIN',
   };
@@ -107,6 +108,7 @@ const accessToken = generateAccessToken(tokenPayload,'1hr')
   return {
     clinicId: clinic.id,
     accessToken,
+    email:user.email,
     temporaryToken,
     nextStep: user ? 'VERIFY_EMAIL' : 'EMAIL_VERIFICATION_OPTIONAL',
     userId: user?.id,

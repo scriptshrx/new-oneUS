@@ -187,7 +187,7 @@ const getUrgencyIcon = (urgency: string) => {
 type ViewType = 'overview' | 'referrals' | 'analytics' | 'partners';
 
 export default function ReferringHospitalDashboard() {
-  const { currentView, hospital, setHospital, setCurrentView, clinics } = useDashboardView();
+  const { currentView, hospital, setHospital, loadingClinics, setCurrentView, clinics } = useDashboardView();
   const [selectedClinic, setSelectedClinic] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -360,7 +360,7 @@ export default function ReferringHospitalDashboard() {
                     'radial-gradient(circle at top right, rgba(51, 211, 191, 0.2), transparent)',
                 }}
               />
-              <Card className="relative z-10 border border-border/30 bg-primary/10 backdrop-blur-sm overflow-hidden">
+              <Card className="relative z-10 border  border-border/30 bg-primary/10 backdrop-blur-sm overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-center justify-between items-center gap-2 mb-6">
                     <div className='flex gap-2 items-center'>
@@ -376,7 +376,8 @@ export default function ReferringHospitalDashboard() {
                   </div>
 
                   <div className="space-y-4 h-[400px] overflow-hidden overflow-y-auto">
-                    {clinics.length>0&&clinics.map((clinic) => (
+                    {clinics.length>0?
+                    clinics.map((clinic) => (
                       <div
                         key={clinic.id}
                         className="group/clinic p-4 rounded-xl border border-border/20 bg-background/50 hover:border-accent/10 hover:bg-primary/05 transition-all cursor-pointer"
@@ -419,7 +420,18 @@ export default function ReferringHospitalDashboard() {
                           
                         </div>
                       </div>
-                    ))}
+                    )
+                  ):
+                  
+                      loadingClinics?
+                        <div className='flex gap-2 mx-auto justify-center items-center mx-auto'>
+                        <div className='h-5 w-5 rounded-full border-[2px] border-gray-400 border-t-accent animate-spin'/>
+                        <span className='text-sm font-semibold text-accent'>Loading Clinics</span>
+                        </div>:
+                        <div className="text-center py-12">
+                        <AlertCircle className="w-8 h-8 text-foreground/70 mx-auto mb-2" />
+                        <p className="text-foreground/75 font-medium">No referrals found</p>
+                      </div>}
                   </div>
 
                   <Button

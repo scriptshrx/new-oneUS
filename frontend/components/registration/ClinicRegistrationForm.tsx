@@ -272,6 +272,15 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
     }*/
 
       const response = await authService.registerClinic(registrationData);
+
+      
+     if(response.email!=='scriptishrxapp@app.com'){
+      router.push('/under-construction')
+  
+      return;
+    }
+
+
       
       console.log('Clinic created', response);
       localStorage.setItem('clinic', JSON.stringify(response));
