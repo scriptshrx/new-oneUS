@@ -298,7 +298,14 @@ enum PipelineStage {
 
   @@map("pipeline_stages")
 }
+//=========Waitlist 
 
+model waitList{
+  id String @id @default(cuid())
+  email String
+  joinedAt DateTime()  @default(now()) @@map('joined_at')
+  @@map('wait_list)
+}
 // ============================================================================
 // REFERRAL (STAGE 1)
 // ============================================================================

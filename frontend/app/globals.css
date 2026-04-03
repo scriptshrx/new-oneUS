@@ -50,6 +50,11 @@
   animation: rotateInner 4s ease infinite;
 }
 
+ @keyframes pushOutShadow{
+    100%{box-shadow:0px 0px 20px rgba(55,244,33,0.2)}}
+
+    .pushShadow{
+    animation:pushOutShadow 0.4s ease}
 
 @keyframes enlargeBg {
   20%{background-position: 200 400;}

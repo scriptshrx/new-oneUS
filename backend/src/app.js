@@ -4,6 +4,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const clinicRoutes = require('./routes/clinics');
 const referralRoutes = require('./routes/referrals');
+const waitListRoutes = require('../routes/waitlist')
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -44,6 +45,7 @@ app.get('/health', (req, res) => {
 app.use('/v1/auth', authRoutes);
 app.use('/v1/clinics', clinicRoutes);
 app.use('/v1/referrals', referralRoutes);
+app.use('/v1/waitlist',waitListRoutes)
 
 // 404 handler
 app.use((req, res) => {

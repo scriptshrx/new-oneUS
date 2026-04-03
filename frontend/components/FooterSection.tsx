@@ -16,9 +16,11 @@ export default function FooterSection() {
             Join hundreds of clinics already automating their operations with Scriptish. Get a personalized demo today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button variant="default" size="lg">
-              Schedule Demo
-            </Button>
+            <Link href="/join-waitlist">
+              <Button variant="default" size="lg">
+                Join Waitlist
+              </Button>
+            </Link>
             <Button variant="outline" size="lg">
               View Pricing
             </Button>
