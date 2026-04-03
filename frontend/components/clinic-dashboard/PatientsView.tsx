@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, ArrowLeft, Plus, ZoomIn, Expand, LucideExpand, Maximize, Loader, Fullscreen } from 'lucide-react';
+import { Users, ArrowLeft, Plus, ZoomIn, Expand, LucideExpand, Maximize, Loader, Fullscreen, CheckCheck, CheckCircle, RefreshCcw, RefreshCcwIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PatientDetailModal from '@/components/PatientDetailModal';
 
@@ -38,12 +38,14 @@ const mockPatients = [
 
 const pipelineStages = [
   { id: 'new_referral', label: 'New Referral' },
-  { id: 'insurance', label: 'Insurance Verfication' },
-  { id: 'authorization', label: 'Prior Authorization' },
+  { id: 'insurance', label: 'Insurance' },
+  { id: 'authorization', label: 'Authorization' },
   { id: 'scheduling', label: 'Scheduling' },
   { id: 'treatment', label: 'Treatment' },
   { id: 'followup', label: 'Follow-up' },
 ];
+
+
 
 function getStageStatus(stageId: string, patientStatus: string) {
   const order = pipelineStages.map(s => s.id);
@@ -58,12 +60,24 @@ function getStageStatus(stageId: string, patientStatus: string) {
 
 export default function PatientsView({ onBack, patientsLoading, patientsError, patients }: PatientsViewProps) {
   const [selectedPatient, setSelectedPatient] = useState<typeof mockPatients[0] | null>(null);
+  const [nextStages, setNextStages] = useState<Record<string, string>>({});
 
-  useEffect(()=>{
-  if(patients.length>0){
-    console.log('Patients:',patients)
-  }
-},[patients])
+  useEffect(() => {
+    if (patients.length > 0) {
+      console.log('Patients:', patients);
+      // Calculate next stages for all patients
+      const stages: Record<string, string> = {};
+      patients.forEach((patient) => {
+        const currentStage = patient.pipelineStage;
+        if (currentStage === 'NEW_REFERRAL') stages[patient.id] = 'insurance';
+        else if (currentStage === 'INSURANCE') stages[patient.id] = 'authorization';
+        else if (currentStage === 'AUTHORIZATION') stages[patient.id] = 'scheduling';
+        else if (currentStage === 'SCHEDULING') stages[patient.id] = 'treatment';
+        else if (currentStage === 'TREATMENT') stages[patient.id] = 'followup';
+      });
+      setNextStages(stages);
+    }
+  }, [patients]);
   return (
     <>
       {/* Header */}
@@ -106,7 +120,7 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
 
               <div className="space-y-3">
                 {patients.length>0&& patients.map((patient) => (
-                  <div key={patient.id} className="bg-background/60 border border-border/20 rounded-lg p-2 cursor-pointer px-4 hover:bg-background/60 relative  transition-colors"
+                  <div key={patient.id} className="bg-background/60 overflow-hidden border border-border/20 rounded-lg p-2 cursor-pointer px-4 hover:bg-background/60 relative  transition-colors"
                    onClick={() => setSelectedPatient(patient)}>
                     <Fullscreen className='absolute h-4 w-4 text-accent/80 right-4 top-4'/>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -114,10 +128,12 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
                         <p className="text-primary/95 font-semibold">{patient.firstName + ' ' + patient.lastName}</p>
                        <p className="text-foreground/75 text-sm font-bold mt-1">{patient.prescribedTreatment}</p>
                        {/* CRM Pipeline */}
-                        <div className="flex items-center gap-2 my-3 overflow-x-auto overflow-hidden"
+                        <div className="flex items-center gap-2 my-3 py-2 overflow-x-auto overflow-hidden"
                         style={{scrollbarWidth:'thin'}}>
                           {pipelineStages.map((stage, idx) => {
                             const status = getStageStatus(stage.id, patient.pipelineStage);
+                            const nextStage = nextStages[patient.id];
+
                             return (
                               <div key={stage.id} className="flex items-center">
                                 <div
@@ -126,10 +142,15 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
                                       ? 'bg-accent text-white'
                                       : status === 'active'
                                       ? 'bg-primary text-white border-2 border-gray-300'
-                                      : 'bg-border/30 text-foreground/40'
-                                  } rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors`}
-                                >{status=='active'&&<div className='h-5 w-5 border-gray-300 mr-2 border-l-primary border-2px animate-spin'/>}
-                                  {stage.label}
+                                      : stage.id==nextStage?'shadow-md'
+                                      :
+                                      'bg-border/30 text-foreground/40'
+                                  } rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap flex items-center justify-center transition-colors`}
+                                >{status=='active'&&
+                                 <CheckCircle className='h-4 mr-2 w-4 text-white'/>}
+                                 {stage.id==nextStage&&
+                                 <div className='h-4 w-4 border-gray-500/30  rounded-full mr-2 border-l-gray-500 border-[2px] flex items-center animate-spin'/>}
+                                  <span className={`${stage.id==nextStage&&'text-gray-600'}`}>{stage.label}</span>
                                 </div>
                                 {idx < pipelineStages.length - 1 && (
                                   <div className="w-4 h-0.5 bg-border/50 mx-1" />
@@ -140,9 +161,12 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
                         </div>
                         <p className="text-foreground/60 text-sm mt-1">Referring Physician: {patient.referringPhysician}</p>
                       </div>
+                      <RefreshCcwIcon
+                      onClick={(e)=>e.stopPropagation()} 
+                      className='h-4 w-4 text-primary absolute top-4 right-32'/>
                       <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 absolute top-3 right-2 rounded-full mr-8 text-xs font-semibold bg-accent/20 text-accent border border-accent/30 whitespace-nowrap">
-                          {patient.status}
+                        <span className={`px-3 py-1 absolute top-3 right-2 rounded-full mr-8 text-xs font-semibold ${patient.urgencyLevel=='ROUTINE'?'bg-primary/20 text-primary':patient.urgencyLevel=='URGENT'?'bg-orange/20 text-orange':'bg-red-500/20 text-red-500'}  border border-accent/30 whitespace-nowrap`}>
+                          {patient.urgencyLevel}
                         </span>
                 
                       </div>

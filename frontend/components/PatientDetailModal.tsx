@@ -17,11 +17,11 @@ interface PatientCRMNodeProps {
 }
 
 const pipelineStages = [
-  { id: 'referral', label: 'Referral', icon: 'receipt' },
-  { id: 'insurance', label: 'Insurance', icon: 'shield' },
-  { id: 'authorization', label: 'Authorization', icon: 'checkmark' },
-  { id: 'scheduling', label: 'Scheduling', icon: 'calendar' },
-  { id: 'treatment', label: 'Treatment', icon: 'syringe' },
+  { id: 'referral', label: 'New Referral', icon: 'receipt' },
+  { id: 'insurance', label: 'Insurance Verification', icon: 'shield' },
+  { id: 'authorization', label: 'Prior Authorization', icon: 'checkmark' },
+  { id: 'scheduling', label: 'Scheduling Treatment', icon: 'calendar' },
+  { id: 'treatment', label: 'Treatment Ongoing', icon: 'syringe' },
   { id: 'followup', label: 'Follow-up', icon: 'phone' },
 ];
 
