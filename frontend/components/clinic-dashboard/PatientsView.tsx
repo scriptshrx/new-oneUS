@@ -125,10 +125,10 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
                                     status === 'completed'
                                       ? 'bg-accent text-white'
                                       : status === 'active'
-                                      ? 'bg-primary text-accent border-2 border-accent'
+                                      ? 'bg-primary text-white border-2 border-gray-300'
                                       : 'bg-border/30 text-foreground/40'
                                   } rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors`}
-                                >{status=='pending'&&<div className='h-5 w-5 border-gray-300 border-l-primary'}
+                                >{status=='active'&&<div className='h-5 w-5 border-gray-300 mr-2 border-l-primary border-2px animate-spin'/>}
                                   {stage.label}
                                 </div>
                                 {idx < pipelineStages.length - 1 && (
