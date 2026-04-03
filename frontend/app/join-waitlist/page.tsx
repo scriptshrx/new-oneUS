@@ -1,5 +1,5 @@
 'use client'
-import { Axis3DIcon } from 'lucide-react';
+import { Axis3DIcon, Loader } from 'lucide-react';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import axios from 'axios'
@@ -24,9 +24,11 @@ export default function JoinWaitlistPage() {
     try{
       setSubmitting(true)
       const response = await axios.post('https://scriptishrxnewmark.onrender.com/v1/waitlist', { email });
-      setSubmitted(true);
+    
       setEmail('');
+      console.log(response)
       setSubmitting(false)
+        setSubmitted(true);
     }
     catch(err){
       setSubmitting(false)
@@ -70,9 +72,14 @@ export default function JoinWaitlistPage() {
             <button
             disabled={submitting}
               type="submit"
-              className="bg-primary cursor-pointer text-white font-semibold rounded-lg py-3 mt-2 hover:bg-brand/90 transition-colors text-lg"
+              className={`bg-primary flex ${!submitting?'cursor-pointer':'cursor-not-allowed'} text-white font-semibold rounded-lg py-3 mt-2 hover:bg-brand/90 transition-colors text-lg`}
             >
-              Join Waitlist
+              {submitting?<div className='flex items-center space-x-4 justify-center mx-auto'>
+                <div>Joining</div>
+                <Loader className='h-5 w-4 animate-spin text-white' />
+                </div>
+                :
+                <div className='mx-auto'>Join Waitlist</div>}
             </button>
           </form>
         )}

@@ -16,6 +16,7 @@ export async function fetchWithAuth(
 
   // Add auth header if not already present
   const accessToken = localStorage.getItem('accessToken');
+  console.log('The retrieved access token for this fetch:',accessToken)
   if (accessToken && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
