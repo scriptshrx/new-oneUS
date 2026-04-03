@@ -1,8 +1,10 @@
-const router = require('express')
+const {Router} = require('express')
 
 const {
    joinWaitList
 } = require('../services/waitListService');
+
+const router = Router()
 
 //Join waitlist
 router.post('/', async(req,res)=>{
