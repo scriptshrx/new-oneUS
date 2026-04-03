@@ -45,14 +45,14 @@ export default function JoinWaitlistPage() {
       ref={cardRef} 
       className="max-w-md w-full bg-card/80 rounded-2xl shadow-lg p-8 border border-brand/20">
         <h1 className="text-3xl sm:text-4xl font-bold text-center text-brand mb-4">Join the Waitlist</h1>
-        <p className="text-center text-foreground/70 mb-8">Be the first to know when Scriptish launches US-wide. Enter your email below to join our exclusive waitlist!</p>
+        <p className="text-center text-foreground/70 mb-8">Be the first to know when Scriptish launches for all <span className='font-semibold'>clinics</span> and <span className='font-semibold'>hospitals</span> across the United States. Enter your email below to join our exclusive waitlist!</p>
         {submitted ? (
-          <div className="text-center text-green-600 font-semibold text-lg py-8">Thank you for joining the waitlist! 🎉</div>
+          <div className="text-center text-transparent bg-clip-text bg-gradient-to-r from-foreground/50 via-foreground to-foreground/50 moveBg font-semibold text-lg py-8">Thank you for joining the waitlist! 🎉</div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
               type="email"
-              className="border border-border/30 rounded-lg px-4 py-3 text-base focus:outline-none focus:border-brand transition-colors bg-background/80"
+              className="border border-border/90 rounded-lg px-4 py-3 text-base focus:outline-none focus:border-brand transition-colors bg-background/80"
               placeholder="Enter your email"
               value={email}
               onChange={e => {setEmail(e.target.value);

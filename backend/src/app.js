@@ -4,7 +4,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const clinicRoutes = require('./routes/clinics');
 const referralRoutes = require('./routes/referrals');
-const waitListRoutes = require('../routes/waitlist')
+const waitListRoutes = require('./routes/waitlist')
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
