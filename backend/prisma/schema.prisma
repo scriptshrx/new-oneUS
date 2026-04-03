@@ -298,7 +298,7 @@ enum PipelineStage {
 
   @@map("pipeline_stages")
 }
-//=========Waitlist 
+
 
 model waitList{
   id String @id @default(cuid())
