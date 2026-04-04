@@ -83,17 +83,17 @@ router.patch('/:referralId/status', authMiddleware, async (req, res, next) => {
   try {
     console.log('📋 [REFERRALS] PATCH /referrals/:referralId/status endpoint called');
     console.log('🔍 [REFERRALS] Referral ID:', req.params.referralId);
-    const { status } = req.body;
-    console.log('📤 [REFERRALS] New status:', status);
+    const { nextStage } = req.body;
+    console.log('📤 [REFERRALS] New status:', nextStage);
     
-    if (!status) {
-      console.error('❌ [REFERRALS] Missing status in request');
-      return res.status(400).json({ error: 'Status is required' });
+    if (!nextStage) {
+      console.error('❌ [REFERRALS] Missing next stage in request');
+      return res.status(400).json({ error: 'Next stage is required' });
     }
 
     const referral = await updateReferralStatus(
       req.params.referralId,
-      status,
+      nextStage,
       req.user.clinicId
     );
 

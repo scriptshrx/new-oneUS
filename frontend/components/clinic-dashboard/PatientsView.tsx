@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Users, ArrowLeft, Plus, ZoomIn, Expand, LucideExpand, Maximize, Loader, Fullscreen, CheckCheck, CheckCircle, RefreshCcw, RefreshCcwIcon, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PatientDetailModal from '@/components/PatientDetailModal';
+import { se } from 'date-fns/locale';
 
 interface PatientsViewProps {
   patients:any[];
@@ -15,24 +16,27 @@ interface PatientsViewProps {
 const mockPatients = [
   {
     id: '1',
-    name: 'Jennifer L.',
-    treatmentType: 'IV Therapy',
+    firstName: 'Jennifer',
+    lastName: 'L.',
+    prescribedTreatment: 'IV Therapy',
     referringPhysician: 'Dr. Sarah Chen, MD',
-    status: 'scheduled',
+    pipelineStage: 'SCHEDULING',
   },
   {
     id: '2',
-    name: 'Marcus T.',
-    treatmentType: 'Ketamine Therapy',
+    firstName: 'Marcus',
+    lastName: 'T.',
+    prescribedTreatment: 'Ketamine Therapy',
     referringPhysician: 'Dr. David Martinez, MD',
-    status: 'in-treatment',
+    pipelineStage: 'TREATMENT',
   },
   {
     id: '3',
-    name: 'Robert H.',
-    treatmentType: 'Biologic Infusion',
+    firstName: 'Robert',
+    lastName: 'H.',
+    prescribedTreatment: 'Biologic Infusion',
     referringPhysician: 'Dr. Angela White, MD',
-    status: 'pa-pending',
+    pipelineStage: 'AUTHORIZATION',
   },
 ];
 
@@ -80,6 +84,39 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
       setNextStages(stages);
     }
   }, [patients]);
+
+  const handleUpdateStatus = async (patientId: string, nextStage: string) => {
+    const referralId=selectedPatient?._referral.id;
+    console.log('Starting to update status for patient referral is:',referralId)
+    try {
+      const response = await fetch(`https://scriptishrxnewmark.onrender.com/v1/referrals/${referralId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({ nextStage }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update status: ${response.statusText}`);
+      }
+
+      // Update the local patient data
+      const updatedPatient = await response.json();
+      
+      // Update patients list with the new patient data
+      const updatedPatients = patients.map((p) =>
+        p.id === patientId ? { ...p, pipelineStage: nextStage } : p
+      );
+      
+      console.log('✅ Patient status updated:', updatedPatient);
+    } catch (error) {
+      console.error('❌ Error updating patient status:', error);
+      throw error;
+    }
+  };
+
   return (
     <>
       {/* Header */}
@@ -123,7 +160,7 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
               <div className="space-y-3">
                 {patients.length>0&& patients.map((patient) => (
                   <div key={patient.id} className="bg-background/60 overflow-hidden border border-border/20 rounded-lg p-2 cursor-pointer px-4 hover:bg-background/60 relative  transition-colors"
-                   onClick={() => setSelectedPatient(patient)}>
+                   onClick={() => {setSelectedPatient(patient);console.log('Selected Patient:',patient)}}>
                     <Fullscreen className='absolute h-4 w-4 text-accent/80 right-4 top-4'/>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex-1">
@@ -210,7 +247,8 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
       {selectedPatient && (
         <PatientDetailModal 
           patient={selectedPatient} 
-          onClose={() => setSelectedPatient(null)} 
+          onClose={() => setSelectedPatient(null)}
+          onUpdateStatus={handleUpdateStatus}
         />
       )}
     </>

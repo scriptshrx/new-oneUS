@@ -1,38 +1,57 @@
 'use client';
 
+import { useState } from 'react';
 import { X, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Patient {
   id?: string;
-  name: string;
-  treatmentType: string;
+  firstName: string;
+  lastName: string;
+  treatmentType?: string;
+  prescribedTreatment?: string;
   referringPhysician: string;
-  status: string;
+  status?: string;
+  pipelineStage: string;
+  primaryDiagnosis?: string;
+  clinicalNotes?: string;
+  urgencyLevel?: string;
 }
 
 interface PatientCRMNodeProps {
   patient: Patient;
   onClose: () => void;
+  onUpdateStatus?: (patientId: string, nextStage: string) => Promise<void>;
 }
 
 const pipelineStages = [
-  { id: 'referral', label: 'New Referral', icon: 'receipt' },
-  { id: 'insurance', label: 'Insurance Verification', icon: 'shield' },
-  { id: 'authorization', label: 'Prior Authorization', icon: 'checkmark' },
-  { id: 'scheduling', label: 'Scheduling Treatment', icon: 'calendar' },
-  { id: 'treatment', label: 'Treatment Ongoing', icon: 'syringe' },
-  { id: 'followup', label: 'Follow-up', icon: 'phone' },
+  { id: 'new_referral', label: 'New Referral', detail: 'New Referral' },
+  { id: 'insurance', label: 'Insurance Verification', detail: 'Insurance Verification' },
+  { id: 'authorization', label: 'Prior Authorization', detail: 'Prior Authorization' },
+  { id: 'scheduling', label: 'Scheduling Treatment', detail: 'Scheduling Treatment' },
+  { id: 'treatment', label: 'Treatment In Process', detail: 'Treatment In Process' },
+  { id: 'followup', label: 'Treatment Follow-ups', detail: 'Treatment Follow-ups' },
 ];
 
-const getStageStatus = (stage: string, patientStatus: string) => {
-  const stageOrder = ['referral', 'insurance', 'authorization', 'scheduling', 'treatment', 'followup'];
-  const currentIndex = stageOrder.indexOf(patientStatus.toLowerCase().replace(/-/g, '_'));
-  const stageIndex = stageOrder.indexOf(stage);
+const getStageStatus = (stageId: string, patientPipelineStage: string) => {
+  const order = pipelineStages.map(s => s.id);
+  const currentIdx = order.indexOf((patientPipelineStage || '').toLowerCase());
+  const stageIdx = order.indexOf(stageId);
 
-  if (stageIndex < currentIndex) return 'completed';
-  if (stageIndex === currentIndex) return 'active';
+  if (stageIdx < currentIdx) return 'completed';
+  if (stageIdx === currentIdx) return 'active';
   return 'pending';
+};
+
+const getNextStage = (currentStage: string): string | null => {
+  const order = pipelineStages.map(s => s.id);
+  const currentIdx = order.indexOf((currentStage || '').toLowerCase());
+  
+  if (currentIdx === -1 || currentIdx === order.length - 1) {
+    return null; // No next stage or stage not found
+  }
+  
+  return order[currentIdx + 1].toUpperCase();
 };
 
 const getStatusColor = (status: string) => {
@@ -61,7 +80,26 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeProps) {
+export default function PatientDetailModal({ patient, onClose, onUpdateStatus }: PatientCRMNodeProps) {
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleUpdateStatus = async () => {
+    if (!onUpdateStatus || !patient.id) return;
+    
+    const nextStage = getNextStage(patient.pipelineStage);
+    if (!nextStage) return; // Already at final stage
+    
+    try {
+      setIsUpdating(true);
+      // console.log('Selected referral id:',patient._referral.id)
+      await onUpdateStatus(patient.id, nextStage);
+      onClose();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      setIsUpdating(false);
+    }
+  };
+
   return (
   <div className="fixed inset-0 absolute z-50 bg-white/50 shadow-md backdrop-blur-md flex items-center justify-center py-4 overflow-y-auto"
     onClick={()=>onClose()}>
@@ -106,7 +144,7 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
 
             <div>
               <label className="text-sm font-semibold text-primary/80">Current Status</label>
-              <p className="text-accent mt-1 font-semibold capitalize">{patient.status}</p>
+              <p className="text-accent mt-1 font-semibold capitalize">{patient.pipelineStage?.replace(/_/g, ' ').toLowerCase()}</p>
             </div>
           </div>
         </div>
@@ -119,7 +157,7 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
           {/* Pipeline Nodes */}
           <div className="flex flex-col lg:flex-row gap-6 hidden items-start lg:items-center justify-between">
             {pipelineStages.map((stage, index) => {
-              const status = getStageStatus(stage.id, patient.status);
+              const status = getStageStatus(stage.id, patient.pipelineStage);
               const isLast = index === pipelineStages.length - 1;
 
               return (
@@ -142,14 +180,14 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
                     <div className="hidden lg:block flex-1 h-1 bg-border/30 mx-2 relative">
                       <div
                         className={`absolute top-0 left-0 h-full transition-all ${
-                          getStageStatus(pipelineStages[index + 1].id, patient.status) === 'completed'
+                          getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'completed'
                             ? 'bg-green-500/50'
-                            : getStageStatus(pipelineStages[index + 1].id, patient.status) === 'active'
+                            : getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'active'
                               ? 'bg-blue-500/50'
                               : 'bg-gray-500/30'
                         }`}
                         style={{
-                          width: getStageStatus(pipelineStages[index + 1].id, patient.status) === 'completed' ? '100%' : '0%',
+                          width: getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'completed' ? '100%' : '0%',
                         }}
                       />
                     </div>
@@ -160,9 +198,9 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
                     <div className="lg:hidden flex-col items-center">
                       <div
                         className={`w-1 h-8 transition-all ${
-                          getStageStatus(pipelineStages[index + 1].id, patient.status) === 'completed'
+                          getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'completed'
                             ? 'bg-green-500/50'
-                            : getStageStatus(pipelineStages[index + 1].id, patient.status) === 'active'
+                            : getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'active'
                               ? 'bg-blue-500/50'
                               : 'bg-gray-500/30'
                         }`}
@@ -179,7 +217,7 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
             <h4 className="text-sm font-semibold text-foreground/80 mb-4">Stage Details</h4>
             <div className="space-y-3">
               {pipelineStages.map((stage) => {
-                const status = getStageStatus(stage.id, patient.status);
+                const status = getStageStatus(stage.id, patient.pipelineStage);
                 return (
                   <div
                     key={stage.id}
@@ -219,8 +257,12 @@ export default function PatientDetailModal({ patient, onClose }: PatientCRMNodeP
           >
             Close
           </Button>
-          <Button className="bg-accent hover:bg-accent/90 text-white font-semibold">
-            Update Status
+          <Button 
+            onClick={handleUpdateStatus}
+            disabled={isUpdating || !getNextStage(patient.pipelineStage)}
+            className="bg-accent hover:bg-accent/90 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isUpdating ? 'Updating...' : 'Update Status'}
           </Button>
         </div>
         </div>

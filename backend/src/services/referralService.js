@@ -198,38 +198,48 @@ const getReferralById = async (referralId, clinicId, hospitalId) => {
   return referral;
 };
 
-const updateReferralStatus = async (referralId, status, clinicId) => {
+const updateReferralStatus = async (id, nextStage, clinicId) => {
   const referral = await prisma.referral.findUnique({
-    where: { id: referralId },
+    where: { id: id },
   });
 
   if (!referral) {
     throw new NotFoundError('Referral not found');
   }
 
-  if (referral.clinicId !== clinicId) {
-    throw new Error('Unauthorized access to referral');
+  const patient = await prisma.patient.findUnique({
+    where:{id:referral.patientId}
+  })
+
+  if (patient.clinicId !== clinicId) {
+    throw new Error('Unauthorized access to patient');
   }
 
   // Update both referral and patient pipeline stage based on status
-  let pipelineStage = 'NEW_REFERRAL';
-  if (status === 'REVIEWED') pipelineStage = 'VERIFYING_INSURANCE';
-  if (status === 'APPROVED') pipelineStage = 'PA_PENDING';
+  let status = 'SUBMITTED';
+ 
+  if(nextStage.toLowerCase()==='insurance') status = 'REVIEWED';
+  if(nextStage.toLowerCase()==='authorization') status = 'REVIEWED';
+  if(nextStage.toLowerCase()==='sheduling') status = 'APPROVED';
+  if(nextStage.toLowerCase()==='treatment') status = 'APPROVED';
+  
+
+  // Update patient pipeline stage
+  await prisma.patient.update({
+    where: { id: updated.patientId },
+    data: { pipelineStage:nextStage },
+  });
 
   const updated = await prisma.referral.update({
     where: { id: referralId },
-    data: { status },
+    data: { status},
     include: {
       patient: true,
       clinic: true,
     },
   });
 
-  // Update patient pipeline stage
-  await prisma.patient.update({
-    where: { id: updated.patientId },
-    data: { pipelineStage },
-  });
+  
 
   return updated;
 };
