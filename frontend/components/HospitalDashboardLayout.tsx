@@ -162,7 +162,9 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
             const apiUrl = 'https://scriptishrxnewmark.onrender.com/v1';
             console.log('Fetching referrals from:', `${apiUrl}/referrals`);
             
-            const response = await fetchWithAuth(`${apiUrl}/referrals`, {
+            // If we have a hospitalId, request referrals scoped to that hospital
+            const query = hospitalId ? `?hospitalId=${encodeURIComponent(hospitalId)}` : '';
+            const response = await fetchWithAuth(`${apiUrl}/referrals${query}`, {
               method: 'GET',
             });
     

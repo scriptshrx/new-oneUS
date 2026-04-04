@@ -130,12 +130,12 @@ const createReferral = async (input, hospitalIdParam) => {
   };
 };
 
-const getReferrals = async (clinicId, filters = {}) => {
-  if (!clinicId) {
-    return []; // Return empty array if no clinicId
-  }
-
-  const where = { clinicId };
+const getReferrals = async (clinicId, hospitalId, filters = {}) => {
+  // Determine filter: prefer clinicId, otherwise use hospitalId
+  const where = {};
+  if (clinicId) where.clinicId = clinicId;
+  else if (hospitalId) where.hospitalId = hospitalId;
+  else return [];
 
   if (filters.status) {
     where.status = filters.status;
@@ -150,7 +150,7 @@ const getReferrals = async (clinicId, filters = {}) => {
   }
 
   const referrals = await prisma.referral.findMany({
-    where:{clinicId},
+    where,
     include: {
       patient: true,
       clinic: true,
@@ -164,7 +164,7 @@ const getReferrals = async (clinicId, filters = {}) => {
   return referrals;
 };
 
-const getReferralById = async (referralId, clinicId) => {
+const getReferralById = async (referralId, clinicId, hospitalId) => {
   const referral = await prisma.referral.findUnique({
     where: { id: referralId },
     include: {
@@ -182,8 +182,16 @@ const getReferralById = async (referralId, clinicId) => {
     throw new NotFoundError('Referral not found');
   }
 
-  // Verify access
-  if (referral.clinicId !== clinicId) {
+  // Verify access: allow if user belongs to clinic or hospital
+  if (clinicId) {
+    if (referral.clinicId !== clinicId) {
+      throw new Error('Unauthorized access to referral');
+    }
+  } else if (hospitalId) {
+    if (referral.hospitalId !== hospitalId) {
+      throw new Error('Unauthorized access to referral');
+    }
+  } else {
     throw new Error('Unauthorized access to referral');
   }
 
