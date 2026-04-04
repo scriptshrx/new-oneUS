@@ -286,7 +286,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
       console.log('Clinic created', response);
       localStorage.setItem('clinic', JSON.stringify(response));
 
-      // Call onSubmit with the response data
+      // Call the onSubmit with the response data
       onSubmit({
         ...formData,
         clinicId: response.clinicId,
