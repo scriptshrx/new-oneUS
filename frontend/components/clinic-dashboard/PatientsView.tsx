@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Users, ArrowLeft, Plus, ZoomIn, Expand, LucideExpand, Maximize, Loader, Fullscreen, CheckCheck, CheckCircle, RefreshCcw, RefreshCcwIcon, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PatientDetailModal from '@/components/PatientDetailModal';
-import { se } from 'date-fns/locale';
+import { fetchWithAuth } from '@/lib/fetchWithAuth';
 
 interface PatientsViewProps {
   patients:any[];
@@ -86,15 +86,11 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
   }, [patients]);
 
   const handleUpdateStatus = async (patientId: string, nextStage: string) => {
-    const referralId=selectedPatient?._referral.id;
-    console.log('Starting to update status for patient referral is:',referralId)
+    const referralId = selectedPatient?._referral.id;
+    console.log('Starting to update status for patient referral is:', referralId)
     try {
-      const response = await fetch(`https://scriptishrxnewmark.onrender.com/v1/referrals/${referralId}/status`, {
+      const response = await fetchWithAuth(`https://scriptishrxnewmark.onrender.com/v1/referrals/${referralId}/status`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
         body: JSON.stringify({ nextStage }),
       });
 
