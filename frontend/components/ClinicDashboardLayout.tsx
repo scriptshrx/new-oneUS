@@ -257,7 +257,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
         <div
-          className={`fixed inset-y-0 shadow-md left-0 z-40 w-64 bg-primary/10 backdrop-blur-[20px] border-r border-border/30 transform transition-transform duration-300 lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 shadow-md left-0 z-40 w-64 bg-background/90 backdrop-blur-[20px] border-r border-border/30 transform transition-transform duration-300 lg:static lg:translate-x-0 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
