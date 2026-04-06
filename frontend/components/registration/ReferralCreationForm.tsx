@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useDashboardView } from '../HospitalDashboardLayout';
+import { fetchWithAuth } from '@/lib/fetchWithAuth';
 
 const API_BASE_URL = 'https://scriptishrxnewmark.onrender.com/v1';
 
@@ -127,12 +128,12 @@ export default function ReferralCreationPage({
     }
   }, [hospitalId]);
 
- 
-
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [capacityError, setCapacityError] = useState<string>('');
+  const [selectedClinicData, setSelectedClinicData] = useState<any>(null);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -147,10 +148,23 @@ export default function ReferralCreationPage({
     if (!formData.targetClinicId) newErrors.targetClinicId = 'Target clinic required';
 
     setErrors(newErrors);
+    
+    if (Object.keys(newErrors).length > 0) {
+      console.log('⚠️ [Validation] Form has errors:', newErrors);
+    } else {
+      console.log('✅ [Validation] All required fields are valid');
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (fieldName: string, value: string) => {
+    // Special handling for clinic selection
+    if (fieldName === 'targetClinicId') {
+      handleClinicSelection(value);
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [fieldName]: value,
@@ -165,23 +179,119 @@ export default function ReferralCreationPage({
     }
   };
 
+  const handleClinicSelection = async (clinicId: string) => {
+    console.log('🏥 [Stage 1] Clinic selection initiated:', clinicId);
+    setCapacityError('');
+
+    try {
+      // Fetch clinic details
+      console.log('📡 [Stage 2] Fetching clinic details from:', `${API_BASE_URL}/clinics/${clinicId}`);
+      const clinicResponse = await fetchWithAuth(`${API_BASE_URL}/clinics/${clinicId}`);
+
+      if (!clinicResponse.ok) {
+        console.error('❌ [Stage 2] Failed to fetch clinic details:', clinicResponse.statusText);
+        throw new Error('Failed to fetch clinic details');
+      }
+
+      const clinicData = await clinicResponse.json();
+      console.log('✅ [Stage 2] Clinic data fetched successfully:', clinicData);
+
+      // Fetch patients linked to this clinic
+      console.log('📡 [Stage 3] Fetching patients for clinic:', clinicId);
+      const patientsResponse = await fetchWithAuth(`${API_BASE_URL}/patients?clinicId=${clinicId}`);
+
+      if (!patientsResponse.ok) {
+        console.error('❌ [Stage 3] Failed to fetch patients:', patientsResponse.statusText);
+        throw new Error('Failed to fetch patients');
+      }
+
+      const patientsData = await patientsResponse.json();
+      console.log('✅ [Stage 3] Patients data fetched:', patientsData);
+
+      const allPatients = Array.isArray(patientsData) ? patientsData : patientsData.patients || [];
+      console.log('📊 [Stage 4] Total patients found:', allPatients.length);
+
+      // Filter out archived and completed patients
+      console.log('🔍 [Stage 5] Filtering patients - excluding INACTIVE_ARCHIVED and COMPLETE stages');
+      const activePatients = allPatients.filter(
+        (patient: any) =>
+          patient.pipelineStage !== 'INACTIVE_ARCHIVED' &&
+          patient.pipelineStage !== 'COMPLETE' &&
+          patient.pipelineStage?.toLowerCase() !== 'inactive_archived' &&
+          patient.pipelineStage?.toLowerCase() !== 'complete'
+      );
+
+      const activeCount = activePatients.length;
+      const chairCount = clinicData.infusionChairCount || 0;
+
+      console.log('✅ [Stage 5] Filter complete:');
+      console.log(`   - Active patients: ${activeCount}`);
+      console.log(`   - Available chairs: ${chairCount}`);
+      console.log(`   - Active patients list:`, activePatients.map((p: any) => ({ id: p.id, stage: p.pipelineStage })));
+
+      // Check capacity
+      console.log('⚖️ [Stage 6] Checking capacity: activeCount (${activeCount}) >= chairCount (${chairCount})?');
+      if (activeCount >= chairCount) {
+        console.error('❌ [Stage 6] Clinic at capacity - selection rejected');
+        setCapacityError(
+          `This clinic has reached its capacity. Currently has ${activeCount} active patients with ${chairCount} available chairs.`
+        );
+        return; // Reject the selection
+      }
+
+      console.log('✅ [Stage 6] Clinic has available capacity - accepting selection');
+
+      // Selection is valid, update form data
+      console.log('💾 [Stage 7] Updating form with selected clinic');
+      setFormData(prev => ({
+        ...prev,
+        targetClinicId: clinicId,
+      }));
+
+      setSelectedClinicData({
+        name: clinicData.name,
+        infusionChairCount: chairCount,
+        activePatients: activeCount,
+      });
+
+      // Clear any existing errors for this field
+      if (errors.targetClinicId) {
+        setErrors(prev => ({
+          ...prev,
+          targetClinicId: '',
+        }));
+      }
+
+      console.log('✅ [Stage 7] Form updated successfully');
+    } catch (error) {
+      console.error('❌ [Error] Exception during clinic selection:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error checking clinic availability';
+      setCapacityError(errorMessage);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
+      console.log('❌ [Submit] Form validation failed');
       return;
     }
 
+    console.log('📋 [Submit - Stage 1] Form validation passed, preparing to submit referral');
     setIsSubmitting(true);
     setApiError('');
 
     try {
       const effectiveHospitalId = hospitalId || formData.hospitalId;
       if (!effectiveHospitalId) {
+        console.error('❌ [Submit - Stage 2] Hospital ID not available');
         setApiError('Hospital not available. Please reload the dashboard.');
         setIsSubmitting(false);
         return;
       }
+      console.log('✅ [Submit - Stage 2] Hospital ID confirmed:', effectiveHospitalId);
+
       const referralPayload = {
         clinicId: formData.targetClinicId,
         hospitalId: effectiveHospitalId,
@@ -219,7 +329,7 @@ export default function ReferralCreationPage({
         },
       };
 
-      console.log('Referral payload:',JSON.stringify(referralPayload))
+      console.log('📡 [Submit - Stage 3] Sending referral payload:', JSON.stringify(referralPayload));
 
       const response = await fetch(`${API_BASE_URL}/referrals`, {
         method: 'POST',
@@ -232,15 +342,19 @@ export default function ReferralCreationPage({
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ [Submit - Stage 4] API returned error:', errorData);
         throw new Error(errorData.error || 'Failed to submit referral');
       }
 
       const result = await response.json();
+      console.log('✅ [Submit - Stage 4] Referral submitted successfully:', result);
+      
       setSuccessMessage(
         `✓ Referral submitted successfully! Patient ${result.patientName} has been created.`
       );
 
       // Reset form
+      console.log('🔄 [Submit - Stage 5] Resetting form');
       setFormData({
         patientFirstName: '',
         patientLastName: '',
@@ -270,11 +384,13 @@ export default function ReferralCreationPage({
         targetClinicId: '',
       });
 
+      console.log('✅ [Submit - Stage 5] Form reset complete, redirecting in 2 seconds');
       setTimeout(() => {
         onBack();
       }, 2000);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit referral';
+      console.error('❌ [Submit - Error]', errorMessage);
       setApiError(errorMessage);
       setIsSubmitting(false);
     }
@@ -313,11 +429,11 @@ export default function ReferralCreationPage({
       )}
 
       {/* Error Alert */}
-      {apiError && (
+      {(apiError || capacityError) && (
         <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex gap-3">
           <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-red-400">{apiError}</p>
+            <p className="text-sm font-medium text-red-400">{apiError || capacityError}</p>
           </div>
         </div>
       )}
@@ -331,7 +447,7 @@ export default function ReferralCreationPage({
             <Label htmlFor="targetClinicId" className="block text-sm font-medium mb-2">
               Select Partner Clinic <span className="text-destructive">*</span>
             </Label>
-            <Select value={formData.targetClinicId} onValueChange={(val) => handleChange('targetClinicId', val)}>
+            <Select value={formData.targetClinicId} onValueChange={(val) => handleClinicSelection(val)}>
               <SelectTrigger className="bg-background/50 border-border/30 text-foreground">
                 <SelectValue placeholder="Select a clinic" />
               </SelectTrigger>
@@ -343,7 +459,26 @@ export default function ReferralCreationPage({
                 ))}
               </SelectContent>
             </Select>
-            {errors.targetClinicId && (
+
+            {/* Capacity Error */}
+            {capacityError && (
+              <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-red-400">{capacityError}</p>
+              </div>
+            )}
+
+            {/* Clinic Info Display */}
+            {selectedClinicData && !capacityError && (
+              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <p className="text-sm font-medium text-green-400">{selectedClinicData.name}</p>
+                <p className="text-xs text-green-400/70 mt-1">
+                  {selectedClinicData.activePatients} of {selectedClinicData.infusionChairCount} chairs in use
+                </p>
+              </div>
+            )}
+
+            {errors.targetClinicId && !capacityError && (
               <p className="text-xs text-destructive mt-1 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" /> {errors.targetClinicId}
               </p>

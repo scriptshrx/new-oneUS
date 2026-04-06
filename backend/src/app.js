@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
+const patientRoutes = require('./routes/patients')
 const clinicRoutes = require('./routes/clinics');
 const referralRoutes = require('./routes/referrals');
 const waitListRoutes = require('./routes/waitlist')
@@ -45,7 +46,8 @@ app.get('/health', (req, res) => {
 app.use('/v1/auth', authRoutes);
 app.use('/v1/clinics', clinicRoutes);
 app.use('/v1/referrals', referralRoutes);
-app.use('/v1/waitlist',waitListRoutes)
+app.use('/v1/waitlist',waitListRoutes);
+app.use('/v1/patients',patientRoutes)
 
 // 404 handler
 app.use((req, res) => {
