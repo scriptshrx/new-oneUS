@@ -60,7 +60,7 @@ const getStatusDistribution = (patients: Patient[]) => {
   return distribution;
 };
 
-const getConversionRate = (patients: Patient[]) => {
+const getCompletionRate = (patients: Patient[]) => {
   const completed = patients.filter(
     (p) => p.pipelineStage === 'COMPLETE' || p.status === 'COMPLETED'
   ).length;
@@ -128,7 +128,7 @@ export default function AnalyticsView({
       newReferrals: getStageCount(patients, 'NEW_REFERRAL'),
       inTreatment: getStageCount(patients, 'IN_TREATMENT'),
       completed: getStageCount(patients, 'COMPLETE'),
-      conversionRate: getConversionRate(patients),
+      completionRate: getCompletionRate(patients),
       avgTimeInPipeline: getAverageTimeInPipeline(patients),
       statusDistribution: getStatusDistribution(patients),
     };
@@ -191,8 +191,8 @@ export default function AnalyticsView({
               />
               <StatCard
                 icon={TrendingUp}
-                label="Conversion Rate"
-                value={analytics.conversionRate}
+                label="Completion Rate"
+                value={analytics.completionRate}
                 unit="%"
                 color="green"
               />
