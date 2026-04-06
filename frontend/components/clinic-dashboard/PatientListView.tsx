@@ -4,6 +4,8 @@ import { ArrowLeft, Mail, Phone, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PatientDetailModal from '@/components/PatientDetailModal';
 import { useState } from 'react';
+import { useClinicDashboardView } from '../ClinicDashboardLayout';
+import { fetchWithAuth } from '@/lib/fetchWithAuth';
 
 
 interface Patient {
@@ -71,6 +73,31 @@ export default function PatientListView({
   onBack,
 }: PatientListViewProps) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const { setCurrentView } = useClinicDashboardView();
+
+  const handleUpdateStatus = async (patientId: string, nextStage: string) => {
+    const referralId = selectedPatient?._referral.id;
+    console.log('Starting to update status for patient referral is:', referralId)
+    try {
+      const response = await fetchWithAuth(`https://scriptishrxnewmark.onrender.com/v1/referrals/${referralId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ nextStage }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update status: ${response.statusText}`);
+      }
+
+      // Update the local patient data
+      const updatedPatient = await response.json();
+      window.location.reload();
+      
+      console.log('✅ Patient status updated:', updatedPatient);
+    } catch (error) {
+      console.error('❌ Error updating patient status:', error);
+      throw error;
+    }
+  };
 
   if (patientsLoading) {
     return (
@@ -238,6 +265,7 @@ export default function PatientListView({
           patient={selectedPatient}
           isOpen={!!selectedPatient}
           onClose={() => setSelectedPatient(null)}
+          onUpdateStatus={handleUpdateStatus}
         />
       )}
     </div>

@@ -22,6 +22,14 @@ const URGENCY_LEVELS = [
   { id: 'EMERGENT', label: 'Emergent' },
 ];
 
+const INSURANCE_PLAN_TYPES = [
+  { id: 'PPO', label: 'PPO - Preferred Provider Organization' },
+  { id: 'HMO', label: 'HMO - Health Maintenance Organization' },
+  { id: 'EPO', label: 'EPO - Exclusive Provider Organization' },
+  { id: 'POS', label: 'POS - Point of Service' },
+  { id: 'INDEMNITY', label: 'Indemnity - Fee-for-Service' },
+];
+
 interface IntakeFormData {
   // Patient info
   patientFirstName: string;
@@ -111,7 +119,7 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
     if (!formData.insuranceCarrier.trim()) newErrors.insuranceCarrier = 'Insurance carrier required';
     if (!formData.insuranceMemberId.trim()) newErrors.insuranceMemberId = 'Member ID required';
     if (!formData.insuranceGroupNumber.trim()) newErrors.insuranceGroupNumber = 'Group number required';
-    if (!formData.insurancePlanType.trim()) newErrors.insurancePlanType = 'Plan type required';
+    if (!formData.insurancePlanType) newErrors.insurancePlanType = 'Plan type required';
 
     // Clinical Information
     if (!formData.primaryDiagnosis.trim()) newErrors.primaryDiagnosis = 'Diagnosis code required';
@@ -487,12 +495,18 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
               <Label className="block text-sm font-medium mb-2">
                 Plan Type <span className="text-destructive">*</span>
               </Label>
-              <Input
-                placeholder="Plan Type (e.g., PPO)"
-                value={formData.insurancePlanType}
-                onChange={(e) => handleChange('insurancePlanType', e.target.value)}
-                className="bg-background/50 border-border/30"
-              />
+              <Select value={formData.insurancePlanType} onValueChange={(val) => handleChange('insurancePlanType', val)}>
+                <SelectTrigger className="bg-background/50 border-border/30 text-foreground">
+                  <SelectValue placeholder="Select plan type" />
+                </SelectTrigger>
+                <SelectContent className="border-border/30">
+                  {INSURANCE_PLAN_TYPES.map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {errors.insurancePlanType && (
                 <p className="text-xs text-destructive mt-1">{errors.insurancePlanType}</p>
               )}

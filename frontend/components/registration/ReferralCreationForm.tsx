@@ -31,6 +31,14 @@ const ICD_10_COMMON = [
   { code: 'G89.29', label: 'G89.29 - Other Chronic Pain' },
 ];
 
+const INSURANCE_PLAN_TYPES = [
+  { id: 'PPO', label: 'PPO - Preferred Provider Organization' },
+  { id: 'HMO', label: 'HMO - Health Maintenance Organization' },
+  { id: 'EPO', label: 'EPO - Exclusive Provider Organization' },
+  { id: 'POS', label: 'POS - Point of Service' },
+  { id: 'INDEMNITY', label: 'Indemnity - Fee-for-Service' },
+];
+
 interface ReferralFormData {
   // Patient info
   patientFirstName: string;
@@ -486,12 +494,18 @@ export default function ReferralCreationPage({
               onChange={(e) => handleChange('insuranceGroupNumber', e.target.value)}
               className="bg-background/50 border-border/30"
             />
-            <Input
-              placeholder="Plan Type (e.g., PPO)"
-              value={formData.insurancePlanType}
-              onChange={(e) => handleChange('insurancePlanType', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
+            <Select value={formData.insurancePlanType} onValueChange={(val) => handleChange('insurancePlanType', val)}>
+              <SelectTrigger className="bg-background/50 border-border/30 text-foreground">
+                <SelectValue placeholder="Select plan type" />
+              </SelectTrigger>
+              <SelectContent className="border-border/30">
+                {INSURANCE_PLAN_TYPES.map((plan) => (
+                  <SelectItem key={plan.id} value={plan.id}>
+                    {plan.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

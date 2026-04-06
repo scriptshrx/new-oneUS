@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow } from 'lucide-react';
+import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, createContext, useContext, useEffect } from 'react';
 import { authService } from '@/lib/authService';
@@ -10,7 +10,7 @@ interface ClinicDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ViewType = 'dashboard' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm';
+type ViewType = 'dashboard' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics';
 
 interface Patient {
   // Core Patient Info
@@ -94,29 +94,44 @@ export const useClinicDashboardView = () => {
 
 const navItems = [
   {
-    id: 'dashboard' as ViewType,
-    label: 'Dashboard',
-    icon: LayoutDashboard,
+    group: 'PATIENTS',
+    items: [
+      {
+        id: 'dashboard' as ViewType,
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+      },
+      {
+        id: 'patientsList' as ViewType,
+        label: 'Patient List',
+        icon: Users,
+      },
+      {
+        id: 'patients' as ViewType,
+        label: 'Patient Pipelines',
+        icon: Workflow,
+      },
+      {
+        id: 'archives' as ViewType,
+        label: 'Archives',
+        icon: Archive,
+      },
+    ],
   },
   {
-    id: 'patientsList' as ViewType,
-    label: 'Patient List',
-    icon: Users,
-  },
-  {
-    id: 'patients' as ViewType,
-    label: 'Patient Pipelines',
-    icon: Workflow,
-  },
-  {
-    id: 'archives' as ViewType,
-    label: 'Archives',
-    icon: Archive,
-  },
-  {
-    id: 'settings' as ViewType,
-    label: 'Settings',
-    icon: Settings,
+    group: 'ANALYTICS & SETTINGS',
+    items: [
+      {
+        id: 'analytics' as ViewType,
+        label: 'Analytics',
+        icon: BarChart3,
+      },
+      {
+        id: 'settings' as ViewType,
+        label: 'Settings',
+        icon: Settings,
+      },
+    ],
   },
 ];
 
@@ -274,28 +289,37 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
           </div>
 
           {/* Navigation */}
-          <nav className="p-4 space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentView === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setCurrentView(item.id);
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-primary/50 text-white border border-primary/50'
-                      : 'text-foreground/70 hover:bg-primary/30 hover:text-primary'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              );
-            })}
+          <nav className="p-4 space-y-6">
+            {navItems.map((group) => (
+              <div key={group.group}>
+                <p className="text-xs font-bold text-primary/50 uppercase tracking-wider px-4 mb-2">
+                  {group.group}
+                </p>
+                <div className="space-y-2">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentView === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setCurrentView(item.id);
+                          setIsSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                          isActive
+                            ? 'bg-primary/50 text-white border border-primary/50'
+                            : 'text-foreground/70 hover:bg-primary/30 hover:text-primary'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span className="font-medium">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* Footer */}

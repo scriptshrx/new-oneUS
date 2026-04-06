@@ -5,6 +5,7 @@ import OverviewView from '@/components/clinic-dashboard/OverviewView';
 import PatientsView from '@/components/clinic-dashboard/PatientsView';
 import PatientListView from '@/components/clinic-dashboard/PatientListView';
 import PatientIntakeForm from '@/components/clinic-dashboard/PatientIntakeForm';
+import AnalyticsView from '@/components/clinic-dashboard/AnalyticsView';
 import SettingsView from '@/components/clinic-dashboard/SettingsView';
 
 export default function ClinicDashboardPage() {
@@ -19,6 +20,17 @@ export default function ClinicDashboardPage() {
     return (
       <PatientIntakeForm
         onBack={() => setCurrentView('patients')}
+      />
+    );
+  }
+
+  if (currentView === 'analytics') {
+    return (
+      <AnalyticsView
+        patients={patients}
+        patientsError={patientsError}
+        patientsLoading={patientsLoading}
+        onBack={() => setCurrentView('dashboard')}
       />
     );
   }
