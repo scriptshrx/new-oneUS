@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useDashboardView } from '../HospitalDashboardLayout';
+import { fetchWithAuth } from '@/lib/fetchWithAuth';
 
 
 
@@ -197,11 +198,10 @@ export default function ReferralCreationPage({
 
       // Fetch patients linked to this clinic
       console.log('📡 [Stage 3] Fetching patients for clinic:', clinicId);
-      const patientsResponse = await fetch(`${API_BASE_URL}/patients?clinicId=${clinicId}`, {
+      const patientsResponse = await fetchWithAuth(`${API_BASE_URL}/patients?clinicId=${clinicId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
 
@@ -336,11 +336,10 @@ export default function ReferralCreationPage({
 
       console.log('📡 [Submit - Stage 3] Sending referral payload:', JSON.stringify(referralPayload));
 
-      const response = await fetch(`${API_BASE_URL}/referrals`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/referrals`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
         body: JSON.stringify(referralPayload),
       });

@@ -69,7 +69,7 @@ interface PatientIntakeFormProps {
 }
 
 export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
-  const { clinic } = useClinicDashboardView();
+  const { clinic, patients } = useClinicDashboardView();
 
   useEffect(()=>{console.log('Clinic is:',clinic)})
 
@@ -150,6 +150,34 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
     if (!validateForm()) {
       return;
     }
+
+     const activePatients = patients.filter(
+        (patient: any) =>
+          patient.pipelineStage !== 'INACTIVE_ARCHIVED' &&
+          patient.pipelineStage !== 'COMPLETE' &&
+          patient.pipelineStage?.toLowerCase() !== 'inactive_archived' &&
+          patient.pipelineStage?.toLowerCase() !== 'complete'
+      );
+
+      const activeCount = activePatients.length;
+      const chairCount = clinic.infusionChairCount || 0;
+
+      console.log('✅ [Stage 5] Filter complete:');
+      console.log(`   - Active patients: ${activeCount}`);
+      console.log(`   - Available chairs: ${chairCount}`);
+      console.log(`   - Active patients list:`, activePatients.map((p: any) => ({ id: p.id, stage: p.pipelineStage })));
+
+       console.log('⚖️ [Stage 6] Checking capacity: activeCount (${activeCount}) >= chairCount (${chairCount})?');
+      if (activeCount >= chairCount) {
+        console.error('❌ [Stage 6] Clinic at capacity - selection rejected');
+        setErrors({CapacityError:
+          `This clinic has reached its capacity. Currently has ${activeCount} active patients with ${chairCount} available chairs.`
+      });
+        return; // Reject the selection
+      }
+
+      console.log('✅ [Stage 6] Clinic has available capacity - accepting selection');
+
 
     setIsSubmitting(true);
     setApiError('');
