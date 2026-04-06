@@ -100,12 +100,22 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    // Patient Information
     if (!formData.patientFirstName.trim()) newErrors.patientFirstName = 'First name required';
     if (!formData.patientLastName.trim()) newErrors.patientLastName = 'Last name required';
     if (!formData.patientDOB) newErrors.patientDOB = 'Date of birth required';
     if (!formData.patientEmail) newErrors.patientEmail = 'Email required';
     if (!formData.patientPhone) newErrors.patientPhone = 'Phone required';
-    if (!formData.primaryDiagnosis) newErrors.primaryDiagnosis = 'Diagnosis code required';
+
+    // Insurance Information
+    if (!formData.insuranceCarrier.trim()) newErrors.insuranceCarrier = 'Insurance carrier required';
+    if (!formData.insuranceMemberId.trim()) newErrors.insuranceMemberId = 'Member ID required';
+    if (!formData.insuranceGroupNumber.trim()) newErrors.insuranceGroupNumber = 'Group number required';
+    if (!formData.insurancePlanType.trim()) newErrors.insurancePlanType = 'Plan type required';
+
+    // Clinical Information
+    if (!formData.primaryDiagnosis.trim()) newErrors.primaryDiagnosis = 'Diagnosis code required';
+    if (!formData.prescribedTreatment.trim()) newErrors.prescribedTreatment = 'Prescribed treatment required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -425,36 +435,68 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
 
         {/* Insurance Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground/90">Insurance Information</h3>
+          <h3 className="text-lg font-semibold text-foreground/90">Insurance Information <span className="text-destructive">*</span></h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              placeholder="Insurance Carrier (e.g., Blue Cross)"
-              value={formData.insuranceCarrier}
-              onChange={(e) => handleChange('insuranceCarrier', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            <Input
-              placeholder="Member ID"
-              value={formData.insuranceMemberId}
-              onChange={(e) => handleChange('insuranceMemberId', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
+            <div>
+              <Label className="block text-sm font-medium mb-2">
+                Insurance Carrier <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="Insurance Carrier (e.g., Blue Cross)"
+                value={formData.insuranceCarrier}
+                onChange={(e) => handleChange('insuranceCarrier', e.target.value)}
+                className="bg-background/50 border-border/30"
+              />
+              {errors.insuranceCarrier && (
+                <p className="text-xs text-destructive mt-1">{errors.insuranceCarrier}</p>
+              )}
+            </div>
+            <div>
+              <Label className="block text-sm font-medium mb-2">
+                Member ID <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="Member ID"
+                value={formData.insuranceMemberId}
+                onChange={(e) => handleChange('insuranceMemberId', e.target.value)}
+                className="bg-background/50 border-border/30"
+              />
+              {errors.insuranceMemberId && (
+                <p className="text-xs text-destructive mt-1">{errors.insuranceMemberId}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              placeholder="Group Number"
-              value={formData.insuranceGroupNumber}
-              onChange={(e) => handleChange('insuranceGroupNumber', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            <Input
-              placeholder="Plan Type (e.g., PPO)"
-              value={formData.insurancePlanType}
-              onChange={(e) => handleChange('insurancePlanType', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
+            <div>
+              <Label className="block text-sm font-medium mb-2">
+                Group Number <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="Group Number"
+                value={formData.insuranceGroupNumber}
+                onChange={(e) => handleChange('insuranceGroupNumber', e.target.value)}
+                className="bg-background/50 border-border/30"
+              />
+              {errors.insuranceGroupNumber && (
+                <p className="text-xs text-destructive mt-1">{errors.insuranceGroupNumber}</p>
+              )}
+            </div>
+            <div>
+              <Label className="block text-sm font-medium mb-2">
+                Plan Type <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="Plan Type (e.g., PPO)"
+                value={formData.insurancePlanType}
+                onChange={(e) => handleChange('insurancePlanType', e.target.value)}
+                className="bg-background/50 border-border/30"
+              />
+              {errors.insurancePlanType && (
+                <p className="text-xs text-destructive mt-1">{errors.insurancePlanType}</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -540,12 +582,20 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
             className="bg-background/50 border-border/30"
           />
 
-          <Input
-            placeholder="Prescribed Treatment"
-            value={formData.prescribedTreatment}
-            onChange={(e) => handleChange('prescribedTreatment', e.target.value)}
-            className="bg-background/50 border-border/30"
-          />
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Prescribed Treatment <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              placeholder="Prescribed Treatment"
+              value={formData.prescribedTreatment}
+              onChange={(e) => handleChange('prescribedTreatment', e.target.value)}
+              className="bg-background/50 border-border/30"
+            />
+            {errors.prescribedTreatment && (
+              <p className="text-xs text-destructive mt-1">{errors.prescribedTreatment}</p>
+            )}
+          </div>
 
           <div>
             <Label className="block text-sm font-medium mb-2">Urgency Level</Label>
