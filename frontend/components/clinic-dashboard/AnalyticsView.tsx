@@ -73,7 +73,7 @@ const getAverageTimeInPipeline = (patients: Patient[]) => {
   const totalDays = patients.reduce((sum, p) => {
     if (!p.createdAt) return sum;
     const createdTime = new Date(p.createdAt).getTime();
-    const days = Math.floor((now - createdTime) / (1000 * 60 * 60 * 24));
+    const days = Math.floor((now - createdTime) / (1000 * 60 * 60));
     return sum + days;
   }, 0);
   return (totalDays / patients.length).toFixed(1);
@@ -200,7 +200,7 @@ export default function AnalyticsView({
                 icon={Clock}
                 label="Avg. Time in Pipeline"
                 value={analytics.avgTimeInPipeline}
-                unit="days"
+                unit="hrs"
                 color="primary"
               />
               <StatCard
