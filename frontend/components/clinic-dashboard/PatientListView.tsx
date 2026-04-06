@@ -141,9 +141,7 @@ export default function PatientListView({
                   <th className="px-6 py-4 text-left">
                     <span className="text-sm font-semibold text-foreground/70">Urgency</span>
                   </th>
-                  <th className="px-6 py-4 text-left">
-                    <span className="text-sm font-semibold text-foreground/70">Status</span>
-                  </th>
+                 
                   <th className="px-6 py-4 text-left">
                     <span className="text-sm font-semibold text-foreground/70">Referred</span>
                   </th>
@@ -208,15 +206,7 @@ export default function PatientListView({
                         {patient.urgencyLevel || 'N/A'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          patient.status
-                        )}`}
-                      >
-                        {patient.status || 'N/A'}
-                      </span>
-                    </td>
+                    
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-foreground/70">
                         <Calendar className="w-4 h-4" />
