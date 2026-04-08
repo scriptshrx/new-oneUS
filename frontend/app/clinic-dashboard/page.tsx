@@ -19,12 +19,7 @@ export default function ClinicDashboardPage() {
   useEffect(() => {
     if (currentView === 'logout') {
       localStorage.removeItem('clinic');
-      if(window && typeof window !=='undefined'){
-        const currentdashboard = localStorage.getItem('dashboardview');
-        if(currentdashboard){
-        setCurrentView(currentdashboard)
-        }
-      }
+     
       router.push('/login');
     }
   }, [currentView, router]);
