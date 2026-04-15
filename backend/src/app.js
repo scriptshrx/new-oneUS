@@ -31,14 +31,15 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'HEAD', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
 
 // Health check
-app.get('/health', (req, res) => {
+app.head('/health', (req, res) => {
+console.log('Wake-up call from UptimeRobot')
   res.json({ status: 'ok' });
 });
 
