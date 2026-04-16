@@ -18,6 +18,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       'http://localhost:3000',
+      'https://scriptishrx.net',
       'http://localhost:3001',
       'https://new-scriptish.vercel.app',
       'https://scriptishrxnewmark.onrender.com',
