@@ -27,8 +27,10 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
   return (
     <>
       {/* Header */}
-      <div className="border-b border-border/30 bg-primary/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+
+      <div className="border-b border-border/30 bg-primary/5 rounded-b-[10px]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 transition-all duration-500 ease-in-out hover:bg-primary/6">
           <div className="flex items-center gap-3 mb-3">
             {onBack && (
               <button
@@ -38,7 +40,7 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
                 <ArrowLeft className="w-5 h-5 text-accent" />
               </button>
             )}
-            <h1 className="text-3xl font-bold text-accent">Refer Patients</h1>
+            <h1 className="text-3xl font-bold text-accent">Refer A Patient</h1>
           </div>
           <p className="text-foreground/75">
             Submit a patient referral to one of your partner clinics
@@ -47,7 +49,8 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 transition-all duration-500 ease-in-out hover:bg-primary/6">
         {showForm ? (
           <ReferralCreationForm
             hospitalId="hospital_123"
@@ -58,10 +61,19 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
           />
         ) : (
           <div className="bg-primary/10 border border-border/30 rounded-2xl p-12 text-center">
-            <div className=" mx-auto w-16 h-16 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center mb-4">
 
-            <div className="text-[40px] font-bold items-center justify-center flex text-center text-green-400">✓</div>
-          
+
+
+
+            <div className=" mx-auto w-16 h-16 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center mb-4 transition-all duration-500 ease-in-out hover:bg-accent/90">
+              <div
+                style={{
+                  animation: 'border-color 5s infinite alternate',
+                }}
+                className="text-[40px] font-bold items-center justify-center flex text-center text-green-400"
+              >
+                ✓
+              </div>
             </div>
             <h2 className="text-2xl font-bold text-primary mb-2">Referral Submitted</h2>
             <p className="text-foreground/75 mb-6">
@@ -78,4 +90,14 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
       </div>
     </>
   );
+}
+
+@keyframes border-color {
+  from {
+    border-color: #4caf50;
+  }
+  
+  to {
+    border-color: #f44336;
+  }
 }
