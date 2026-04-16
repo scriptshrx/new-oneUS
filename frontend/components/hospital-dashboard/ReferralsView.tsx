@@ -40,7 +40,7 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
                 <ArrowLeft className="w-5 h-5 text-accent" />
               </button>
             )}
-            <h1 className="text-3xl font-bold text-accent">Refer A Patient</h1>
+            <h1 className="text-3xl font-bold text-accent">Refer Patients</h1>
           </div>
           <p className="text-foreground/75">
             Submit a patient referral to one of your partner clinics
