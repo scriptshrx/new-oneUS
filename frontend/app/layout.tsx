@@ -10,22 +10,20 @@ export const metadata: Metadata = {
   title: 'Scriptish',
   description: 'Solution for Infusion Clinics',
   generator: 'Engr. Mark',
-  icons: {
-    icon: [
+  openGraph: {
+    title: 'Scriptish',
+    description: 'Operating System for Infusion Clinics',
+    images: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: '/og-image-1.png',
+        width: 1200,
+        height: 630,
+        alt: 'Scriptish - Solution for Infusion Clinics',
       },
     ],
-    apple: '/apple-icon.png',
+  },
+  icons: {
+    icon: '/new-logo.png',
   },
 }
 
@@ -42,6 +40,9 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/new-logo.png" />
+      </head>
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
           <ProtectedLayout>

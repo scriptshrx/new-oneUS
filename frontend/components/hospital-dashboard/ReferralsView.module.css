@@ -1,0 +1,13 @@
+@keyframes border-color {
+  from {
+    border-color: #4caf50;
+  }
+  
+  to {
+    border-color: #f44336;
+  }
+}
+
+.animatedBorder {
+  animation: border-color 5s infinite alternate;
+}

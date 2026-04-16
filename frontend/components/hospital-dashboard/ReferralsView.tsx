@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, TicketCheck } from 'lucide-react';
 import ReferralCreationForm from '@/components/registration/ReferralCreationForm';
 import { useDashboardView } from '@/components/HospitalDashboardLayout';
+import styles from './ReferralsView.module.css';
 
 interface ReferralsViewProps {
   onBack?: () => void;
@@ -66,12 +67,7 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
 
 
             <div className=" mx-auto w-16 h-16 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center mb-4 transition-all duration-500 ease-in-out hover:bg-accent/90">
-              <div
-                style={{
-                  animation: 'border-color 5s infinite alternate',
-                }}
-                className="text-[40px] font-bold items-center justify-center flex text-center text-green-400"
-              >
+              <div className={`text-[40px] font-bold items-center justify-center flex text-center text-green-400 ${styles.animatedBorder}`}>
                 ✓
               </div>
             </div>
@@ -90,14 +86,4 @@ export default function ReferralsView({ onBack }: ReferralsViewProps) {
       </div>
     </>
   );
-}
-
-@keyframes border-color {
-  from {
-    border-color: #4caf50;
-  }
-  
-  to {
-    border-color: #f44336;
-  }
 }
