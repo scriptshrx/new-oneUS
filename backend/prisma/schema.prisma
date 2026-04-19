@@ -120,6 +120,7 @@ model Clinic {
   knowledgeBase         KnowledgeBase?
   callLogs              CallLog[]
   subscription          Subscription?
+  infusionChairs        InfusionChair[] @relation("ClinicInfusionChairs")
 
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
@@ -150,6 +151,46 @@ enum ClinicStatus {
   CANCELLED
 
   @@map("clinic_statuses")
+}
+
+// ============================================================================
+// INFUSION CHAIRS (CLINIC OPERATIONS)
+// ============================================================================
+
+model InfusionChair {
+  id                    String    @id @default(cuid())
+
+  clinic                Clinic    @relation("ClinicInfusionChairs", fields: [clinicId], references: [id], onDelete: Cascade)
+  clinicId              String @map("clinic_id")
+
+  // Chair Officer Details
+  name                  String
+  email                 String
+  specialty             String
+
+  // Operating Address
+  operatingAddress      String @map("operating_address")
+  city                  String
+  state                 String    @db.Char(2)
+  zipCode               String @map("zip_code")
+
+  // Status
+  status                ChairStatus @default(ACTIVE)
+
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@index([clinicId])
+  @@index([email])
+  @@map("infusion_chairs")
+}
+
+enum ChairStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+
+  @@map("chair_statuses")
 }
 
 // ============================================================================
