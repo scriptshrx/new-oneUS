@@ -675,8 +675,6 @@ model InsuranceVerification {
 
   createdAt             DateTime  @default(now()) @map("created_at")
 
-  insurance_latest      InsuranceInformation? @relation("LatestVerification", fields: [id], references: [id])
-
   @@index([insuranceId])
   @@index([clinicId])
   @@map("insurance_verifications")
