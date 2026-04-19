@@ -51,7 +51,7 @@ class ChairService {
    */
   static async createChair(clinicId, chairData) {
     try {
-      // Validate required fields
+      // Validate the required fields
       const { name, email, specialty, operatingAddress, city, state, zipCode } = chairData;
 
       if (!name || !email || !specialty || !operatingAddress || !city || !state || !zipCode) {
