@@ -1,4 +1,4 @@
-const { prisma } = require('../db/client');
+const prisma = require('../db/client');
 
 class ChairService {
   /**
