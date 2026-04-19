@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ChairService = require('../services/chairService');
-const { authenticateToken } = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 
 // Middleware to verify clinic ownership
 const verifyClinicOwnership = async (req, res, next) => {
@@ -18,7 +18,7 @@ const verifyClinicOwnership = async (req, res, next) => {
 };
 
 // Get all infusion chairs for a clinic
-router.get('/chairs/:clinicId', authenticateToken, verifyClinicOwnership, async (req, res) => {
+router.get('/chairs/:clinicId', authMiddleware, verifyClinicOwnership, async (req, res) => {
   try {
     const { clinicId } = req.params;
 
@@ -38,7 +38,7 @@ router.get('/chairs/:clinicId', authenticateToken, verifyClinicOwnership, async 
 });
 
 // Get infusion chairs with patients
-router.get('/chairs/:clinicId/with-patients', authenticateToken, verifyClinicOwnership, async (req, res) => {
+router.get('/chairs/:clinicId/with-patients', authMiddleware, verifyClinicOwnership, async (req, res) => {
   try {
     const { clinicId } = req.params;
 
@@ -58,7 +58,7 @@ router.get('/chairs/:clinicId/with-patients', authenticateToken, verifyClinicOwn
 });
 
 // Get a single infusion chair
-router.get('/chair/:chairId', authenticateToken, async (req, res) => {
+router.get('/chair/:chairId', authMiddleware, async (req, res) => {
   try {
     const { chairId } = req.params;
 
@@ -78,7 +78,7 @@ router.get('/chair/:chairId', authenticateToken, async (req, res) => {
 });
 
 // Create a new infusion chair
-router.post('/chairs/:clinicId', authenticateToken, verifyClinicOwnership, async (req, res) => {
+router.post('/chairs/:clinicId', authMiddleware, verifyClinicOwnership, async (req, res) => {
   try {
     const { clinicId } = req.params;
     const chairData = req.body;
@@ -100,7 +100,7 @@ router.post('/chairs/:clinicId', authenticateToken, verifyClinicOwnership, async
 });
 
 // Update an infusion chair
-router.put('/chair/:chairId', authenticateToken, async (req, res) => {
+router.put('/chair/:chairId', authMiddleware, async (req, res) => {
   try {
     const { chairId } = req.params;
     const updateData = req.body;
@@ -122,7 +122,7 @@ router.put('/chair/:chairId', authenticateToken, async (req, res) => {
 });
 
 // Delete an infusion chair (hard delete)
-router.delete('/chair/:chairId', authenticateToken, async (req, res) => {
+router.delete('/chair/:chairId', authMiddleware, async (req, res) => {
   try {
     const { chairId } = req.params;
 
@@ -143,7 +143,7 @@ router.delete('/chair/:chairId', authenticateToken, async (req, res) => {
 });
 
 // Archive an infusion chair (soft delete)
-router.patch('/chair/:chairId/archive', authenticateToken, async (req, res) => {
+router.patch('/chair/:chairId/archive', authMiddleware, async (req, res) => {
   try {
     const { chairId } = req.params;
 
