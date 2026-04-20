@@ -189,14 +189,26 @@ export default function LoginPage() {
         return;
       }
 
-      const response = await authService.login({
+      const response: any = await authService.login({
         email,
         password,
       });
 
+      console.log('Response data for this login:', JSON.stringify(response));
 
-      console.log('Response data for this login:',JSON.stringify(response));
-      console.log('Admin eamil:',response.user.email);
+      // If login returned an infusion chair, route to the chair dashboard
+      if (response?.from === 'infusionChair' && response?.data) {
+        try {
+          localStorage.setItem('chair', JSON.stringify(response.data));
+          localStorage.setItem('tenantType', 'infusionChair');
+        } catch (e) {
+          console.error('Failed to persist chair data', e);
+        }
+        router.push('/chair-dashboard');
+        return;
+      }
+
+      console.log('Admin eamil:', response.user?.email);
      
       /* Check if user is authorized
       if(response.user.email !== 'bytance@clinic.com' && response.user.email !== 'ezehmark5@bytpay.com'){

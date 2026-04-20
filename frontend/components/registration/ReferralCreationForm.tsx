@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { useDashboardView } from '../HospitalDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
+import InsuranceVerificationModal from './InsuranceVerificationModal';
 
 
 
@@ -135,6 +136,8 @@ export default function ReferralCreationPage({
   const [successMessage, setSuccessMessage] = useState('');
   const [capacityError, setCapacityError] = useState<string>('');
   const [selectedClinicData, setSelectedClinicData] = useState<any>(null);
+  const [showInsuranceModal, setShowInsuranceModal] = useState(false);
+  const [submittedPatientName, setSubmittedPatientName] = useState('');
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -356,6 +359,10 @@ export default function ReferralCreationPage({
       setSuccessMessage(
         `✓ Referral submitted successfully! Patient ${result.patientName} has been created.`
       );
+      
+      // Store patient name and show insurance modal
+      setSubmittedPatientName(result.patientName || `${formData.patientFirstName} ${formData.patientLastName}`);
+      setShowInsuranceModal(true);
 
       // Reset form
       console.log('🔄 [Submit - Stage 5] Resetting form');
@@ -388,10 +395,8 @@ export default function ReferralCreationPage({
         targetClinicId: '',
       });
 
-      console.log('✅ [Submit - Stage 5] Form reset complete, redirecting in 2 seconds');
-      setTimeout(() => {
-        onBack();
-      }, 2000);
+      console.log('✅ [Submit - Stage 5] Form reset complete, showing insurance verification modal');
+      setIsSubmitting(false);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit referral';
       console.error('❌ [Submit - Error]', errorMessage);
@@ -421,15 +426,15 @@ export default function ReferralCreationPage({
       </div>
 
       {/* Success Alert */}
-      {successMessage && (
-        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex gap-3">
-          <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center mt-0.5">
-            <div className="text-sm font-bold text-green-400">✓</div>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-green-300">{successMessage}</p>
-          </div>
-        </div>
+      {successMessage && showInsuranceModal && (
+        <InsuranceVerificationModal
+          patientName={submittedPatientName}
+          onClose={() => {
+            setShowInsuranceModal(false);
+            setSuccessMessage('');
+            onBack();
+          }}
+        />
       )}
 
       {/* Error Alert */}

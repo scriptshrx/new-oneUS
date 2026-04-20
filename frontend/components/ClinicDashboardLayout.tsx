@@ -1,16 +1,19 @@
 'use client';
 
-import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3, Zap, Mic, Database, MessageSquare, CreditCard, BrainCircuit, Bot } from 'lucide-react';
+import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3, Zap, Mic, Database, MessageSquare, CreditCard, BrainCircuit, Bot, Users2, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, createContext, useContext, useEffect } from 'react';
 import { authService } from '@/lib/authService';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
+import AllChairsView from './clinic-dashboard/AllChairsView';
+import AddChairsView from './clinic-dashboard/AddChairsView';
+import ChairsPipelineView from './clinic-dashboard/ChairsPipelineView';
 
 interface ClinicDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ViewType = 'dashboard' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'logout';
+type ViewType = 'dashboard' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
 
 interface Patient {
   // Core Patient Info
@@ -103,7 +106,7 @@ const navItems = [
       },
       {
         id: 'patientsList' as ViewType,
-        label: 'Patient List',
+        label: 'Patient CRM',
         icon: Users,
       },
       {
@@ -134,22 +137,22 @@ const navItems = [
     ],
   },
   {
-    group: 'AI CONCIERGE',
+    group: 'INFUSION CHAIRS',
     items: [
       {
-        id: 'voiceAgents' as ViewType,
-        label: 'Voice Agents',
-        icon: Bot,
+        id: 'allChairs' as ViewType,
+        label: 'Active Chairs',
+        icon: Users2,
       },
       {
-        id: 'knowledgeBase' as ViewType,
-        label: 'Knowledge Base',
-        icon: BrainCircuit,
+        id: 'chairsPipeline' as ViewType,
+        label: 'Chairs Pipeline',
+        icon: Workflow,
       },
       {
-        id: 'automatedSMS' as ViewType,
-        label: 'Automated SMS',
-        icon: MessageSquare,
+        id: 'addChairs' as ViewType,
+        label: 'Add Chairs',
+        icon: UserPlus,
       },
     ],
   },
@@ -302,6 +305,21 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
 
     fetchReferredPatients();
   }, []);
+
+  // Render the appropriate view based on currentView
+  const renderView = () => {
+    switch (currentView) {
+      case 'allChairs':
+        return <AllChairsView />;
+      case 'chairsPipeline':
+        return <ChairsPipelineView />;
+      case 'addChairs':
+        return <AddChairsView />;
+      default:
+        return children;
+    }
+  };
+
   return (
     <DashboardContext.Provider value={{ currentView, clinic, setCurrentView, patients, patientsLoading, patientsError }}>
       <div className="flex h-screen bg-background">
@@ -359,7 +377,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
           </nav>
 
           {/* Footer - Empty for now, logout moved to SETTINGS group */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/30">
+          <div className="absolute bottom-0 left-0 right-0 p-4  border-border/30">
           </div>
         </div>
 
@@ -389,7 +407,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
 
           {/* Page Content */}
           <div className="flex-1 overflow-auto">
-            {children}
+            {renderView()}
           </div>
         </div>
       </div>

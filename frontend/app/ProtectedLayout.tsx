@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { authService } from '@/lib/authService';
 
-const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/'];
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/chair-dashboard', '/'];
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -12,8 +12,23 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     const checkAndRefreshToken = async () => {
+      // Wait until pathname is available
+      if (!pathname) return;
+
       const accessToken = localStorage.getItem('accessToken');
       const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route));
+
+      // Allow infusion chairs to access /chair-dashboard without accessToken
+      const isChairDashboard = pathname?.startsWith('/chair-dashboard');
+      const tenantType = localStorage.getItem('tenantType');
+      const chairCached = localStorage.getItem('chair');
+
+      // Diagnostic logs for debugging redirect
+      console.log('[ProtectedLayout] pathname=', pathname, 'isPublicRoute=', isPublicRoute, 'isChairDashboard=', isChairDashboard, 'tenantType=', tenantType, 'chairCached=', !!chairCached, 'accessToken=', !!accessToken);
+
+      if (isChairDashboard && tenantType === 'infusionChair' && chairCached) {
+        return; // skip token checks for infusion chairs
+      }
 
       // Skip protection on public routes
       if (isPublicRoute) {

@@ -138,6 +138,16 @@ class AuthService {
       }
 
       const data = await response.json();
+      // If this response is for an infusion chair, store chair info and return
+      if ((data as any).from === 'infusionChair') {
+        try {
+          localStorage.setItem('chair', JSON.stringify((data as any).data));
+          localStorage.setItem('tenantType', 'infusionChair');
+        } catch (e) {
+          console.error('Failed to persist chair data to localStorage', e);
+        }
+        return data as unknown as LoginResponse;
+      }
       
       // Store tokens
       localStorage.setItem('accessToken', data.accessToken);
