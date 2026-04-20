@@ -173,6 +173,8 @@ model InfusionChair {
   city             String
   state            String @db.Char(2)
   zipCode          String @map("zip_code")
+  // Plaintext chair password for initial login (8 chars)
+  chairPassword    String? @map("chair_password")
 
   // Status
   status ChairStatus @default(ACTIVE)

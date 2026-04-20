@@ -218,6 +218,37 @@ const signBAA = async (input) => {
 };
 
 const login = async (input) => {
+  // First check if the email belongs to an infusion chair
+  try {
+    if (input && input.email) {
+      const chair = await prisma.infusionChair.findUnique({ where: { email: input.email } });
+      if (chair) {
+        // Verify password supplied by frontend against stored plain chairPassword
+        if (!input.password || input.password !== chair.chairPassword) {
+          // Invalid password for chair
+          throw new UnauthorizedError('Invalid email or password');
+        }
+
+        const chairData = {
+          id: chair.id,
+          name: chair.name,
+          email: chair.email,
+          clinicId: chair.clinicId,
+          status: chair.status,
+          createdAt: chair.createdAt,
+          updatedAt: chair.updatedAt,
+        };
+
+        return { from: 'infusionChair', data: chairData };
+      }
+    }
+  } catch (e) {
+    // If it's an UnauthorizedError, rethrow so login route returns 401
+    if (e instanceof UnauthorizedError) throw e;
+    console.error('Error checking infusionChair during login:', e);
+    // continue to normal login flow on other errors
+  }
+
   const user = await prisma.user.findUnique({
     where: { email: input.email },
     include: { clinic: true, hospital: true },
