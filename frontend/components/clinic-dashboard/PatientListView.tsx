@@ -34,6 +34,7 @@ interface PatientListViewProps {
   patientsError: string | null;
   patientsLoading: boolean;
   onBack?: () => void;
+  clinicId?: string;
 }
 
 const getUrgencyColor = (urgency: string | undefined) => {
@@ -71,9 +72,11 @@ export default function PatientListView({
   patientsError,
   patientsLoading,
   onBack,
+  clinicId,
 }: PatientListViewProps) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const { setCurrentView } = useClinicDashboardView();
+  const { setCurrentView, clinic } = useClinicDashboardView();
+  const effectiveClinicId = clinicId || clinic?.id;
 
   const handleUpdateStatus = async (patientId: string, nextStage: string) => {
     const referralId = selectedPatient?._referral.id;
@@ -266,6 +269,7 @@ export default function PatientListView({
           isOpen={!!selectedPatient}
           onClose={() => setSelectedPatient(null)}
           onUpdateStatus={handleUpdateStatus}
+          clinicId={effectiveClinicId}
         />
       )}
     </div>

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { X, CheckCircle, Clock, AlertCircle, Archive } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, CheckCircle, Clock, AlertCircle, Archive, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ChairSelectionModal from '@/components/ChairSelectionModal';
+import { fetchWithAuth } from '@/lib/fetchWithAuth';
 
 interface Patient {
   id?: string;
@@ -18,10 +20,21 @@ interface Patient {
   urgencyLevel?: string;
 }
 
+interface Chair {
+  id: string;
+  name: string;
+  email: string;
+  specialty: string;
+  city: string;
+  state: string;
+  status: string;
+}
+
 interface PatientCRMNodeProps {
   patient: Patient;
   onClose: () => void;
   onUpdateStatus?: (patientId: string, nextStage: string) => Promise<void>;
+  clinicId?: string;
 }
 
 const pipelineStages = [
@@ -85,9 +98,62 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-export default function PatientDetailModal({ patient, onClose, onUpdateStatus }: PatientCRMNodeProps) {
+export default function PatientDetailModal({ patient, onClose, onUpdateStatus, clinicId }: PatientCRMNodeProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showChairSelection, setShowChairSelection] = useState(false);
+  const [taggedChair, setTaggedChair] = useState<Chair | null>(null);
+  const [loadingChair, setLoadingChair] = useState(false);
+  const [chairError, setChairError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (patient.id) {
+      fetchTaggedChair();
+    }
+  }, [patient.id]);
+
+  const fetchTaggedChair = async () => {
+    try {
+      setLoadingChair(true);
+      setChairError(null);
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/chairs/patients/${patient.id}/tagged-chair`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setTaggedChair(data.data || null);
+      }
+    } catch (err) {
+      console.error('Error fetching tagged chair:', err);
+    } finally {
+      setLoadingChair(false);
+    }
+  };
+
+  const handleTagChair = async (chairId: string) => {
+    if (!patient.id) return;
+
+    try {
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/chairs/patients/${patient.id}/tag-chair`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ chairId }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to tag chair');
+      }
+
+      const data = await response.json();
+      setTaggedChair(data.data?.infusionChair || null);
+    } catch (err) {
+      console.error('Error tagging chair:', err);
+      throw err;
+    }
+  };
 
   const nextStage = getNextStage(patient.pipelineStage);
   const nextStageLabel =
@@ -165,6 +231,65 @@ export default function PatientDetailModal({ patient, onClose, onUpdateStatus }:
               <p className="text-accent mt-1 font-semibold capitalize">{patient.pipelineStage?.replace(/_/g, ' ').toLowerCase()}</p>
             </div>
           </div>
+        </div>
+
+        {/* Infusion Chair Section */}
+        <div className="p-6 border-b border-primary/20">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-primary/95">Assigned Infusion Chair</h3>
+          </div>
+          
+          {loadingChair ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader className="w-5 h-5 animate-spin text-primary mr-2" />
+              <span className="text-foreground/70">Loading chair information...</span>
+            </div>
+          ) : taggedChair ? (
+            <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-primary/80 uppercase">Chair Name</label>
+                  <p className="text-foreground font-semibold mt-1">{taggedChair.name}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-primary/80 uppercase">Specialty</label>
+                  <p className="text-foreground font-semibold mt-1">{taggedChair.specialty}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-primary/80 uppercase">Email</label>
+                  <p className="text-foreground mt-1">{taggedChair.email}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-primary/80 uppercase">Location</label>
+                  <p className="text-foreground mt-1">
+                    {taggedChair.city}, {taggedChair.state}
+                  </p>
+                </div>
+              </div>
+              {clinicId && (
+                <Button
+                  onClick={() => setShowChairSelection(true)}
+                  className="mt-4 text-sm bg-primary/20 text-primary hover:bg-primary/30"
+                >
+                  Change Chair
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 mb-3">No infusion chair assigned to this patient yet.</p>
+              {clinicId ? (
+                <Button
+                  onClick={() => setShowChairSelection(true)}
+                  className="bg-primary text-white hover:bg-primary/90"
+                >
+                  Tag Chair
+                </Button>
+              ) : (
+                <p className="text-xs text-yellow-700">Unable to tag chair: clinic information not available</p>
+              )}
+            </div>
+          )}
         </div>
         
 
@@ -325,6 +450,16 @@ export default function PatientDetailModal({ patient, onClose, onUpdateStatus }:
 
       
       </div>
+
+      {/* Chair Selection Modal */}
+      {clinicId && (
+        <ChairSelectionModal
+          isOpen={showChairSelection}
+          onClose={() => setShowChairSelection(false)}
+          clinicId={clinicId}
+          onChairSelected={handleTagChair}
+        />
+      )}
     </div>
   );
 }

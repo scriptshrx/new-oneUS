@@ -312,7 +312,7 @@ model Patient {
   // User account (optional - for patient portal login)
   user User? @relation("PatientUser")
 
-  // Insurance
+  // Insurance model
   insurance InsuranceInformation?
 
   // Clinical
