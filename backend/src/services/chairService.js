@@ -1,0 +1,215 @@
+const prisma = require('../db/client');
+const crypto = require('crypto');
+const { sendEmail } = require('../utils/email');
+
+class ChairService {
+  /**
+   * Get all infusion chairs for a clinic
+   * @param {string} clinicId - The clinic ID
+   * @returns {Promise<Array>} - Array of infusion chairs
+   */
+  static async getChairsByClinic(clinicId) {
+    try {
+      const chairs = await prisma.infusionChair.findMany({
+        where: {
+          clinicId: clinicId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      return chairs;
+    } catch (error) {
+      throw new Error(`Failed to fetch infusion chairs: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get a single infusion chair by ID
+   * @param {string} chairId - The chair ID
+   * @returns {Promise<Object>} - The infusion chair object
+   */
+  static async getChairById(chairId) {
+    try {
+      const chair = await prisma.infusionChair.findUnique({
+        where: {
+          id: chairId,
+        },
+      });
+      if (!chair) {
+        throw new Error('Infusion chair not found');
+      }
+      return chair;
+    } catch (error) {
+      throw new Error(`Failed to fetch infusion chair: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create a new infusion chair
+   * @param {string} clinicId - The clinic ID
+   * @param {Object} chairData - The chair data
+   * @returns {Promise<Object>} - The created infusion chair
+   */
+  static async createChair(clinicId, chairData) {
+    try {
+      // Validate the required fields
+      const { name, email, specialty, operatingAddress, city, state, zipCode } = chairData;
+
+      if (!name || !email || !specialty || !operatingAddress || !city || !state || !zipCode) {
+        throw new Error('Missing required fields');
+      }
+
+      // Generate a random 8-character password (alphanumeric)
+      const generateRandomPassword = (length = 8) => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let pw = '';
+        const bytes = crypto.randomBytes(length);
+        for (let i = 0; i < length; i++) {
+          pw += chars[bytes[i] % chars.length];
+        }
+        return pw;
+      };
+
+      const plainPassword = generateRandomPassword(8);
+      console.log('The chair password is',plainPassword)
+
+      const chair = await prisma.infusionChair.create({
+        data: {
+          clinicId,
+          name,
+          email,
+          specialty,
+          operatingAddress,
+          city,
+          state,
+          zipCode,
+          chairPassword: plainPassword,
+          status: 'ACTIVE',
+        },
+      });
+
+      // Try to fetch clinic name for email context
+      let clinic = null;
+      try {
+        clinic = await prisma.clinic.findUnique({ where: { id: clinicId } });
+      } catch (e) {
+        // ignore
+      }
+
+      // Send account creation email (do not block on failure)
+      try {
+        const clinicName = clinic?.name || 'Your Clinic';
+        const subject = 'Your Chair Account Created';
+        const html = `
+          <h2>Account Created</h2>
+          <p>Hello ${name},</p>
+          <p>An account has been created for you as an infusion chair at <strong>${clinicName}</strong>.</p>
+          <p>Login details:</p>
+          <ul>
+            <li>Email: <strong>${email}</strong></li>
+            <li>Password: <strong>${plainPassword}</strong></li>
+          </ul>
+          <p>Please sign in and change your password after first login.</p>
+        `;
+
+        await sendEmail({ to: email, subject, html });
+      } catch (e) {
+        console.error('Failed to send chair account email:', e);
+      }
+
+      return chair;
+    } catch (error) {
+      throw new Error(`Failed to create infusion chair: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update an infusion chair
+   * @param {string} chairId - The chair ID
+   * @param {Object} updateData - The data to update
+   * @returns {Promise<Object>} - The updated infusion chair
+   */
+  static async updateChair(chairId, updateData) {
+    try {
+      const chair = await prisma.infusionChair.update({
+        where: {
+          id: chairId,
+        },
+        data: updateData,
+      });
+
+      return chair;
+    } catch (error) {
+      throw new Error(`Failed to update infusion chair: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete an infusion chair
+   * @param {string} chairId - The chair ID
+   * @returns {Promise<Object>} - The deleted infusion chair
+   */
+  static async deleteChair(chairId) {
+    try {
+      const chair = await prisma.infusionChair.delete({
+        where: {
+          id: chairId,
+        },
+      });
+
+      return chair;
+    } catch (error) {
+      throw new Error(`Failed to delete infusion chair: ${error.message}`);
+    }
+  }
+
+  /**
+   * Archive an infusion chair (soft delete)
+   * @param {string} chairId - The chair ID
+   * @returns {Promise<Object>} - The archived infusion chair
+   */
+  static async archiveChair(chairId) {
+    try {
+      const chair = await prisma.infusionChair.update({
+        where: {
+          id: chairId,
+        },
+        data: {
+          status: 'ARCHIVED',
+        },
+      });
+
+      return chair;
+    } catch (error) {
+      throw new Error(`Failed to archive infusion chair: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get infusion chairs with patients assigned to them
+   * @param {string} clinicId - The clinic ID
+   * @returns {Promise<Array>} - Array of chairs with their patients
+   */
+  static async getChairsWithPatients(clinicId) {
+    try {
+      // This would require additional fields or relationships in the Appointment model
+      // For now, we'll get all chairs and can enhance later
+      const chairs = await prisma.infusionChair.findMany({
+        where: {
+          clinicId: clinicId,
+          status: 'ACTIVE',
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
+
+      return chairs;
+    } catch (error) {
+      throw new Error(`Failed to fetch chairs with patients: ${error.message}`);
+    }
+  }
+}
+
+module.exports = ChairService;

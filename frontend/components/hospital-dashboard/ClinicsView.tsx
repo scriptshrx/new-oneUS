@@ -19,7 +19,7 @@ export default function ClinicsView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-accent mb-2">Partner Clinics</h1>
@@ -34,7 +34,7 @@ export default function ClinicsView() {
           clinics.map((clinic) => (
             <div
               key={clinic.id}
-              className="bg-secondary/50 border border-border/30 rounded-xl p-6 hover:border-primary/50 transition-all cursor-pointer hover:shadow-lg"
+              className="bg-secondary/10 border border-border/30 rounded-xl p-6 hover:border-primary/50 transition-all cursor-pointeoor hover:shadow-lg"
             >
               {/* Clinic Header */}
               <div className="mb-4">

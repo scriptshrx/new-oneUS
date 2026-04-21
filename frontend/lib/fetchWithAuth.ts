@@ -35,8 +35,18 @@ export async function fetchWithAuth(
       console.log('Token refreshed, retrying request...');
       response = await fetch(url, { ...options, headers });
     } else {
-      // Refresh failed, redirect to login
-      console.error('Token refresh failed, redirecting to login');
+      // Refresh failed. If this request is being made for an infusion chair (no tokens expected),
+      // do not force a redirect to login here — allow the caller to handle the 401.
+      const tenantType = typeof window !== 'undefined' ? localStorage.getItem('tenantType') : null;
+      const chairCached = typeof window !== 'undefined' ? localStorage.getItem('chair') : null;
+      console.error('Token refresh failed');
+      if (tenantType === 'infusionChair' && chairCached) {
+        console.log('Infusion chair request: skipping forced redirect on 401');
+        return response;
+      }
+
+      // Non-chair flows: clear storage and redirect to login
+      console.error('Redirecting to login due to failed refresh');
       if (typeof window !== 'undefined') {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
