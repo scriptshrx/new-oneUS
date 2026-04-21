@@ -45,7 +45,7 @@ export default function ChairSelectionModal({
       setLoading(true);
       setError(null);
       const response = await fetchWithAuth(
-        `https://scriptishrxnewmark.onrender.com/v1/chairs/chairs/${clinicId}`
+        `https://scriptishrxnewmark.onrender.com/v1/chairs/${clinicId}`
       );
 
       if (!response.ok) {
