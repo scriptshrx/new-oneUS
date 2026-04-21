@@ -97,66 +97,44 @@ export default function ChairDashboardLayout({ children }: ChairDashboardLayoutP
         setPatientsLoading(true);
         setPatientsError(null);
 
+        if (!chair?.id) {
+          setPatientsError('Chair ID not found');
+          setPatients([]);
+          return;
+        }
+
         const apiUrl = 'https://scriptishrxnewmark.onrender.com/v1';
-        const response = await fetchWithAuth(`${apiUrl}/referrals`, { method: 'GET' });
+        const response = await fetchWithAuth(`${apiUrl}/patients/by-chair/${chair.id}`, { method: 'GET' });
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch referrals: ${response.statusText}`);
+          throw new Error(`Failed to fetch patients: ${response.statusText}`);
         }
 
         const data = await response.json();
-        const referrals = Array.isArray(data) ? data : data.referrals || [];
+        const patientsData = Array.isArray(data) ? data : data.patients || [];
 
-        // Filter referrals for this chair (try common field names)
-        const chairId = chair?.id;
-        const filtered = referrals.filter((r: any) => {
-          if (!chairId) return false;
-          return (
-            r.infusionChairId === chairId ||
-            r.chairId === chairId ||
-            r.assignedChairId === chairId ||
-            r.assignedInfusionChairId === chairId ||
-            (r.chair && r.chair.id === chairId) ||
-            (r.assignedChair && r.assignedChair.id === chairId)
-          );
-        });
-
-        const flattenedPatients: Patient[] = filtered.map((referral: any) => {
-          const patient = referral.patient || {};
-          const physician = referral.referringPhysician || {};
-          return {
-            id: patient.id,
-            firstName: patient.firstName,
-            lastName: patient.lastName,
-            dateOfBirth: patient.dateOfBirth,
-            email: patient.emailAddress,
-            phone: patient.phoneNumber,
-            address: patient.address,
-            city: patient.city,
-            state: patient.state,
-            zipCode: patient.zipCode,
-            primaryDiagnosis: referral.primaryDiagnosis,
-            prescribedTreatment: referral.prescribedTreatment,
-            urgencyLevel: referral.urgencyLevel,
-            clinicalNotes: referral.clinicalNotes,
-            status: referral.status,
-            referringPhysician: `${physician.firstName || ''} ${physician.lastName || ''}`.trim(),
-            pipelineStage: patient.pipelineStage,
-            insurance: {
-              carrier: patient.insurance?.insuranceCarrier,
-              memberId: patient.insurance?.memberID,
-              groupId: patient.insurance?.groupNumber,
-              coverageStatus: patient.insurance?.coverageStatus,
-            },
-            priorAuthorization: {
-              status: referral.priorAuthStatus,
-              approvalNumber: referral.priorAuthApprovalNumber,
-            },
-            createdAt: referral.createdAt,
-            updatedAt: referral.updatedAt,
-            _referral: referral,
-          };
-        });
+        const flattenedPatients: Patient[] = patientsData.map((patient: any) => ({
+          id: patient.id,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          dateOfBirth: patient.dateOfBirth,
+          email: patient.emailAddress,
+          phone: patient.phoneNumber,
+          address: patient.address,
+          city: patient.city,
+          state: patient.state,
+          zipCode: patient.zipCode,
+          pipelineStage: patient.pipelineStage,
+          status: patient.status,
+          primaryDiagnosis: patient.primaryDiagnosis,
+          prescribedTreatment: patient.prescribedTreatment,
+          urgencyLevel: patient.urgencyLevel,
+          clinicalNotes: patient.clinicalNotes,
+          referringPhysician: patient.referringPhysician || 'N/A',
+          createdAt: patient.createdAt,
+          updatedAt: patient.updatedAt,
+          _referral: patient._referral,
+        }));
 
         setPatients(flattenedPatients);
       } catch (error) {
@@ -169,7 +147,7 @@ export default function ChairDashboardLayout({ children }: ChairDashboardLayoutP
     };
 
     fetchPatients();
-  }, [chair]);
+  }, [chair?.id]);
 
   const renderView = () => {
     switch (currentView) {

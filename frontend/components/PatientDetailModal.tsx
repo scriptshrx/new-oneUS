@@ -117,7 +117,7 @@ export default function PatientDetailModal({ patient, onClose, onUpdateStatus, c
       setLoadingChair(true);
       setChairError(null);
       const response = await fetchWithAuth(
-        `https://scriptishrxnewmark.onrender.com/v1/chairs/patients/${patient.id}/tagged-chair`
+        `https://scriptishrxnewmark.onrender.com/v1/patients/${patient.id}/tagged-chair`
       );
 
       if (response.ok) {
@@ -136,7 +136,7 @@ export default function PatientDetailModal({ patient, onClose, onUpdateStatus, c
 
     try {
       const response = await fetchWithAuth(
-        `https://scriptishrxnewmark.onrender.com/v1/chairs/patients/${patient.id}/tag-chair`,
+        `https://scriptishrxnewmark.onrender.com/v1/patients/${patient.id}/tag-chair`,
         {
           method: 'PATCH',
           body: JSON.stringify({ chairId }),
@@ -144,10 +144,12 @@ export default function PatientDetailModal({ patient, onClose, onUpdateStatus, c
       );
 
       if (!response.ok) {
-        throw new Error('Failed to tag chair');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to tag chair');
       }
 
       const data = await response.json();
+      console.log('Chair tagged successfully:', data);
       setTaggedChair(data.data?.infusionChair || null);
     } catch (err) {
       console.error('Error tagging chair:', err);

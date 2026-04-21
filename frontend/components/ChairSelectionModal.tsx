@@ -69,14 +69,14 @@ export default function ChairSelectionModal({
 
     try {
       setIsSubmitting(true);
+      setError(null);
       await onChairSelected(selectedChairId);
       setSelectedChairId(null);
       onClose();
     } catch (err) {
       console.error('Error selecting chair:', err);
-      setError(
-        err instanceof Error ? err.message : 'Failed to tag chair to patient'
-      );
+      const errorMessage = err instanceof Error ? err.message : 'Failed to tag chair to patient';
+      setError(errorMessage);
       setIsSubmitting(false);
     }
   };
