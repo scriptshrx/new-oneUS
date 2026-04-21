@@ -179,6 +179,9 @@ model InfusionChair {
   // Status
   status ChairStatus @default(ACTIVE)
 
+  // Patients assigned to this chair
+  taggedPatients Patient[] @relation("PatientInfusionChair")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -302,6 +305,10 @@ model Patient {
   clinic   Clinic @relation(fields: [clinicId], references: [id])
   clinicId String @map("clinic_id")
 
+  // Infusion chair relationship (optional)
+  infusionChair   InfusionChair? @relation("PatientInfusionChair", fields: [infusionChairId], references: [id])
+  infusionChairId String?        @map("infusion_chair_id")
+
   // User account (optional - for patient portal login)
   user User? @relation("PatientUser")
 
@@ -327,6 +334,7 @@ model Patient {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([clinicId])
+  @@index([infusionChairId])
   @@index([emailAddress])
   @@index([phoneNumber])
   @@map("patients")

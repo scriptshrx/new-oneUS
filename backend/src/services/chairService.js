@@ -210,6 +210,73 @@ class ChairService {
       throw new Error(`Failed to fetch chairs with patients: ${error.message}`);
     }
   }
+
+  /**
+   * Tag an infusion chair to a patient
+   * @param {string} patientId - The patient ID
+   * @param {string} chairId - The chair ID
+   * @returns {Promise<Object>} - The updated patient object
+   */
+  static async tagChairToPatient(patientId, chairId) {
+    try {
+      // Verify chair exists
+      const chair = await prisma.infusionChair.findUnique({
+        where: { id: chairId },
+      });
+      if (!chair) {
+        throw new Error('Infusion chair not found');
+      }
+
+      // Verify patient exists
+      const patient = await prisma.patient.findUnique({
+        where: { id: patientId },
+        include: { infusionChair: true },
+      });
+      if (!patient) {
+        throw new Error('Patient not found');
+      }
+
+      // Verify chair belongs to the same clinic as the patient
+      if (chair.clinicId !== patient.clinicId) {
+        throw new Error('Chair does not belong to the patient\'s clinic');
+      }
+
+      // Update patient with tagged chair
+      const updatedPatient = await prisma.patient.update({
+        where: { id: patientId },
+        data: {
+          infusionChairId: chairId,
+        },
+        include: { infusionChair: true },
+      });
+
+      return updatedPatient;
+    } catch (error) {
+      throw new Error(`Failed to tag chair to patient: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get the tagged infusion chair for a patient
+   * @param {string} patientId - The patient ID
+   * @returns {Promise<Object|null>} - The infusion chair or null if none tagged
+   */
+  static async getTaggedChairForPatient(patientId) {
+    try {
+      const patient = await prisma.patient.findUnique({
+        where: { id: patientId },
+        include: { infusionChair: true },
+      });
+
+      if (!patient) {
+        throw new Error('Patient not found');
+      }
+
+      return patient.infusionChair || null;
+    } catch (error) {
+      throw new Error(`Failed to fetch tagged chair for patient: ${error.message}`);
+    }
+  }
 }
 
 module.exports = ChairService;

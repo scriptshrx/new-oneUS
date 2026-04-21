@@ -163,4 +163,53 @@ router.patch('/chair/:chairId/archive', authMiddleware, async (req, res) => {
   }
 });
 
+// Tag a chair to a patient
+router.patch('/patients/:patientId/tag-chair', authMiddleware, async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const { chairId } = req.body;
+
+    if (!chairId) {
+      return res.status(400).json({
+        success: false,
+        error: 'chairId is required',
+      });
+    }
+
+    const patient = await ChairService.tagChairToPatient(patientId, chairId);
+
+    res.json({
+      success: true,
+      data: patient,
+      message: 'Chair tagged to patient successfully',
+    });
+  } catch (error) {
+    console.error('Error tagging chair to patient:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Get tagged chair for a patient
+router.get('/patients/:patientId/tagged-chair', authMiddleware, async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const chair = await ChairService.getTaggedChairForPatient(patientId);
+
+    res.json({
+      success: true,
+      data: chair,
+    });
+  } catch (error) {
+    console.error('Error fetching tagged chair:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;
