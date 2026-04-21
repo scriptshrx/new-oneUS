@@ -399,7 +399,7 @@ model Subscription {
 
   // Dates
   startDate   DateTime  @default(now()) @map("start_date")
-  renewalDate DateTime  @map("renewal_date")
+  renewalDate DateTime?  @map("renewal_date")
   cancelledAt DateTime? @map("cancelled_at")
 
   createdAt DateTime @default(now()) @map("created_at")
