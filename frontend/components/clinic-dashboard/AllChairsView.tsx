@@ -16,6 +16,9 @@ interface Chair {
   zipCode: string;
   status: string;
   createdAt: string;
+  patientPipelineStage:string;
+  // optional display fields that may come from the API
+  patientName?: string;
 }
 
 export default function AllChairsView() {
@@ -49,7 +52,31 @@ export default function AllChairsView() {
       }
 
       const data = await response.json();
-      setChairs(data.data || []);
+      const chairsData: Chair[] = data.data || [];
+
+      // Fetch patient (if any) for each chair in parallel and attach a display name
+      const chairsWithPatients = await Promise.all(
+        chairsData.map(async (chair) => {
+          try {
+            const resp = await fetchWithAuth(`${apiUrl}/patients/by-chair/${chair.id}`, { method: 'GET' });
+            if (resp.ok) {
+              const patients = await resp.json();
+              const first = Array.isArray(patients) ? patients[0] : patients?.[0];
+              if (first) {
+                chair.patientName = `${first.firstName || ''} ${first.lastName || ''}`.trim();
+                chair.patientPipelineStage = first.pipelineStage;
+              }
+
+              console.log('Chair is now updated to reflect patient pipeline:',chair)
+            }
+          } catch (e) {
+            console.warn('Failed to fetch patients for chair', chair.id, e);
+          }
+          return chair;
+        })
+      );
+
+      setChairs(chairsWithPatients);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch chairs';
       setError(errorMessage);
@@ -125,62 +152,64 @@ export default function AllChairsView() {
         </div>
       )}
 
-      {/* Chairs Grid */}
+      {/* Chairs Grid (2-column, compact cards; INFUSING cards span full width) */}
       {chairs.length > 0 && (
-        <div className="grid gap-4">
-          {chairs.map(chair => (
-            <div
-              key={chair.id}
-              className="bg-background/50 border border-border/30 rounded-lg p-6 hover:border-border/50 transition-colors"
-            >
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    {chair.name}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-foreground/60">Email</p>
-                      <p className="text-foreground">{chair.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-foreground/60">Specialty</p>
-                      <p className="text-foreground">{chair.specialty}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-foreground/60">Operating Address</p>
-                      <p className="text-foreground">
-                        {chair.operatingAddress}, {chair.city}, {chair.state} {chair.zipCode}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      chair.status === 'ACTIVE'
-                        ? 'bg-green-500/20 text-green-700'
-                        : chair.status === 'INACTIVE'
-                        ? 'bg-yellow-500/20 text-yellow-700'
-                        : 'bg-gray-500/20 text-gray-700'
-                    }`}>
-                      {chair.status}
-                    </span>
-                  </div>
-                </div>
+        <div className="grid grid-cols-2 gap-4">
+          {chairs.map((chair, idx) => {
+            const isInfusing = chair.patientPipelineStage === 'treatment' || chair.status === 'IN_USE';
+            const displayStatus = isInfusing ? 'Infusing' : chair.status === 'ACTIVE' ? 'Available' : 'Unavailable';
+            const subtitle = isInfusing ? (chair.patientName || 'In progress') : 'No appt today';
 
-                {/* Delete Button */}
-                <button
-                  onClick={() => handleDeleteChair(chair.id)}
-                  disabled={deleting === chair.id}
-                  className="p-2 text-red-600 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
-                  title="Delete chair"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+            // Small compact card vs large highlighted card for infusing
+            const cardBase = `rounded-lg p-4 hover:shadow-lg shadow-sm transition-colors relative max-w-40 bg-purple-400/10 overflow-hidden border`;
+            const cardStyle = isInfusing
+              ? `${cardBase} col-span-2 bg-gradient-to-br from-purple-700/80 to-purple-600/70 border-transparent text-white shadow-lg h-36`
+              : `${cardBase} bg-background/40 border-border/30 hover:border-border/50 h-28`;
+
+            return (
+              <div key={chair.id} className={cardStyle}>
+                <div className="flex flex-col h-full justify-between">
+                  <div>
+                    <div className="text-xs font-semibold text-foreground/60 mb-2">{chair.name}</div>
+                    <div className="text-base font-semibold {isInfusing ? 'text-white' : 'text-foreground'}">
+                      
+                      {displayStatus}
+
+                    </div>
+               
+                    <div className={`text-sm mt-1 ${isInfusing ? 'text-purple-100/90' : 'text-foreground/60'}`}>
+                      {subtitle}
+                    </div>
+                  </div>
+
+                  {!isInfusing && (
+                    <div className="flex justify-end items-center absolute  bottom-1 right-1 gap-2">
+                      <button
+                        onClick={() => handleDeleteChair(chair.id)}
+                        disabled={deleting === chair.id}
+                        className="p-2 text-red-600 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                        title="Delete chair"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      {/* Floating chat / help button (visual only) */}
+      {/* <button
+        aria-label="Chat support"
+        className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center shadow-xl"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      </button> */}
     </div>
   );
 }

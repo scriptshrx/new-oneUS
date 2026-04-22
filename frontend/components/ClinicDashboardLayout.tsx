@@ -141,7 +141,7 @@ const navItems = [
     items: [
       {
         id: 'allChairs' as ViewType,
-        label: 'Active Chairs',
+        label: 'Chairs View',
         icon: Users2,
       },
       {

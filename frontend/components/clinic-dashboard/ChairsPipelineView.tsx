@@ -25,6 +25,7 @@ interface Patient {
   primaryDiagnosis?: string;
   urgencyLevel?: string;
   status?: string;
+  pipelineStage?: string;
 }
 
 interface ChairWithPatients extends Chair {
@@ -189,140 +190,76 @@ export default function ChairsPipelineView() {
         </div>
       )}
 
-      {/* Chairs Pipeline */}
+      {/* Chairs Grid (2-column, compact cards) - show patient pipeline stage on card */}
       {chairs.length > 0 && (
-        <div className="space-y-4">
-          {chairs.map((chair) => (
-            <div
-              key={chair.id}
-              onMouseEnter={() => setHoveredChair(chair.id)}
-              onMouseLeave={() => setHoveredChair(null)}
-              className="border border-border/30 rounded-lg overflow-hidden bg-background/30 hover:bg-background/50 transition-colors"
-            >
-              {/* Chair Header */}
-              <div className="bg-background/50 border-b border-border/30 p-4 cursor-pointer" onClick={() => setExpandedChairs(prev => ({ ...prev, [chair.id]: !prev[chair.id] }))}>
-                <div className="flex justify-between items-start">
+        <div className="grid grid-cols-2  gap-4">
+          {chairs.map((chair) => {
+            const firstPatient = chair.patients?.[0];
+            const patientStageRaw = firstPatient?.pipelineStage?.toUpperCase().replace('_',' ') || '';
+            const patientStage = patientStageRaw ? patientStageRaw : '';
+            const isInfusing = patientStage === 'treatment' || chair.status === 'IN_USE';
+            const subtitle = firstPatient ? `${firstPatient.firstName} ${firstPatient.lastName}` : 'No appt today';
+
+            const cardBase = `max-w-40 bg-purple-400/10 shadow-sm hover:shadow-lg rounded-lg p-4 hover:shadow-lg shadow-sm transition-colors relative overflow-hidden border`;
+            const cardStyle = isInfusing
+              ? `${cardBase} col-span-2 bg-gradient-to-br from-purple-700/80 to-purple-600/70 border-transparent text-white shadow-lg h-36`
+              : `${cardBase} bg-background/40 border-border/30 hover:border-border/50 h-28`;
+
+            return (
+              <div key={chair.id} className={cardStyle}>
+                <div className="flex flex-col h-full justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {chair.name}
-                    </h3>
-                    <p className="text-sm text-foreground/60 mt-1">{chair.specialty}</p>
+                    <div className="text-xs font-semibold text-foreground/60 mb-2">{chair.name}</div>
+                    <div className="text-base font-semibold">
+                      {patientStage || chair.status}
+                    </div>
+                    <div className={`text-sm mt-1 ${isInfusing ? 'text-purple-100/90' : 'text-foreground/60'}`}>
+                      {subtitle}
+                    </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    chair.status === 'ACTIVE'
-                      ? 'bg-green-500/20 text-green-700'
-                      : chair.status === 'INACTIVE'
-                      ? 'bg-yellow-500/20 text-yellow-700'
-                      : 'bg-gray-500/20 text-gray-700'
-                  }`}>
-                    {chair.status}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-4 mt-3 text-sm">
-                  <div>
-                    <p className="text-foreground/60">Email</p>
-                    <p className="text-foreground">{chair.email}</p>
+
+                  <div className="flex justify-end items-center gap-2">
+                    <button
+                      onClick={(e) => {e.stopPropagation();setExpandedChairs(prev => ({ ...prev, [chair.id]: !prev[chair.id] }))}}
+                      className="p-2 text-foreground/60 absolute bottom-1 right-1 hover:bg-background/20 rounded-lg transition-colors"
+                      title="Toggle patients"
+                    >
+                      <Fullscreen className="w-5 h-5" />
+                    </button>
                   </div>
-                  <div>
-                    <p className="text-foreground/60">Address</p>
-                    <p className="text-foreground">{chair.city}, {chair.state} {chair.zipCode}</p>
-                  </div>
-                  <div>
-                    <p className="text-foreground/60">Patients Assigned</p>
-                    <p className="text-foreground font-semibold">{chair.patients?.length || 0}</p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Patients List (collapsed by default) */}
-              <div
-                aria-hidden={!((expandedChairs[chair.id] || hoveredChair === chair.id))}
-                className="transition-all duration-300 ease-out overflow-hidden"
-                style={{ maxHeight: (expandedChairs[chair.id] || hoveredChair === chair.id) ? '1200px' : '0px', opacity: (expandedChairs[chair.id] || hoveredChair === chair.id) ? 1 : 0 }}
-              >
-                {chair.patients && chair.patients.length > 0 ? (
-                  <div className="divide-y divide-border/30">
-                    {chair.patients.map(patient => (
-                      <div key={patient.id} className="p-4 hover:bg-background/30 transition-colors cursor-pointer relative" onClick={() => setSelectedPatient(patient)}>
-                        <Fullscreen className='absolute h-4 w-4 text-accent/80 right-4 top-4'/>
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-foreground">
-                              {patient.firstName} {patient.lastName}
-                            </h4>
-                            {patient.primaryDiagnosis && (
-                              <p className="text-sm text-foreground/60 mt-1">
-                                {patient.primaryDiagnosis}
-                              </p>
-                            )}
-
-                            <div className={`flex items-center gap-2 my-3 py-2 overflow-x-auto h-10 rounded-lg -pb-10 pl-2 transition-all items-end overflow-y-visible`} style={{scrollbarWidth:'none'}}>
-                              {pipelineStages.map((stage, idx) => {
-                                const status = getStageStatus(stage.id, patient.pipelineStage);
-                                const nextStage = nextStages[patient.id];
-                                const stageClass = status === 'completed'
-                                  ? 'bg-accent/80 text-white'
-                                  : status === 'active'
-                                  ? 'bg-primary/80 text-white border-2 border-gray-300'
-                                  : (stage.id === nextStage ? 'shadow-md' : 'bg-border/30 text-foreground/40');
-
-                                if (stage.id === 'inactive_archived') return null;
-
-                                return (
-                                  <div key={stage.id} className="flex self-end relative">
-                                    <div
-                                      className="relative"
-                                      onMouseEnter={() => setHoveredStage(stage.id)}
-                                      onMouseLeave={() => setHoveredStage(null)}
-                                    >
-                                      <div
-                                        className={`${stageClass} rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap flex items-center justify-center transition-colors`}
-                                      >
-                                        {status === 'completed' && (
-                                          <CheckCircle2 className='h-4 mr-2 w-4 text-white'/>
-                                        )}
-                                        {status === 'active' && stage.id !== 'complete' && (
-                                          <div className='h-3 w-3 border-gray-100/30  rounded-full mr-2 border-l-gray-100 border-[2px] flex items-center animate-spin'/>
-                                        )}
-                                        <span className={`${stage.id === nextStage ? 'text-gray-600' : ''}`}>{stage.label}</span>
-                                      </div>
-                                    </div>
-
-                                    {hoveredStage === stage.id && (
-                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 z-50 pointer-events-none" style={{whiteSpace: 'nowrap'}}>
-                                        <div className="bg-white text-foreground px-3 py-2 rounded-lg text-xs font-semibold shadow-lg">
-                                          {stage.detail}
-                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white" />
-                                        </div>
-                                      </div>
-                                    )}
-                                    {idx < pipelineStages.length - 2 && (
-                                      <div className="w-4 h-0.5 bg-border/80 self-center mx-1" />
-                                    )}
-                                  </div>
-                                );
-                              })}
+                  {/* Expanded patients area (keeps original behavior) */}
+                  {expandedChairs[chair.id] && (
+                    <div className="col-span-2 mt-3">
+                      {chair.patients && chair.patients.length > 0 ? (
+                        <div className="divide-y divide-border/30 rounded-md overflow-hidden">
+                          {chair.patients.map(patient => (
+                            <div key={patient.id} className="p-3 bg-background/20">
+                              <div className="flex justify-between">
+                                <div>
+                                  <div className="font-medium text-foreground">{patient.firstName} {patient.lastName}</div>
+                                  {patient.primaryDiagnosis && <div className="text-sm text-foreground/60">{patient.primaryDiagnosis}</div>}
+                                </div>
+                                <div className="text-right">
+                                  {patient.urgencyLevel && (
+                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(patient.urgencyLevel)}`}>
+                                      {patient.urgencyLevel}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            {patient.urgencyLevel && (
-                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(patient.urgencyLevel)}`}>
-                                {patient.urgencyLevel}
-                              </span>
-                            )}
-                          </div>
+                          ))}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-4 text-center text-foreground/60 text-sm">
-                    No patients assigned to this chair
-                  </div>
-                )}
+                      ) : (
+                        <div className="p-3 text-foreground/60 text-sm">No patients assigned to this chair</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
