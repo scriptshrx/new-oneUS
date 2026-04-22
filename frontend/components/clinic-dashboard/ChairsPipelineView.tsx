@@ -69,13 +69,18 @@ export default function ChairsPipelineView() {
       const data = await response.json();
       const chairsData = data.data || [];
 
+      console.log('Patients:',patients)
+
+      console.log('Chairs befor joining',chairsData)
       // Map patients to chairs (example mapping - you may need to adjust based on your data structure)
       const chairsWithPatients = chairsData.map((chair: Chair) => ({
         ...chair,
         // In a real scenario, you'd have a relationship to fetch patients assigned to this chair
         // For now, we'll show all patients as a demo
-        patients: patients.slice(0, Math.floor(Math.random() * 3) + 1),
+        patients: patients.filter((patient)=>patient.infusionChairId===chair.id),
       }));
+
+      console.log("Chairs with patient:",chairsWithPatients)
 
       setChairs(chairsWithPatients);
     } catch (err) {
@@ -192,37 +197,43 @@ export default function ChairsPipelineView() {
 
       {/* Chairs Grid (2-column, compact cards) - show patient pipeline stage on card */}
       {chairs.length > 0 && (
-        <div className="grid grid-cols-2  gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {chairs.map((chair) => {
             const firstPatient = chair.patients?.[0];
             const patientStageRaw = firstPatient?.pipelineStage?.toUpperCase().replace('_',' ') || '';
             const patientStage = patientStageRaw ? patientStageRaw : '';
             const isInfusing = patientStage === 'treatment' || chair.status === 'IN_USE';
-            const subtitle = firstPatient ? `${firstPatient.firstName} ${firstPatient.lastName}` : 'No appt today';
+            const subtitle = firstPatient ? `${firstPatient.firstName} ${firstPatient.lastName}` : 'No Patient';
 
-            const cardBase = `max-w-40 bg-purple-400/10 shadow-sm hover:shadow-lg rounded-lg p-4 hover:shadow-lg shadow-sm transition-colors relative overflow-hidden border`;
+            const cardBase = ` bg-purple-400/10 shadow-sm hover:shadow-lg rounded-lg p-4 hover:shadow-lg shadow-sm transition-colors relative overflow-hidden border`;
             const cardStyle = isInfusing
               ? `${cardBase} col-span-2 bg-gradient-to-br from-purple-700/80 to-purple-600/70 border-transparent text-white shadow-lg h-36`
               : `${cardBase} bg-background/40 border-border/30 hover:border-border/50 h-28`;
 
             return (
-              <div key={chair.id} className={cardStyle}>
+              <div key={chair.id} className={`${cardStyle} items-center justify-center`}>
                 <div className="flex flex-col h-full justify-between">
                   <div>
-                    <div className="text-xs font-semibold text-foreground/60 mb-2">{chair.name}</div>
-                    <div className="text-base font-semibold">
-                      {patientStage || chair.status}
+                    <div className="text-xs font-semibold text-foreground/60 mb-2 text-center">{chair.name}</div>
+                    <div className="text-base font-semibold text-center">
+                      {patientStage || 'No Patient'}
                     </div>
-                    <div className={`text-sm mt-1 ${isInfusing ? 'text-purple-100/90' : 'text-foreground/60'}`}>
+                    <div className={`text-sm mt-1 text-center ${isInfusing ? 'text-purple-100/90' : 'text-foreground/60'}`}>
                       {subtitle}
                     </div>
                   </div>
 
                   <div className="flex justify-end items-center gap-2">
                     <button
-                      onClick={(e) => {e.stopPropagation();setExpandedChairs(prev => ({ ...prev, [chair.id]: !prev[chair.id] }))}}
-                      className="p-2 text-foreground/60 absolute bottom-1 right-1 hover:bg-background/20 rounded-lg transition-colors"
-                      title="Toggle patients"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const firstPatient = chair.patients?.[0];
+                        if (firstPatient) {
+                          setSelectedPatient(firstPatient);
+                        }
+                      }}
+                      className="p-2 text-foreground/60 absolute bottom-1 right-1 hover:bg-background/80 rounded-lg transition-colors"
+                      title="View patient details"
                     >
                       <Fullscreen className="w-5 h-5" />
                     </button>
@@ -261,6 +272,17 @@ export default function ChairsPipelineView() {
             );
           })}
         </div>
+      )}
+
+      {/* Patient Detail Modal */}
+      {selectedPatient && (
+        <PatientDetailModal
+          patient={selectedPatient}
+          isOpen={!!selectedPatient}
+          onClose={() => setSelectedPatient(null)}
+          onUpdateStatus={handleUpdateStatus}
+          clinicId={clinic?.id}
+        />
       )}
     </div>
   );

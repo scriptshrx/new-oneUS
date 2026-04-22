@@ -9,6 +9,7 @@ interface FormData {
   name: string;
   email: string;
   specialty: string;
+  chairPassword:string;
   operatingAddress: string;
   city: string;
   state: string;
@@ -30,6 +31,7 @@ export default function AddChairsView() {
     name: '',
     email: '',
     specialty: '',
+    chairPassword:'',
     operatingAddress: '',
     city: '',
     state: '',
@@ -117,6 +119,7 @@ export default function AddChairsView() {
         name: '',
         email: '',
         specialty: '',
+        chairPassword:'',
         operatingAddress: '',
         city: '',
         state: '',
@@ -214,6 +217,23 @@ export default function AddChairsView() {
             } focus:outline-none focus:ring-2`}
           />
           {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Password
+          </label>
+          <input
+            type="password"
+            name="password"
+            value={formData.chairPassword}
+            onChange={handleInputChange}
+            placeholder="Enter password"
+            className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50
+             `}
+          />
+          
         </div>
 
         {/* Specialty */}

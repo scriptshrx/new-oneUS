@@ -240,6 +240,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
             address: patient.address,
             city: patient.city,
             state: patient.state,
+            infusionChairId:patient.infusionChairId,
             zipCode: patient.zipCode,
             
             // Referral clinical details (flattened from referral)

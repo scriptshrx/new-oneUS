@@ -154,30 +154,30 @@ export default function AllChairsView() {
 
       {/* Chairs Grid (2-column, compact cards; INFUSING cards span full width) */}
       {chairs.length > 0 && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {chairs.map((chair, idx) => {
             const isInfusing = chair.patientPipelineStage === 'treatment' || chair.status === 'IN_USE';
             const displayStatus = isInfusing ? 'Infusing' : chair.status === 'ACTIVE' ? 'Available' : 'Unavailable';
             const subtitle = isInfusing ? (chair.patientName || 'In progress') : 'No appt today';
 
             // Small compact card vs large highlighted card for infusing
-            const cardBase = `rounded-lg p-4 hover:shadow-lg shadow-sm transition-colors relative max-w-40 bg-purple-400/10 overflow-hidden border`;
+            const cardBase = `rounded-lg p-4 hover:shadow-lg shadow-sm transition-colors relative bg-purple-400/10 overflow-hidden border`;
             const cardStyle = isInfusing
               ? `${cardBase} col-span-2 bg-gradient-to-br from-purple-700/80 to-purple-600/70 border-transparent text-white shadow-lg h-36`
               : `${cardBase} bg-background/40 border-border/30 hover:border-border/50 h-28`;
 
             return (
-              <div key={chair.id} className={cardStyle}>
+              <div key={chair.id} className={`${cardStyle}  flex items-center justify-center`}>
                 <div className="flex flex-col h-full justify-between">
                   <div>
-                    <div className="text-xs font-semibold text-foreground/60 mb-2">{chair.name}</div>
-                    <div className="text-base font-semibold {isInfusing ? 'text-white' : 'text-foreground'}">
+                    <div className="text-xs font-semibold text-foreground/60 mb-2 text-center">{chair.name}</div>
+                    <div className="text-base font-semibold text-center {isInfusing ? 'text-white' : 'text-foreground'}">
                       
                       {displayStatus}
 
                     </div>
                
-                    <div className={`text-sm mt-1 ${isInfusing ? 'text-purple-100/90' : 'text-foreground/60'}`}>
+                    <div className={`text-center text-sm mt-1 ${isInfusing ? 'text-purple-100/90' : 'text-foreground/60'}`}>
                       {subtitle}
                     </div>
                   </div>

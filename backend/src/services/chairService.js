@@ -54,7 +54,7 @@ class ChairService {
   static async createChair(clinicId, chairData) {
     try {
       // Validate the required fields
-      const { name, email, specialty, operatingAddress, city, state, zipCode } = chairData;
+      const { name, email, specialty, operatingAddress,chairPassword, city, state, zipCode } = chairData;
 
       if (!name || !email || !specialty || !operatingAddress || !city || !state || !zipCode) {
         throw new Error('Missing required fields');
@@ -84,7 +84,7 @@ class ChairService {
           city,
           state,
           zipCode,
-          chairPassword: plainPassword,
+          chairPassword,
           status: 'ACTIVE',
         },
       });
