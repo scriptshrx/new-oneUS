@@ -29,6 +29,7 @@ router.get('/',authMiddleware, async(req,res)=>{
             return res.status(400).json({ error: 'clinicId query parameter is required' });
         }
         const result = await fetchAllPatients(clinicId);
+        console.log('All patients fetched',res.json())
         res.json(result)
     }
     catch(err){
