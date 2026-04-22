@@ -226,7 +226,7 @@ export default function AddChairsView() {
           </label>
           <input
             type="password"
-            name="password"
+            name="chairPassword"
             value={formData.chairPassword}
             onChange={handleInputChange}
             placeholder="Enter password"
