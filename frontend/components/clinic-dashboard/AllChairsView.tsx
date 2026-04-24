@@ -157,7 +157,7 @@ export default function AllChairsView() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {chairs.map((chair, idx) => {
             const isInfusing = chair.patientPipelineStage === 'treatment' || chair.status === 'IN_USE';
-            const displayStatus = isInfusing ? 'Infusing' : chair.status === 'ACTIVE' ? 'Available' : 'Unavailable';
+            const displayStatus = isInfusing ? 'Infusing' : chair.status === 'ACTIVE' ? 'Active' : 'Inactive';
             const subtitle = isInfusing ? (chair.patientName || 'In progress') : 'No appt today';
 
             // Small compact card vs large highlighted card for infusing
@@ -171,9 +171,9 @@ export default function AllChairsView() {
                 <div className="flex flex-col h-full justify-between">
                   <div>
                     <div className="text-xs font-semibold text-foreground/60 mb-2 text-center">{chair.name}</div>
-                    <div className="text-base font-semibold text-center {isInfusing ? 'text-white' : 'text-foreground'}">
+                    <div className="text-base flex items-center justify-center font-semibold text-center {isInfusing ? 'text-white' : 'text-foreground'}">
                       
-                      {displayStatus}
+                      {displayStatus}<div className='h-3 w-3 rounded-full ml-3 bg-green-500 animate-pulse'/>
 
                     </div>
                
