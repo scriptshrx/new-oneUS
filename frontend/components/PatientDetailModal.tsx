@@ -278,7 +278,7 @@ export default function PatientDetailModal({ patient, onClose, onUpdateStatus, c
               )}
             </div>
           ) : (
-            // patient.pipelineStage.toLocaleLowerCase()==='scheduling'&&
+             patient.pipelineStage.toLocaleLowerCase()==='scheduling'&&
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-yellow-800 mb-3">No infusion chair assigned to this patient yet.</p>
               {clinicId ? (

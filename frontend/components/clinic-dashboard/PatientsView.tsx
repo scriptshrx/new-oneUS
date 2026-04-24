@@ -60,7 +60,9 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
 
   useEffect(() => {
     if (patients.length > 0) {
+      console.log('The clinic id is:',clinicId)
       console.log('Patients:', patients);
+      
       // Calculate next stages for all patients
       const stages: Record<string, string> = {};
       patients.forEach((patient) => {
