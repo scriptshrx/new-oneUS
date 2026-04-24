@@ -265,7 +265,7 @@ export default function LoginPage() {
 
         <div className="w-full max-w-md">
           <div 
-          class='cardClass'
+          // class='cardClass'
           ref={cardRef}
           className="bg-gradient-to-tr from-card via-card to-primary/10 border border-border/20 rounded-[20px] p-8 sm:p-10  shadow-lg"
         >

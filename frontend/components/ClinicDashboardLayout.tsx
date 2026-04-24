@@ -182,6 +182,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   const [patientsError, setPatientsError] = useState<string | null>(null);
   const router = useRouter();
   const [clinic, setClinic] = useState<any | null>(null);
+  const[clinicId,setClinicId]=useState('')
   
   // Restore dashboard view from localStorage on mount
   useEffect(() => {
@@ -297,6 +298,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         try {
           const clinic = JSON.parse(clinicCache);
           setClinic(clinic);
+          setClinicId(clinic.id)
           console.log('Clinic hydrated successfully:', clinic);
         } catch (e) {
           console.error('Failed to parse clinic data:', e);
@@ -322,7 +324,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   };
 
   return (
-    <DashboardContext.Provider value={{ currentView, clinic, setCurrentView, patients, patientsLoading, patientsError }}>
+    <DashboardContext.Provider value={{ currentView, clinic, clinicId, setCurrentView, patients, patientsLoading, patientsError }}>
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
         <div

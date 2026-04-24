@@ -46,7 +46,7 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
   const [nextStages, setNextStages] = useState<Record<string, string>>({});
   const [hoveredStage, setHoveredStage] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState<boolean>(false);
-  const {setCurrentView} = useClinicDashboardView();
+  const {setCurrentView, clinicId} = useClinicDashboardView();
 
   const activePatients = patients.filter(
     (patient) => !['INACTIVE_ARCHIVED', 'inactive_archived'].includes(patient.pipelineStage)
@@ -291,6 +291,7 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
       {selectedPatient && (
         <PatientDetailModal 
           patient={selectedPatient} 
+          clinicId={clinicId}
           onClose={() => setSelectedPatient(null)}
           onUpdateStatus={handleUpdateStatus}
         />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertCircle, Fullscreen, CheckCircle2, Loader, RefreshCcwIcon } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import { useChairDashboardView } from '../ChairDashboardLayout';
 import PatientDetailModal from '@/components/PatientDetailModal';
@@ -25,52 +25,23 @@ interface Patient {
   [key: string]: any;
 }
 
-interface ChairWithPatients extends Patient {
-  patients?: Patient[];
-}
+const pipelineStages = [
+  { id: 'new_referral', label: 'New 6', color: 'bg-blue-600' },
+  { id: 'insurance', label: 'Insurance 3', color: 'bg-purple-600' },
+  { id: 'authorization', label: 'Authorization 2', color: 'bg-indigo-600' },
+  { id: 'scheduling', label: 'Scheduling', color: 'bg-cyan-600' },
+  { id: 'treatment', label: 'In Treatment', color: 'bg-teal-600' },
+  { id: 'complete', label: 'Completed', color: 'bg-green-600' },
+];
 
 export default function PatientsView() {
   const { chair, patients, patientsLoading, patientsError } = useChairDashboardView();
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
-  const [nextStages, setNextStages] = useState<Record<string, string>>({});
-  const [hoveredStage, setHoveredStage] = useState<string | null>(null);
-
-  const pipelineStages = [
-    { id: 'new_referral', detail: 'New Referral', label: 'New Referral' },
-    { id: 'insurance', detail: 'Insurance Verification', label: 'Insurance' },
-    { id: 'authorization', detail: 'Prior Authorization', label: 'Authorization' },
-    { id: 'scheduling', detail: 'Scheduling Treatment', label: 'Scheduling' },
-    { id: 'treatment', detail: 'Treatment In Process', label: 'Treatment' },
-    { id: 'complete', detail: 'Treatment Is Completed', label: 'Completed' },
-    { id: 'follow_up', detail: 'Treatment Follow-ups', label: 'Follow-up' },
-    { id: 'inactive_archived', label: 'Patient Archived', detail: 'INACTIVE_ARCHIVED' }
-  ];
-
-  function getStageStatus(stageId: string, currentPipelineStage: string) {
-    const order = pipelineStages.map(s => s.id);
-    const currentIdx = order.indexOf((currentPipelineStage || '').toLowerCase());
-    const stageIdx = order.indexOf(stageId);
-    if (stageIdx < currentIdx) return 'completed';
-    if (stageIdx === currentIdx) return 'active';
-    return 'pending';
-  }
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (patients && patients.length > 0) {
-      const stages: Record<string, string> = {};
-      patients.forEach((patient) => {
-        const currentStage = patient.pipelineStage;
-        if (currentStage === 'NEW_REFERRAL') stages[patient.id] = 'insurance';
-        else if (currentStage === 'INSURANCE') stages[patient.id] = 'authorization';
-        else if (currentStage === 'AUTHORIZATION') stages[patient.id] = 'scheduling';
-        else if (currentStage === 'SCHEDULING') stages[patient.id] = 'treatment';
-        else if (currentStage === 'TREATMENT') stages[patient.id] = 'complete';
-        else if (currentStage === 'COMPLETE') stages[patient.id] = 'follow_up';
-        else if (currentStage === 'FOLLOW_UP') stages[patient.id] = 'inactive_archived';
-      });
-      setNextStages(stages);
-    }
-  }, [patients]);
+    setIsClient(true);
+  }, []);
 
   const handleUpdateStatus = async (patientId: string, nextStage: string) => {
     try {
@@ -91,14 +62,32 @@ export default function PatientsView() {
   const getUrgencyColor = (urgency?: string) => {
     switch (urgency) {
       case 'URGENT':
-        return 'bg-red-500/20 text-red-700 border-red-500/30';
+        return 'bg-red-100 text-red-700 border border-red-300';
       case 'HIGH':
-        return 'bg-orange-500/20 text-orange-700 border-orange-500/30';
+        return 'bg-orange-100 text-orange-700 border border-orange-300';
       case 'MEDIUM':
-        return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+        return 'bg-yellow-100 text-yellow-700 border border-yellow-300';
       default:
-        return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
+        return 'bg-blue-100 text-blue-700 border border-blue-300';
     }
+  };
+
+  const getTotalValue = (stagePatients: Patient[]) => {
+    return stagePatients.length > 0 ? `$${stagePatients.length * 25}K` : '$0';
+  };
+
+  const groupPatientsByStage = () => {
+    const grouped: Record<string, Patient[]> = {};
+    pipelineStages.forEach(stage => {
+      grouped[stage.id] = [];
+    });
+    patients?.forEach(patient => {
+      const stage = (patient.pipelineStage || 'new_referral').toLowerCase();
+      if (grouped[stage]) {
+        grouped[stage].push(patient);
+      }
+    });
+    return grouped;
   };
 
   if (patientsLoading) {
@@ -112,11 +101,21 @@ export default function PatientsView() {
     );
   }
 
+  const groupedPatients = groupPatientsByStage();
+
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Patient Pipelines</h1>
-        <p className="text-foreground/60 mt-1">View your assigned patients and their treatment stages</p>
+    <div className="p-6 space-y-6 h-full overflow-hidden flex flex-col bg-slate-50">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Deal pipeline</h1>
+          <p className="text-slate-600 mt-1">Main table • mondayskick</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="bg-white border border-slate-200 rounded-lg p-3 flex items-center gap-2">
+            <span className="text-slate-500 text-sm">Deal insights</span>
+            <span className="text-red-600 text-sm font-bold">This deal is at risk</span>
+          </div>
+        </div>
       </div>
 
       {patientsError && (
@@ -127,111 +126,96 @@ export default function PatientsView() {
       )}
 
       {patients.length === 0 && !patientsError && (
-        <div className="text-center py-12 bg-background/50 rounded-lg border border-border/30">
-          <p className="text-foreground/60 mb-2">No patients found</p>
-          <p className="text-sm text-foreground/50">Assigned patients will appear here</p>
+        <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
+          <p className="text-slate-600 mb-2">No patients found</p>
+          <p className="text-sm text-slate-500">Assigned patients will appear here</p>
         </div>
       )}
 
       {patients.length > 0 && (
-        <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
-          <div className="p-6">
-            <div className="space-y-3">
-              {patients.map((patient) => (
-                <div
-                  key={patient.id}
-                  className="bg-background/60 border border-border/20 rounded-lg p-4 cursor-pointer hover:bg-background/80 relative transition-colors"
-                  onClick={() => setSelectedPatient(patient)}
-                >
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="text-primary/95 font-semibold text-lg">{patient.firstName} {patient.lastName}</p>
-                        <p className="text-foreground/75 text-sm font-bold mt-1">{patient.prescribedTreatment || 'N/A'}</p>
-                        <p className="text-foreground/60 text-sm mt-1">
-                          Referring Physician: <span className="font-semibold text-primary/70">{patient.referringPhysician || 'N/A'}</span>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold border whitespace-nowrap ${getUrgencyColor(
-                            patient.urgencyLevel
-                          )}`}
-                        >
-                          {patient.urgencyLevel || 'N/A'}
-                        </span>
-                        <Fullscreen className="h-4 w-4 text-accent/80" />
-                      </div>
+        <div className="flex-1 overflow-x-auto pb-4">
+          <div className="flex gap-4 min-w-max pr-6">
+            {pipelineStages.map((stage) => {
+              const stagePatients = groupedPatients[stage.id] || [];
+              
+              return (
+                <div key={stage.id} className="flex-shrink-0 w-80">
+                  {/* Stage Header - Monday.com style */}
+                  <div className={`${stage.color} rounded-lg px-4 py-3 text-white mb-4 flex items-center justify-between`}>
+                    <div>
+                      <h2 className="font-bold text-base">{stage.label}</h2>
                     </div>
-
-                    {/* Pipeline Stages */}
-                    <div
-                      className="flex items-center gap-1 py-2 overflow-x-auto rounded-lg pl-2 overflow-y-visible"
-                      style={{ scrollbarWidth: 'none' }}
-                    >
-                      {pipelineStages.map((stage, idx) => {
-                        const status = getStageStatus(stage.id, patient.pipelineStage);
-                        const nextStage = nextStages[patient.id];
-
-                        return (
-                          stage.id !== 'inactive_archived' && (
-                            <div key={stage.id} className="flex items-center gap-1">
-                              <div
-                                className="relative"
-                                onMouseEnter={() => setHoveredStage(`${patient.id}-${stage.id}`)}
-                                onMouseLeave={() => setHoveredStage(null)}
-                              >
-                                <div
-                                  className={`${
-                                    status === 'completed'
-                                      ? 'bg-accent/80 text-white'
-                                      : status === 'active'
-                                      ? 'bg-primary/80 text-white border-2 border-gray-300'
-                                      : stage.id === nextStage
-                                      ? 'shadow-md bg-border/50 text-foreground'
-                                      : 'bg-border/30 text-foreground/40'
-                                  } rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap flex items-center justify-center transition-colors`}
-                                >
-                                  {status === 'completed' && <CheckCircle2 className="h-4 mr-2 w-4 text-white" />}
-                                  {status === 'active' && stage.id !== 'complete' && (
-                                    <div className="h-3 w-3 border-gray-100/30 rounded-full mr-2 border-l-gray-100 border-[2px] flex items-center animate-spin" />
-                                  )}
-                                  <span className={`${stage.id === nextStage && 'text-gray-600'}`}>
-                                    {stage.label}
-                                  </span>
-                                </div>
-
-                                {/* Tooltip */}
-                                {hoveredStage === `${patient.id}-${stage.id}` && (
-                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 z-50 pointer-events-none" style={{ whiteSpace: 'nowrap' }}>
-                                    <div className="bg-white text-foreground px-3 py-2 rounded-lg text-xs font-semibold shadow-lg">
-                                      {stage.detail}
-                                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white" />
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-
-                              {idx < pipelineStages.length - 2 && (
-                                <div className="w-4 h-0.5 bg-border/80 mx-1" />
-                              )}
-                            </div>
-                          )
-                        );
-                      })}
+                    <div className="text-right">
+                      <p className="text-white/90 text-sm font-semibold">{getTotalValue(stagePatients)}</p>
                     </div>
                   </div>
+
+                  {/* Patient Cards */}
+                  <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                    {stagePatients.length === 0 ? (
+                      <div className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                        <p className="text-slate-400 text-sm">No patients</p>
+                      </div>
+                    ) : (
+                      stagePatients.map((patient) => (
+                        <div
+                          key={patient.id}
+                          className="bg-white border border-slate-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-all hover:border-slate-300 group"
+                          onClick={() => setSelectedPatient(patient)}
+                        >
+                          {/* Patient Name */}
+                          <div className="px-4 py-3 border-b border-slate-100">
+                            <h3 className="font-bold text-slate-900 text-sm leading-tight truncate">
+                              {patient.firstName} {patient.lastName}
+                            </h3>
+                          </div>
+
+                          {/* Deal Value Section */}
+                          <div className="px-4 py-2">
+                            <p className="text-xs text-slate-500 font-semibold uppercase">Value</p>
+                            <p className="text-lg font-bold text-slate-900 mt-0.5">$25,000</p>
+                          </div>
+
+                          {/* Urgency Badge */}
+                          <div className="px-4 py-2">
+                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold ${getUrgencyColor(patient.urgencyLevel)}`}>
+                              {patient.urgencyLevel || 'Low'}
+                            </span>
+                          </div>
+
+                          {/* Treatment/Details */}
+                          <div className="px-4 py-3 space-y-2 bg-slate-50/50 text-xs">
+                            <div className="flex justify-between items-start">
+                              <span className="text-slate-600">Treatment:</span>
+                              <span className="text-slate-900 font-medium text-right flex-1 ml-2">{patient.prescribedTreatment || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-start">
+                              <span className="text-slate-600">Physician:</span>
+                              <span className="text-slate-900 font-medium text-right flex-1 ml-2 truncate">{patient.referringPhysician || 'N/A'}</span>
+                            </div>
+                          </div>
+
+                          {/* Action hint */}
+                          <div className="px-4 py-2 border-t border-slate-100">
+                            <div className="text-xs text-slate-500 flex items-center gap-1">
+                              <span>📌 AI recommendation</span>
+                            </div>
+                            <p className="text-xs text-slate-600 mt-1">Schedule a consultation call</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {selectedPatient && (
+      {isClient && selectedPatient && (
         <PatientDetailModal
           patient={selectedPatient}
-          isOpen={!!selectedPatient}
           onClose={() => setSelectedPatient(null)}
           onUpdateStatus={handleUpdateStatus}
         />

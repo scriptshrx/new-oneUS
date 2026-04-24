@@ -71,7 +71,27 @@ interface PatientIntakeFormProps {
 export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
   const { clinic, patients } = useClinicDashboardView();
 
-  useEffect(()=>{console.log('Clinic is:',clinic)})
+  useEffect(() => {
+    if (clinic && patients) {
+      const activePatients = patients.filter(
+        (patient: any) =>
+          patient.pipelineStage !== 'INACTIVE_ARCHIVED' &&
+          patient.pipelineStage !== 'COMPLETE' &&
+          patient.pipelineStage?.toLowerCase() !== 'inactive_archived' &&
+          patient.pipelineStage?.toLowerCase() !== 'complete'
+      );
+
+      const activeCount = activePatients.length;
+      const chairCount = clinic.infusionChairCount || 0;
+
+      if (activeCount >= chairCount) {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          CapacityError: `This clinic has reached its capacity. Currently has ${activeCount} active patients with ${chairCount} available chairs.`,
+        }));
+      }
+    }
+  }, [clinic, patients]);
 
   const [formData, setFormData] = useState<IntakeFormData>({
     patientFirstName: '',
@@ -346,6 +366,16 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
           <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-red-400">{apiError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Clinic Capacity Error Alert */}
+      {errors.CapacityError && (
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-red-400">{errors.CapacityError}</p>
           </div>
         </div>
       )}
