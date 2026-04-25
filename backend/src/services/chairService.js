@@ -54,7 +54,7 @@ class ChairService {
   static async createChair(clinicId, chairData) {
     try {
       // Validate the required fields
-      const { name, email, specialty, operatingAddress,chairPassword, city, state, zipCode } = chairData;
+      const { chairNumber } = chairData;
 
       if (!name || !email || !specialty || !operatingAddress || !city || !state || !zipCode) {
         throw new Error('Missing required fields');
@@ -77,14 +77,7 @@ class ChairService {
       const chair = await prisma.infusionChair.create({
         data: {
           clinicId,
-          name,
-          email,
-          specialty,
-          operatingAddress,
-          city,
-          state,
-          zipCode,
-          chairPassword,
+          chairNumber,
           status: 'ACTIVE',
         },
       });
