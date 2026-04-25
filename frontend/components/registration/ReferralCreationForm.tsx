@@ -201,12 +201,8 @@ export default function ReferralCreationPage({
 
       // Fetch patients linked to this clinic
       console.log('📡 [Stage 3] Fetching patients for clinic:', clinicId);
-      const patientsResponse = await fetchWithAuth(`${API_BASE_URL}/patients?clinicId=${clinicId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const patientsResponse = await fetchWithAuth(`${API_BASE_URL}/patients?clinicId=${clinicId}`
+       );
 
       // Check if the response is OK
       if (!patientsResponse.ok) {
