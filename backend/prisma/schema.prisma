@@ -164,7 +164,7 @@ model InfusionChair {
   clinicId String @map("clinic_id")
 
   // Chair Officer Details
-  chairNumber      String
+  chairNumber      String @map("chair_number")
   //email     String
   //specialty String
 
