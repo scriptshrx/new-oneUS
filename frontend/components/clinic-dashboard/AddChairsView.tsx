@@ -182,7 +182,7 @@ export default function AddChairsView() {
         {/* Chair Officer Name */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
-            Chair Officer Name
+            Chair Number
           </label>
           <input
             type="text"
@@ -199,143 +199,8 @@ export default function AddChairsView() {
           {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
         </div>
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Email Address
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            placeholder="Enter email address"
-            className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50 ${
-              errors.email
-                ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-                : 'border-border/30 focus:border-primary focus:ring-primary/20'
-            } focus:outline-none focus:ring-2`}
-          />
-          {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Password
-          </label>
-          <input
-            type="password"
-            name="chairPassword"
-            value={formData.chairPassword}
-            onChange={handleInputChange}
-            placeholder="Enter password"
-            className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50
-             `}
-          />
-          
-        </div>
-
-        {/* Specialty */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Specialty
-          </label>
-          <input
-            type="text"
-            name="specialty"
-            value={formData.specialty}
-            onChange={handleInputChange}
-            placeholder="Enter specialty (e.g., IV Therapy, Ketamine Infusion)"
-            className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50 ${
-              errors.specialty
-                ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-                : 'border-border/30 focus:border-primary focus:ring-primary/20'
-            } focus:outline-none focus:ring-2`}
-          />
-          {errors.specialty && <p className="text-red-600 text-sm mt-1">{errors.specialty}</p>}
-        </div>
-
-        {/* Operating Address */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Operating Address
-          </label>
-          <input
-            type="text"
-            name="operatingAddress"
-            value={formData.operatingAddress}
-            onChange={handleInputChange}
-            placeholder="Enter operating address"
-            className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50 ${
-              errors.operatingAddress
-                ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-                : 'border-border/30 focus:border-primary focus:ring-primary/20'
-            } focus:outline-none focus:ring-2`}
-          />
-          {errors.operatingAddress && <p className="text-red-600 text-sm mt-1">{errors.operatingAddress}</p>}
-        </div>
-
-        {/* City, State, Zip */}
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              City
-            </label>
-            <input
-              type="text"
-              name="city"
-              value={formData.city}
-              onChange={handleInputChange}
-              placeholder="City"
-              className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50 ${
-                errors.city
-                  ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-border/30 focus:border-primary focus:ring-primary/20'
-              } focus:outline-none focus:ring-2`}
-            />
-            {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              State
-            </label>
-            <input
-              type="text"
-              name="state"
-              value={formData.state}
-              onChange={handleInputChange}
-              placeholder="State (e.g., CA)"
-              maxLength={2}
-              className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50 uppercase ${
-                errors.state
-                  ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-border/30 focus:border-primary focus:ring-primary/20'
-              } focus:outline-none focus:ring-2`}
-            />
-            {errors.state && <p className="text-red-600 text-sm mt-1">{errors.state}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Zip Code
-            </label>
-            <input
-              type="text"
-              name="zipCode"
-              value={formData.zipCode}
-              onChange={handleInputChange}
-              placeholder="Zip code"
-              className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50 ${
-                errors.zipCode
-                  ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-border/30 focus:border-primary focus:ring-primary/20'
-              } focus:outline-none focus:ring-2`}
-            />
-            {errors.zipCode && <p className="text-red-600 text-sm mt-1">{errors.zipCode}</p>}
-          </div>
-        </div>
+        
+        
 
         {/* Submit Button */}
         <div className="flex gap-3 pt-4">

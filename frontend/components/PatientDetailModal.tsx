@@ -22,16 +22,14 @@ interface Patient {
 
 interface Chair {
   id: string;
-  name: string;
-  email: string;
-  specialty: string;
-  city: string;
-  state: string;
-  status: string;
+  chairNumber: string;
+  status:string
+ 
 }
 
 interface PatientCRMNodeProps {
   patient: Patient;
+  clinicName:string;
   onClose: () => void;
   onUpdateStatus?: (patientId: string, nextStage: string) => Promise<void>;
   clinicId?: string;
@@ -98,7 +96,7 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-export default function PatientDetailModal({ patient, onClose, onUpdateStatus, clinicId }: PatientCRMNodeProps) {
+export default function PatientDetailModal({ patient, onClose,clinicName, onUpdateStatus, clinicId }: PatientCRMNodeProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showChairSelection, setShowChairSelection] = useState(false);
@@ -460,6 +458,7 @@ export default function PatientDetailModal({ patient, onClose, onUpdateStatus, c
           isOpen={showChairSelection}
           onClose={() => setShowChairSelection(false)}
           clinicId={clinicId}
+          clinicName={clinicName}
           onChairSelected={handleTagChair}
         />
       )}
