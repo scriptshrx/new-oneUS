@@ -16,7 +16,7 @@ interface ClinicDashboardLayoutProps {
 type ViewType = 'dashboard' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
 
 interface Patient {
-  // Core Patient Info
+  // Core Patient Infos
   id: string;
   firstName: string;
   lastName: string;
