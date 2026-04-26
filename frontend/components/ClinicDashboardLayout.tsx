@@ -13,7 +13,7 @@ interface ClinicDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ViewType = 'dashboard' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
+type ViewType = 'dashboard' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
 
 interface Patient {
   // Core Patient Info
@@ -154,6 +154,7 @@ const navItems = [
         label: 'Add Chairs',
         icon: UserPlus,
       },
+      
     ],
   },
   {
@@ -167,6 +168,43 @@ const navItems = [
       {
         id: 'logout' as ViewType,
         label: 'Logout',
+        icon: LogOut,
+      },
+    ],
+  },
+
+   {
+    group: 'INFUSION CHAIRS',
+    items: [
+      {
+        id: 'allChairs' as ViewType,
+        label: 'Chairs View',
+        icon: Users2,
+      },
+      {
+        id: 'chairsPipeline' as ViewType,
+        label: 'Chairs Pipeline',
+        icon: Workflow,
+      },
+      {
+        id: 'addChairs' as ViewType,
+        label: 'Add Chairs',
+        icon: UserPlus,
+      },
+      
+    ],
+  },
+  {
+    group: 'VERIFICATIONS',
+    items: [
+      {
+        id: 'insuranceVerify' as ViewType,
+        label: 'Insurance Verify',
+        icon: CreditCard,
+      },
+      {
+        id: 'priorAuth' as ViewType,
+        label: 'Prior Auth',
         icon: LogOut,
       },
     ],
