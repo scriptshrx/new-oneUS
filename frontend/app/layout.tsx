@@ -44,7 +44,7 @@ export default function RootLayout({
         <link rel="icon" href="/new-logo.png" />
       </head>
       <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ProtectedLayout>
             {children}
           </ProtectedLayout>
