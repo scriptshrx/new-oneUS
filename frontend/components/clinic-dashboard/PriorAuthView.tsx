@@ -1,13 +1,10 @@
 'use client';
 
 import { ArrowLeft, Mail, Phone, Calendar, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import PatientDetailModal from '@/components/PatientDetailModal';
 import { useState } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
-
-import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 
 
 interface Patient {
@@ -31,9 +28,8 @@ interface Patient {
   [key: string]: any;
 }
 
-interface PatientListViewProps {
+interface PriorAuthViewProps {
   patients: Patient[];
-  insuranceOnly:boolean;
   patientsError: string | null;
   patientsLoading: boolean;
   onBack?: () => void;
@@ -55,36 +51,16 @@ const getUrgencyColor = (urgency: string | undefined) => {
   }
 };
 
-const getStatusColor = (status: string | undefined) => {
-  switch (status?.toUpperCase()) {
-    case 'ACTIVE':
-      return 'bg-green-100 text-green-800';
-    case 'PENDING':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'COMPLETED':
-      return 'bg-blue-100 text-blue-800';
-    case 'ARCHIVED':
-      return 'bg-gray-100 text-gray-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-export default function PatientListView({
-  patients,
-  patientsError,
-  patientsLoading,
-  insuranceOnly,
-  onBack,
-  clinicId,
-}: PatientListViewProps) {
+export default function PriorAuthView({ patients, patientsError, patientsLoading, onBack, clinicId }: PriorAuthViewProps) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
 
+  // Only show patients in the INSURANCE pipeline stage
+  const filteredPatients = patients.filter((p) => (p.pipelineStage || '').toString().toUpperCase() === 'INSURANCE');
+
   const handleUpdateStatus = async (patientId: string, nextStage: string) => {
-    const referralId = selectedPatient?._referral.id;
-    console.log('Starting to update status for patient referral is:', referralId)
+    const referralId = selectedPatient?._referral?.id;
     try {
       const response = await fetchWithAuth(`https://scriptishrxnewmark.onrender.com/v1/referrals/${referralId}/status`, {
         method: 'PATCH',
@@ -95,18 +71,14 @@ export default function PatientListView({
         throw new Error(`Failed to update status: ${response.statusText}`);
       }
 
-      // Update the local patient data
       const updatedPatient = await response.json();
       window.location.reload();
-      
-      console.log('✅ Patient status updated:', updatedPatient);
+      console.log('✅ PriorAuth status updated:', updatedPatient);
     } catch (error) {
-      console.error('❌ Error updating patient status:', error);
+      console.error('❌ Error updating prior auth status:', error);
       throw error;
     }
   };
-
-   const[showInsurance, setShowInsurance]=useState(false)
 
   if (patientsLoading) {
     return (
@@ -134,9 +106,9 @@ export default function PatientListView({
                 <span className="text-sm">Back</span>
               </button>
             )}
-            <h1 className="text-3xl font-bold text-foreground">Patient List</h1>
+            <h1 className="text-3xl font-bold text-foreground">Prior Authorizations</h1>
             <p className="text-sm text-foreground/70 mt-1">
-              {patients.length} patient{patients.length !== 1 ? 's' : ''} referred
+              {filteredPatients.length} patient{filteredPatients.length !== 1 ? 's' : ''} in insurance pipeline
             </p>
           </div>
         </div>
@@ -154,12 +126,12 @@ export default function PatientListView({
           </div>
         )}
 
-        {patients.length === 0 ? (
+        {filteredPatients.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-primary/50" />
             </div>
-            <p className="text-foreground/70">No patients to display</p>
+            <p className="text-foreground/70">No patients in the insurance pipeline</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -178,7 +150,6 @@ export default function PatientListView({
                   <th className="px-6 py-4 text-left">
                     <span className="text-sm font-semibold text-foreground/70">Urgency</span>
                   </th>
-                 
                   <th className="px-6 py-4 text-left">
                     <span className="text-sm font-semibold text-foreground/70">Referred</span>
                   </th>
@@ -188,7 +159,7 @@ export default function PatientListView({
                 </tr>
               </thead>
               <tbody>
-                {patients.map((patient) => (
+                {filteredPatients.map((patient) => (
                   <tr
                     key={patient.id}
                     className="border-b border-border/20 hover:bg-primary/5 transition-colors"
@@ -198,9 +169,7 @@ export default function PatientListView({
                         <span className="font-medium text-foreground">
                           {patient.firstName} {patient.lastName}
                         </span>
-                        <span className="text-xs text-foreground/50">
-                          DOB: {patient.dateOfBirth || 'N/A'}
-                        </span>
+                        <span className="text-xs text-foreground/50">DOB: {patient.dateOfBirth || 'N/A'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -208,10 +177,7 @@ export default function PatientListView({
                         {patient.email && (
                           <div className="flex items-center gap-2 text-sm text-foreground/70">
                             <Mail className="w-4 h-4" />
-                            <a
-                              href={`mailto:${patient.email}`}
-                              className="hover:text-primary transition-colors truncate"
-                            >
+                            <a href={`mailto:${patient.email}`} className="hover:text-primary transition-colors truncate">
                               {patient.email}
                             </a>
                           </div>
@@ -219,10 +185,7 @@ export default function PatientListView({
                         {patient.phone && (
                           <div className="flex items-center gap-2 text-sm text-foreground/70">
                             <Phone className="w-4 h-4" />
-                            <a
-                              href={`tel:${patient.phone}`}
-                              className="hover:text-primary transition-colors"
-                            >
+                            <a href={`tel:${patient.phone}`} className="hover:text-primary transition-colors">
                               {patient.phone}
                             </a>
                           </div>
@@ -230,43 +193,26 @@ export default function PatientListView({
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-foreground">
-                        {patient.primaryDiagnosis || 'N/A'}
-                      </span>
+                      <span className="text-sm text-foreground">{patient.primaryDiagnosis || 'N/A'}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(
-                          patient.urgencyLevel
-                        )}`}
-                      >
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(patient.urgencyLevel)}`}>
                         {patient.urgencyLevel || 'N/A'}
                       </span>
                     </td>
-                    
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-foreground/70">
                         <Calendar className="w-4 h-4" />
-                        {patient.createdAt
-                          ? new Date(patient.createdAt).toLocaleDateString()
-                          : 'N/A'}
+                        {patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {
-                        insuranceOnly?
-                        <button
-                          onClick={() => { setSelectedPatient(patient); setShowInsurance(true); }}
-                          className="px-3 py-2 text-sm text-white font-medium bg-blue-500  text-primary hover:bg-blue-500/70 rounded-lg transition-colors"
-                        >
-                          Verify
-                        </button>:
                       <button
                         onClick={() => setSelectedPatient(patient)}
                         className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
                       >
                         View Details
-                      </button>}
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -277,20 +223,13 @@ export default function PatientListView({
       </div>
 
       {/* Patient Detail Modal */}
-      {(selectedPatient && !showInsurance)&& (
+      {selectedPatient && (
         <PatientDetailModal
           patient={selectedPatient}
           isOpen={!!selectedPatient}
           onClose={() => setSelectedPatient(null)}
           onUpdateStatus={handleUpdateStatus}
           clinicId={effectiveClinicId}
-        />
-      )}
-
-      {(showInsurance && selectedPatient) && (
-        <InsuranceOnlyModal
-          patientName={`${selectedPatient.firstName || ''} ${selectedPatient.lastName || ''}`.trim()}
-          onClose={() => setShowInsurance(false)}
         />
       )}
     </div>

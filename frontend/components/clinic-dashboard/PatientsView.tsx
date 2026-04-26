@@ -110,6 +110,8 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
     }
   };
 
+ 
+
   return (
     <>
       {/* Header */}

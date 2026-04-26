@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3, Zap, Mic, Database, MessageSquare, CreditCard, BrainCircuit, Bot, Users2, UserPlus } from 'lucide-react';
+import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3, Zap, Mic, Database, MessageSquare, CreditCard, BrainCircuit, Bot, Users2, UserPlus, BookmarkCheck, UserRoundCheck, UserCog } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, createContext, useContext, useEffect } from 'react';
 import { authService } from '@/lib/authService';
@@ -8,12 +8,15 @@ import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import AllChairsView from './clinic-dashboard/AllChairsView';
 import AddChairsView from './clinic-dashboard/AddChairsView';
 import ChairsPipelineView from './clinic-dashboard/ChairsPipelineView';
+import InsuranceVerifyView from './clinic-dashboard/InsuranceVerifyView';
+import PriorAuthView from './clinic-dashboard/PriorAuthView';
+import AccountSettings from './clinic-dashboard/AccountSettings';
 
 interface ClinicDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ViewType = 'dashboard' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
+type ViewType = 'dashboard' | 'accountSettings' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
 
 interface Patient {
   // Core Patient Infos
@@ -83,6 +86,7 @@ interface DashboardContextType {
   patientsLoading: boolean;
   patientsError: string | null;
   clinic: any | null;
+  clinicId: string | null;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -157,13 +161,30 @@ const navItems = [
       
     ],
   },
+   
+  {
+    group: 'VERIFICATIONS',
+    items: [
+      {
+        id: 'insuranceVerify' as ViewType,
+        label: 'Insurance Verify',
+        icon: BookmarkCheck,
+      },
+      {
+        id: 'priorAuth' as ViewType,
+        label: 'Prior Auth',
+        icon: UserRoundCheck,
+      },
+    ],
+  },
+  
   {
     group: 'SETTINGS',
     items: [
       {
-        id: 'subscriptions' as ViewType,
-        label: 'Subscriptions',
-        icon: CreditCard,
+        id: 'accountSettings' as ViewType,
+        label: 'Account Settings',
+        icon: UserCog,
       },
       {
         id: 'logout' as ViewType,
@@ -173,42 +194,6 @@ const navItems = [
     ],
   },
 
-   {
-    group: 'INFUSION CHAIRS',
-    items: [
-      {
-        id: 'allChairs' as ViewType,
-        label: 'Chairs View',
-        icon: Users2,
-      },
-      {
-        id: 'chairsPipeline' as ViewType,
-        label: 'Chairs Pipeline',
-        icon: Workflow,
-      },
-      {
-        id: 'addChairs' as ViewType,
-        label: 'Add Chairs',
-        icon: UserPlus,
-      },
-      
-    ],
-  },
-  {
-    group: 'VERIFICATIONS',
-    items: [
-      {
-        id: 'insuranceVerify' as ViewType,
-        label: 'Insurance Verify',
-        icon: CreditCard,
-      },
-      {
-        id: 'priorAuth' as ViewType,
-        label: 'Prior Auth',
-        icon: LogOut,
-      },
-    ],
-  },
 ];
 
 export default function ClinicDashboardLayout({ children }: ClinicDashboardLayoutProps) {
@@ -356,6 +341,19 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         return <ChairsPipelineView />;
       case 'addChairs':
         return <AddChairsView />;
+      case 'accountSettings':
+        return <AccountSettings />;
+      case 'priorAuth':
+        return (
+          <PriorAuthView
+            patients={patients.filter((p) => (p.pipelineStage || '').toString().toUpperCase() === 'INSURANCE')}
+            patientsLoading={patientsLoading}
+            patientsError={patientsError}
+            clinicId={clinicId}
+          />
+        );
+      case 'insuranceVerify':
+        return <InsuranceVerifyView />;
       default:
         return children;
     }
