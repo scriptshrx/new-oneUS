@@ -7,15 +7,7 @@ import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import PatientDetailModal from '@/components/PatientDetailModal';
 
 interface Chair {
-  id: string;
-  name: string;
-  email: string;
-  specialty: string;
-  operatingAddress: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  status: string;
+  chairNumber: string
 }
 
 interface Patient {
@@ -214,7 +206,7 @@ export default function ChairsPipelineView() {
               <div key={chair.id} className={`${cardStyle} items-center justify-center`}>
                 <div className="flex flex-col h-full justify-between">
                   <div>
-                    <div className="text-xs font-semibold text-foreground/60 mb-2 text-center">{chair.name}</div>
+                    <div className="text-xs font-semibold text-foreground/60 mb-2 text-center">{chair.chairNumber}</div>
                     <div className="text-base font-semibold text-center">
                       {patientStage || 'No Patient'}
                     </div>

@@ -247,7 +247,9 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
           ) : taggedChair ? (
             <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <label className="text-xs font-semibold text-primary/80 uppercase">Chair Number</label>
+                <p className="text-foreground font-semibold mt-1">{taggedChair.chairNumber}</p>
+                {/* <div>
                   <label className="text-xs font-semibold text-primary/80 uppercase">Chair Name</label>
                   <p className="text-foreground font-semibold mt-1">{taggedChair.name}</p>
                 </div>
@@ -264,7 +266,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                   <p className="text-foreground mt-1">
                     {taggedChair.city}, {taggedChair.state}
                   </p>
-                </div>
+                </div> */}
               </div>
               {clinicId && (
                 <Button

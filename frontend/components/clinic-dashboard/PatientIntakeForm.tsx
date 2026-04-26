@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
-
+import InsuranceVerificationModal from '../registration/InsuranceVerificationModal';
 const API_BASE_URL = 'https://scriptishrxnewmark.onrender.com/v1';
 
 const URGENCY_LEVELS = [
@@ -70,7 +70,7 @@ interface PatientIntakeFormProps {
 
 export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
   const { clinic, patients } = useClinicDashboardView();
-
+const[showInsuranceModal,setShowInsuranceModal] =useState(false)
   useEffect(() => {
     if (clinic && patients) {
       const activePatients = patients.filter(
@@ -124,7 +124,7 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
+const[submittedPatientName,setSubmittedPatientName]=useState('')
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -246,6 +246,7 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
         },
       };
 
+      setSubmittedPatientName(`${formData.patientFirstName} ${formData.patientLastName}`)
       console.log('Patient Intake payload:', JSON.stringify(referralPayload));
 
       const response = await fetch(`${API_BASE_URL}/referrals`, {
@@ -266,6 +267,8 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
       setSuccessMessage(
         `✓ Patient intake submitted successfully! ${result.patientName} has been added to ${clinic.name}.`
       );
+
+      setShowInsuranceModal(true)
 
       // Reset form
       setFormData({
@@ -696,6 +699,14 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
             />
           </div>
         </div>
+        {showInsuranceModal&&
+        <InsuranceVerificationModal
+         patientName={submittedPatientName}
+          onClose={() => {
+            setShowInsuranceModal(false);
+            setSuccessMessage('');
+            onBack();
+          }}/>}
       </div>
 
       {/* Submit Buttons */}
@@ -727,6 +738,7 @@ export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
           Cancel
         </Button>
       </div>
+      
     </form>
   );
 }

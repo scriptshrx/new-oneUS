@@ -44,7 +44,7 @@ router.get('/chairs/:clinicId/with-patients', authMiddleware, verifyClinicOwners
 
     const chairs = await ChairService.getChairsWithPatients(clinicId);
 
-    res.json({
+    return res.json({
       success: true,
       data: chairs,
     });

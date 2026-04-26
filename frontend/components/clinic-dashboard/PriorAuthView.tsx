@@ -131,7 +131,7 @@ const[showPriorAuth,setShowPriorAuth]=useState(false)
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-primary/50" />
             </div>
-            <p className="text-foreground/70">No patients in the insurance pipeline</p>
+            <p className="text-foreground/70">No patients is due for this pipeline</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3, Zap, Mic, Database, MessageSquare, CreditCard, BrainCircuit, Bot, Users2, UserPlus, BookmarkCheck, UserRoundCheck, UserCog } from 'lucide-react';
+import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3, Zap, Mic, Database, MessageSquare, CreditCard, BrainCircuit, Bot, Users2, UserPlus, BookmarkCheck, UserRoundCheck, UserCog, FileUser, NotebookPen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, createContext, useContext, useEffect } from 'react';
 import { authService } from '@/lib/authService';
@@ -11,12 +11,12 @@ import ChairsPipelineView from './clinic-dashboard/ChairsPipelineView';
 import InsuranceVerifyView from './clinic-dashboard/InsuranceVerifyView';
 import PriorAuthView from './clinic-dashboard/PriorAuthView';
 import AccountSettings from './clinic-dashboard/AccountSettings';
-
+import PatientIntakeForm from './clinic-dashboard/PatientIntakeForm';
 interface ClinicDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ViewType = 'dashboard' | 'accountSettings' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
+type ViewType = 'dashboard' |  'accountSettings' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
 
 interface Patient {
   // Core Patient Infos
@@ -109,6 +109,12 @@ const navItems = [
         icon: LayoutDashboard,
       },
       {
+        id:'intakeForm' as ViewType,
+        label:'Intake Form',
+        icon: NotebookPen
+      },
+      
+      {
         id: 'patientsList' as ViewType,
         label: 'Patient CRM',
         icon: Users,
@@ -126,18 +132,14 @@ const navItems = [
     ],
   },
   {
-    group: 'ANALYTICS & SETTINGS',
+    group: 'ANALYTICS',
     items: [
       {
         id: 'analytics' as ViewType,
         label: 'Analytics',
         icon: BarChart3,
       },
-      {
-        id: 'settings' as ViewType,
-        label: 'Settings',
-        icon: Settings,
-      },
+      
     ],
   },
   {
@@ -211,7 +213,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedView = localStorage.getItem('dashboardView') as ViewType | null;
-      if (savedView && ['overview', 'patients', 'archives', 'settings'].includes(savedView)) {
+      if (savedView) {
         setCurrentView(savedView);
         localStorage.removeItem('dashboardView'); // Clear after using
       }
@@ -352,6 +354,10 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
             clinicId={clinicId}
           />
         );
+        case 'intakeForm':
+          return <PatientIntakeForm
+        
+          />
       case 'insuranceVerify':
         return <InsuranceVerifyView />;
       default:
