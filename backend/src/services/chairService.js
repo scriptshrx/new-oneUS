@@ -56,23 +56,21 @@ class ChairService {
       // Validate the required fields
       const { chairNumber } = chairData;
 
-      if (!name || !email || !specialty || !operatingAddress || !city || !state || !zipCode) {
-        throw new Error('Missing required fields');
-      }
+    
 
       // Generate a random 8-character password (alphanumeric)
-      const generateRandomPassword = (length = 8) => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let pw = '';
-        const bytes = crypto.randomBytes(length);
-        for (let i = 0; i < length; i++) {
-          pw += chars[bytes[i] % chars.length];
-        }
-        return pw;
-      };
+      // const generateRandomPassword = (length = 8) => {
+      //   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      //   let pw = '';
+      //   const bytes = crypto.randomBytes(length);
+      //   for (let i = 0; i < length; i++) {
+      //     pw += chars[bytes[i] % chars.length];
+      //   }
+      //   return pw;
+      // };
 
-      const plainPassword = generateRandomPassword(8);
-      console.log('The chair password is',plainPassword)
+      // const plainPassword = generateRandomPassword(8);
+      // console.log('The chair password is',plainPassword)
 
       const chair = await prisma.infusionChair.create({
         data: {
@@ -91,25 +89,25 @@ class ChairService {
       }
 
       // Send account creation email (do not block on failure)
-      try {
-        const clinicName = clinic?.name || 'Your Clinic';
-        const subject = 'Your Chair Account Created';
-        const html = `
-          <h2>Account Created</h2>
-          <p>Hello ${name},</p>
-          <p>An account has been created for you as an infusion chair at <strong>${clinicName}</strong>.</p>
-          <p>Login details:</p>
-          <ul>
-            <li>Email: <strong>${email}</strong></li>
-            <li>Password: <strong>${plainPassword}</strong></li>
-          </ul>
-          <p>Please sign in and change your password after first login.</p>
-        `;
+    //   try {
+    //     const clinicName = clinic?.name || 'Your Clinic';
+    //     const subject = 'Your Chair Account Created';
+    //     const html = `
+    //       <h2>Account Created</h2>
+    //       <p>Hello ${name},</p>
+    //       <p>An account has been created for you as an infusion chair at <strong>${clinicName}</strong>.</p>
+    //       <p>Login details:</p>
+    //       <ul>
+    //         <li>Email: <strong>${email}</strong></li>
+    //         <li>Password: <strong>${plainPassword}</strong></li>
+    //       </ul>
+    //       <p>Please sign in and change your password after first login.</p>
+    //     `;
 
-        await sendEmail({ to: email, subject, html });
-      } catch (e) {
-        console.error('Failed to send chair account email:', e);
-      }
+    //     await sendEmail({ to: email, subject, html });
+    //   } catch (e) {
+    //     console.error('Failed to send chair account email:', e);
+    //   }
 
       return chair;
     } catch (error) {
@@ -194,7 +192,7 @@ class ChairService {
           status: 'ACTIVE',
         },
         orderBy: {
-          name: 'asc',
+          createdAt: 'asc',
         },
       });
 

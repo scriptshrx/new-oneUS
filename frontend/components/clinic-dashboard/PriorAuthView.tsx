@@ -5,7 +5,7 @@ import PatientDetailModal from '@/components/PatientDetailModal';
 import { useState } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
-
+import PriorAuthOnlyModal from '../registration/PriorAuthOnlyModal';
 
 interface Patient {
   id: string;
@@ -55,7 +55,7 @@ export default function PriorAuthView({ patients, patientsError, patientsLoading
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
-
+const[showPriorAuth,setShowPriorAuth]=useState(false)
   // Only show patients in the INSURANCE pipeline stage
   const filteredPatients = patients.filter((p) => (p.pipelineStage || '').toString().toUpperCase() === 'INSURANCE');
 
@@ -208,10 +208,10 @@ export default function PriorAuthView({ patients, patientsError, patientsLoading
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => setSelectedPatient(patient)}
-                        className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        onClick={() => {setSelectedPatient(patient);setShowPriorAuth(true)}}
+                        className="px-3 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-500/70 rounded-lg transition-colors"
                       >
-                        View Details
+                        Verify
                       </button>
                     </td>
                   </tr>
@@ -222,8 +222,15 @@ export default function PriorAuthView({ patients, patientsError, patientsLoading
         )}
       </div>
 
+      {showPriorAuth && selectedPatient && (
+        <PriorAuthOnlyModal
+          patientName={`${selectedPatient?.firstName} ${selectedPatient?.lastName}`}
+          onClose={() => setShowPriorAuth(false)}
+        />
+      )}
+
       {/* Patient Detail Modal */}
-      {selectedPatient && (
+      {/* {selectedPatient && (
         <PatientDetailModal
           patient={selectedPatient}
           isOpen={!!selectedPatient}
@@ -231,7 +238,7 @@ export default function PriorAuthView({ patients, patientsError, patientsLoading
           onUpdateStatus={handleUpdateStatus}
           clinicId={effectiveClinicId}
         />
-      )}
+      )} */}
     </div>
   );
 }

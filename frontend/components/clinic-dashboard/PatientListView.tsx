@@ -290,7 +290,7 @@ export default function PatientListView({
       {(showInsurance && selectedPatient) && (
         <InsuranceOnlyModal
           patientName={`${selectedPatient.firstName || ''} ${selectedPatient.lastName || ''}`.trim()}
-          onClose={() => setShowInsurance(false)}
+          onClose={() => {setShowInsurance(false);setSelectedPatient(null)}}
         />
       )}
     </div>

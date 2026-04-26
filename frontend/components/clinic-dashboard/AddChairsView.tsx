@@ -6,14 +6,8 @@ import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 
 interface FormData {
-  name: string;
-  email: string;
-  specialty: string;
-  chairPassword:string;
-  operatingAddress: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  chairNumber: string;
+
 }
 
 interface FormErrors {
@@ -28,41 +22,17 @@ export default function AddChairsView() {
   const [errors, setErrors] = useState<FormErrors>({});
 
   const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
-    specialty: '',
-    chairPassword:'',
-    operatingAddress: '',
-    city: '',
-    state: '',
-    zipCode: '',
+    chairNumber: '',
+   
   });
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Chair officer name is required';
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    if (!formData.specialty.trim()) {
-      newErrors.specialty = 'Specialty is required';
-    }
-    if (!formData.operatingAddress.trim()) {
-      newErrors.operatingAddress = 'Operating address is required';
-    }
-    if (!formData.city.trim()) {
-      newErrors.city = 'City is required';
-    }
-    if (!formData.state.trim()) {
-      newErrors.state = 'State is required';
-    }
-    if (!formData.zipCode.trim()) {
-      newErrors.zipCode = 'Zip code is required';
+   
+    
+    if (!formData.chairNumber.trim()) {
+      newErrors.chairNumber = 'Cahir number is required';
     }
 
     setErrors(newErrors);
@@ -186,17 +156,17 @@ export default function AddChairsView() {
           </label>
           <input
             type="text"
-            name="name"
-            value={formData.name}
+            name="chairNumber"
+            value={formData.chairNumber}
             onChange={handleInputChange}
             placeholder="Enter chair officer name"
             className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50 ${
-              errors.name
+              errors.chairNumber
                 ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
                 : 'border-border/30 focus:border-primary focus:ring-primary/20'
             } focus:outline-none focus:ring-2`}
           />
-          {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
+          {errors.chairNumber && <p className="text-red-600 text-sm mt-1">{errors.chairNumber}</p>}
         </div>
 
         

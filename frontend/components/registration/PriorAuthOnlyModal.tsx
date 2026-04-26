@@ -56,31 +56,21 @@ const PRIOR_AUTHORIZATION_PROVIDERS = [
   },
 ];
 
-export default function InsuranceOnlyModal({
+export default function PriorAuthOnlyModal({
   patientName,
   onClose,
 }: InsuranceVerificationModalProps) {
-  const [activeTab, setActiveTab] = useState('insurance');
+  const [activeTab, setActiveTab] = useState('authorization');
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-background rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-border/50">
         {/* Header */}
-        <div className="border-b border-border/30 bg-gradient-to-r justify-end from-primary/10 to-accent/5 p-6 flex items-start justify-between">
-          {/* <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center flex-shrink-0 mt-1">
-              <CheckCircle2 className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Referral Submitted Successfully</h2>
-              <p className="text-sm text-foreground/60 mt-1">
-                Patient <span className="font-semibold text-foreground">{patientName}</span> has been created. Complete insurance verification to proceed.
-              </p>
-            </div>
-          </div> */}
+        <div className="border-b flex-end justify-end border-border/30 bg-gradient-to-r from-primary/10 to-accent/5 p-6 flex items-start justify-between">
+          
           <button
             onClick={onClose}
-            className="text-foreground/50 hover:text-foreground/80 transition-colors flex-shrink-0"
+            className="text-foreground/50 mr-4 hover:text-foreground/80 transition-colors right-4 flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -90,17 +80,15 @@ export default function InsuranceOnlyModal({
         <div className="flex-1 overflow-y-auto p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Tab List */}
-            <TabsList className="flex w-full mb-6 bg-muted/50">
-              <TabsTrigger value="insurance" className="flex items-center gap-2">
-                <span>Insurance Verification for <span className='font-semibold'>{patientName}</span></span>
+            <TabsList className=" w-full flex mb-6 bg-muted/50">
+             
+              <TabsTrigger value="authorization" className="flex items-center gap-2">
+                <span>Prior Authorization for <span className='font-semibold'>{patientName}</span></span>
               </TabsTrigger>
-              {/* <TabsTrigger value="authorization" className="flex items-center gap-2">
-                <span>Prior Authorization</span>
-              </TabsTrigger> */}
             </TabsList>
 
             {/* Insurance Verification Tab */}
-            <TabsContent value="insurance" className="space-y-3">
+            {/* <TabsContent value="insurance" className="space-y-3">
               <div className="mb-4">
                 <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
                   Choose a provider to verify patient insurance
@@ -125,10 +113,10 @@ export default function InsuranceOnlyModal({
                   </a>
                 ))}
               </div>
-            </TabsContent>
+            </TabsContent> */}
 
             {/* Prior Authorization Tab */}
-            {/* <TabsContent value="authorization" className="space-y-3">
+            <TabsContent value="authorization" className="space-y-3">
               <div className="mb-4">
                 <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
                   Choose a provider for prior authorization
@@ -153,7 +141,7 @@ export default function InsuranceOnlyModal({
                   </a>
                 ))}
               </div>
-            </TabsContent> */}
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -163,7 +151,7 @@ export default function InsuranceOnlyModal({
             onClick={onClose}
             className="flex-1 bg-accent hover:bg-accent/90 text-white font-semibold"
           >
-            Complete Verification
+            Completed
           </Button>
           <Button
             onClick={onClose}
