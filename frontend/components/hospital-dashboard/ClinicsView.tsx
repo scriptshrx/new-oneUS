@@ -112,7 +112,7 @@ export default function ClinicsView() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-primary/10 rounded-lg p-3 text-center">
                   <p className="text-2xl font-bold text-primary">
-                    {clinic.activePatients || 0}
+                    {clinic.numberOfPatients || 0}
                   </p>
                   <p className="text-xs text-foreground/60">Active Patients</p>
                 </div>

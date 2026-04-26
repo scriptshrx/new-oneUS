@@ -24,7 +24,7 @@ router.post('/', authMiddleware, async (req, res, next) => {
     // Pass hospitalId from authenticated user when available
     const result = await createReferral(req.body, req.user.hospitalId);
     console.log('✅ [REFERRALS] Referral created successfully:', result.id);
-    res.status(201).json(result);
+    return res.status(201).json(result);
   } catch (error) {
     console.error('💥 [REFERRALS] Error creating referral:', error);
     next(error);
@@ -56,7 +56,7 @@ router.get('/', authMiddleware, async (req, res, next) => {
     console.log('✅ [REFERRALS] Successfully fetched referrals count:', referrals.length);
     console.log('📦 [REFERRALS] Response:', referrals);
     
-    res.json(referrals);
+    return res.json(referrals);
   } catch (error) {
     console.error('💥 [REFERRALS] Error fetching referrals:', error);
     next(error);
@@ -71,7 +71,7 @@ router.get('/:referralId', authMiddleware, async (req, res, next) => {
     
     const referral = await getReferralById(req.params.referralId, req.user.clinicId);
     console.log('✅ [REFERRALS] Referral found:', referral?.id);
-    res.json(referral);
+    return res.json(referral);
   } catch (error) {
     console.error('💥 [REFERRALS] Error fetching referral:', error);
     next(error);
@@ -98,7 +98,7 @@ router.patch('/:referralId/status', authMiddleware, async (req, res, next) => {
     );
 
     console.log('✅ [REFERRALS] Status updated successfully');
-    res.json(referral);
+    return res.json(referral);
   } catch (error) {
     console.error('💥 [REFERRALS] Error updating referral status:', error);
     next(error);

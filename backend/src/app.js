@@ -42,7 +42,7 @@ app.use(cors(corsOptions));
 // Health check
 app.head('/health', (req, res) => {
 console.log('Wake-up call from UptimeRobot')
-  res.json({ status: 'ok' });
+  return res.json({ status: 'ok' });
 });
 
 // Routes

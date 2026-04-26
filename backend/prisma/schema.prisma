@@ -164,17 +164,17 @@ model InfusionChair {
   clinicId String @map("clinic_id")
 
   // Chair Officer Details
-  name      String
-  email     String
-  specialty String
+  chairNumber      String @map("chair_number")
+  //email     String
+  //specialty String
 
   // Operating Address
-  operatingAddress String @map("operating_address")
-  city             String
-  state            String @db.Char(2)
-  zipCode          String @map("zip_code")
+  //operatingAddress String @map("operating_address")
+  //city             String
+  //state            String @db.Char(2)
+  //zipCode          String @map("zip_code")
   // Plaintext chair password for initial login (8 chars)
-  chairPassword    String? @map("chair_password")
+  //chairPassword    String? @map("chair_password")
 
   // Status
   status ChairStatus @default(ACTIVE)
@@ -186,7 +186,7 @@ model InfusionChair {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([clinicId])
-  @@index([email])
+//  @@index([email])
   @@map("infusion_chairs")
 }
 

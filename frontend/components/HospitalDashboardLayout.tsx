@@ -303,9 +303,23 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
         }
 
         const allClinics = await response.json();
-        console.log('Clinic one treatmentTypesOffered:', allClinics[0]?.treatmentTypesOffered);
-        setClinics(allClinics || []);
-        console.log('✅ [fetchClinics] All clinics fetched:', allClinics);
+
+        const updatedClinics = await Promise.all(
+          allClinics.map(async(clinic)=>{
+            try {
+              const clinicId = clinic.id;
+              const referralsResponse = await fetchWithAuth(`${apiUrl}/referrals?clinicId=${clinicId}`);
+              const patientsForClinic = await referralsResponse.json();
+              return {...clinic, numberOfPatients: patientsForClinic.length};
+            } catch (error) {
+              console.error(`Failed to fetch patient count for clinic ${clinic.id}:`, error);
+              return {...clinic, numberOfPatients: 0};
+            }
+          })
+        );
+
+        setClinics(updatedClinics);
+        console.log('✅ [fetchClinics] All clinics fetched:', updatedClinics);
       } catch (error) {
         console.error('💥 Error fetching clinics:', error);
         setClinics([]);

@@ -4,20 +4,19 @@ import { useState, useEffect } from 'react';
 import { X, Loader, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
+import ClinicPatientCRM from './ClinicPatientCRM';
 
 interface Chair {
   id: string;
-  name: string;
-  email: string;
-  specialty: string;
-  city: string;
-  state: string;
-  status: string;
+  chairNumber: string;
+
+  status:string;
 }
 
 interface ChairSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  clinicName:string;
   clinicId: string;
   onChairSelected: (chairId: string) => Promise<void>;
 }
@@ -26,6 +25,7 @@ export default function ChairSelectionModal({
   isOpen,
   onClose,
   clinicId,
+  clinicName,
   onChairSelected,
 }: ChairSelectionModalProps) {
   const [chairs, setChairs] = useState<Chair[]>([]);
@@ -147,12 +147,12 @@ export default function ChairSelectionModal({
                     className="mt-1 mr-4"
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-foreground">{chair.name}</div>
+                    <div className="font-semibold text-foreground">{chair.chairNumber}</div>
                     <div className="text-sm text-foreground/70 mt-1">
-                      <p>Email: {chair.email}</p>
-                      <p>Specialty: {chair.specialty}</p>
+                      
+                  
                       <p>
-                        Location: {chair.city}, {chair.state}
+                        {clinicName}
                       </p>
                     </div>
                   </div>

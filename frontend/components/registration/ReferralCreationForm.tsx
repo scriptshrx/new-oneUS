@@ -201,19 +201,30 @@ export default function ReferralCreationPage({
 
       // Fetch patients linked to this clinic
       console.log('📡 [Stage 3] Fetching patients for clinic:', clinicId);
-      const patientsResponse = await fetchWithAuth(`${API_BASE_URL}/patients?clinicId=${clinicId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const patientsResponse = await fetchWithAuth(`${API_BASE_URL}/patients?clinicId=${clinicId}`
+       );
 
+      // Check if the response is OK
       if (!patientsResponse.ok) {
         console.error('❌ [Stage 3] Failed to fetch patients:', patientsResponse.statusText);
         throw new Error('Failed to fetch patients');
       }
 
-      const patientsData = await patientsResponse.json();
+      // Parse the response safely
+      const responseText = await patientsResponse.text();
+      if (!responseText) {
+        console.error('❌ [Stage 3] Empty response body received');
+        throw new Error('Empty response from server');
+      }
+
+      let patientsData;
+      try {
+        patientsData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('❌ [Stage 3] Failed to parse JSON:', parseError);
+        throw new Error('Invalid JSON response from server');
+      }
+
       console.log('✅ [Stage 3] Patients data fetched:', patientsData);
 
       const allPatients = Array.isArray(patientsData) ? patientsData : patientsData.patients || [];

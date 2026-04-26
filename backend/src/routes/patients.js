@@ -14,10 +14,10 @@ router.get('/by-chair/:chairId', authMiddleware, async(req, res) => {
             return res.status(400).json({ error: 'chairId parameter is required' });
         }
         const patients = await fetchPatientsByChairId(chairId);
-        res.json(patients);
+        return res.json(patients);
     } catch (err) {
         console.error('Error fetching patients by chair:', err);
-        res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: err.message });
     }
 });
 
@@ -29,12 +29,12 @@ router.get('/',authMiddleware, async(req,res)=>{
             return res.status(400).json({ error: 'clinicId query parameter is required' });
         }
         const result = await fetchAllPatients(clinicId);
-        console.log('All patients fetched',res.json())
-        res.json(result)
+        console.log('All patients fetched', result)
+        return res.json(result)
     }
     catch(err){
         console.log('Error fetching patients:',err)
-        res.status(500).json({ error: err.message })
+        return res.status(500).json({ error: err.message })
     }
 } )
 
