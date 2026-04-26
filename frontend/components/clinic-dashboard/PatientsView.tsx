@@ -35,7 +35,7 @@ function getStageStatus(stageId: string, currentPipelineStage: string) {
   const currentIdx = order.indexOf((currentPipelineStage || '').toLowerCase());
   const stageIdx = order.indexOf(stageId);
   if (stageIdx < currentIdx) return 'completed';
-  if (stageIdx === currentIdx) return 'active';
+  if (stageIdx === currentIdx) return 'completed';
   return 'pending';
 }
 
@@ -205,7 +205,7 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
                                     } rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap flex items-center justify-center transition-colors`}
                                   >{status=='completed'&&
                                    <CheckCircle2 className='h-4 mr-2 w-4 text-white'/>}
-                                   {status=='active' && stage.id!=='complete'&&<div className='h-3 w-3 border-gray-100/30  rounded-full mr-2 border-l-gray-100 border-[2px] flex items-center animate-spin'/>}
+                                   {stage.id==nextStage&&<div className='h-3 w-3 border-gray-100/30  rounded-full mr-2 border-l-gray-400 border-[2px] flex items-center animate-spin'/>}
                                    
                                     <span className={`${stage.id==nextStage&&'text-gray-600'}`}>{stage.label}</span>
                                   </div>
@@ -232,7 +232,7 @@ export default function PatientsView({ onBack, patientsLoading, patientsError, p
                       </div>
                       <RefreshCcwIcon
                       onClick={(e)=>{e.stopPropagation();localStorage.setItem('dashboardView','patients');window.location.reload();}} 
-                      className='h-4 w-4 text-primary absolute top-4 right-32 cursor-pointer hover:text-accent transition-colors'/>
+                      className='h-4 w-4 text-primary absolute top-4 right-34 cursor-pointer hover:text-accent transition-colors'/>
                       <div className="flex items-center gap-3">
                         <span className={`px-3 py-1 absolute top-3 right-2 rounded-full mr-8 text-xs font-semibold border whitespace-nowrap ${
                           patient.urgencyLevel === 'ROUTINE' 

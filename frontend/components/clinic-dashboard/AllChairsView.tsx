@@ -6,19 +6,8 @@ import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 
 interface Chair {
-  id: string;
-  name: string;
-  email: string;
-  specialty: string;
-  operatingAddress: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  status: string;
-  createdAt: string;
-  patientPipelineStage:string;
-  // optional display fields that may come from the API
-  patientName?: string;
+  chairNumber:string
+
 }
 
 export default function AllChairsView() {
@@ -173,7 +162,7 @@ export default function AllChairsView() {
                     <div className="text-xs font-semibold text-foreground/60 mb-2 text-center">{chair.name}</div>
                     <div className="text-base flex items-center justify-center font-semibold text-center {isInfusing ? 'text-white' : 'text-foreground'}">
                       
-                      {displayStatus}<div className='h-3 w-3 rounded-full ml-3 bg-green-500 animate-pulse'/>
+                      {chair.chairNumber}<div className='h-3 w-3 rounded-full ml-3 bg-green-500 animate-pulse'/>
 
                     </div>
                
