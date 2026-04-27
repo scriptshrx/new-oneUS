@@ -83,7 +83,7 @@ export default function PriorAuthOnlyModal({
             <TabsList className=" w-full flex mb-6 bg-muted/50">
              
               <TabsTrigger value="authorization" className="flex items-center gap-2">
-                <span>Prior Authorization for <span className='font-semibold'>{patientName}</span></span>
+                <span>Prior Authorization {patientName&& 'for'} <span className='font-semibold'>{patientName}</span></span>
               </TabsTrigger>
             </TabsList>
 
