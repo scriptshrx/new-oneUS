@@ -16,9 +16,9 @@ const router = Router();
 router.get('/availability/:clinicId/:date', authMiddleware, async (req, res) => {
   try {
     const { clinicId, date } = req.params;
-    const { durationMinutes = 60 } = req.query;
+    const { durationMinutes = 60, chairId } = req.query;
 
-    const slots = await getAvailableTimeSlots(clinicId, new Date(date), parseInt(durationMinutes));
+    const slots = await getAvailableTimeSlots(clinicId, new Date(date), parseInt(durationMinutes), chairId || null);
 
     return res.json({
       success: true,

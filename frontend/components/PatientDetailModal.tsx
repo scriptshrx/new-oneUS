@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle, Clock, AlertCircle, Archive, Loader } from 'lucide-react';
+import { X, CheckCircle, Clock, AlertCircle, Archive, Loader, Calendar, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChairSelectionModal from '@/components/ChairSelectionModal';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
+import { format } from 'date-fns';
 
 interface Patient {
   id?: string;
@@ -24,7 +25,17 @@ interface Chair {
   id: string;
   chairNumber: string;
   status:string
- 
+}
+
+interface Appointment {
+  id: string;
+  scheduledDate: string;
+  scheduledStartTime: string;
+  scheduledEndTime?: string;
+  appointmentType: string;
+  treatmentType: string;
+  status: string;
+  assignedChair?: string;
 }
 
 interface PatientCRMNodeProps {
@@ -101,12 +112,14 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
   const [showConfirm, setShowConfirm] = useState(false);
   const [showChairSelection, setShowChairSelection] = useState(false);
   const [taggedChair, setTaggedChair] = useState<Chair | null>(null);
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loadingChair, setLoadingChair] = useState(false);
   const [chairError, setChairError] = useState<string | null>(null);
 
   useEffect(() => {
     if (patient.id) {
       fetchTaggedChair();
+      fetchAppointment();
     }
   }, [patient.id]);
 
@@ -126,6 +139,25 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
       console.error('Error fetching tagged chair:', err);
     } finally {
       setLoadingChair(false);
+    }
+  };
+
+  const fetchAppointment = async () => {
+    try {
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/appointments/patient/${patient.id}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Get the most recent appointment
+        const appointments = Array.isArray(data.data) ? data.data : [];
+        if (appointments.length > 0) {
+          setAppointment(appointments[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching appointment:', err);
     }
   };
 
@@ -149,6 +181,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
       const data = await response.json();
       console.log('Chair tagged successfully:', data);
       setTaggedChair(data.data?.infusionChair || null);
+      await fetchAppointment();
     } catch (err) {
       console.error('Error tagging chair:', err);
       throw err;
@@ -236,57 +269,115 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
         {/* Infusion Chair Section */}
         <div className="p-6 border-b border-primary/20">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-primary/95">Assigned Infusion Chair</h3>
+            <h3 className="text-lg font-bold text-primary/95">Assigned Infusion Chair & Appointment</h3>
           </div>
           
           { loadingChair ? (
             <div className="flex items-center justify-center py-8">
               <Loader className="w-5 h-5 animate-spin text-primary mr-2" />
-              <span className="text-foreground/70">Loading chair information...</span>
+              <span className="text-foreground/70">Loading chair and appointment information...</span>
             </div>
-          ) : taggedChair ? (
-            <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="text-xs font-semibold text-primary/80 uppercase">Chair Number</label>
-                <p className="text-foreground font-semibold mt-1">{taggedChair.chairNumber}</p>
-                {/* <div>
-                  <label className="text-xs font-semibold text-primary/80 uppercase">Chair Name</label>
-                  <p className="text-foreground font-semibold mt-1">{taggedChair.name}</p>
+          ) : taggedChair || appointment ? (
+            <div className="space-y-4">
+              {/* Chair Details */}
+              {taggedChair && (
+                <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+                  <h4 className="text-sm font-semibold text-primary/95 mb-3">Chair Details</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-primary/80 uppercase">Chair Number</label>
+                      <p className="text-foreground font-semibold">{taggedChair.chairNumber}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-primary/80 uppercase">Status</label>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                        taggedChair.status === 'ACTIVE'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {taggedChair.status}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-primary/80 uppercase">Specialty</label>
-                  <p className="text-foreground font-semibold mt-1">{taggedChair.specialty}</p>
+              )}
+
+              {/* Appointment Details */}
+              {appointment ? (
+                <div className="p-4 bg-accent/10 rounded-lg border border-accent/30">
+                  <h4 className="text-sm font-semibold text-accent mb-3">Appointment Details</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-accent" />
+                      <div className="flex-1">
+                        <label className="text-xs font-semibold text-accent/80 uppercase">Date & Time</label>
+                        <p className="text-foreground font-semibold text-sm">
+                          {format(new Date(appointment.scheduledStartTime), 'EEEE, MMMM d, yyyy')}
+                        </p>
+                        <p className="text-foreground/80 text-sm">
+                          {format(new Date(appointment.scheduledStartTime), 'h:mm a')}
+                          {appointment.scheduledEndTime && ` - ${format(new Date(appointment.scheduledEndTime), 'h:mm a')}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-accent/80 uppercase">Type</label>
+                      <p className="text-foreground font-semibold text-sm">{appointment.appointmentType.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-accent/80 uppercase">Treatment</label>
+                      <p className="text-foreground font-semibold text-sm">{appointment.treatmentType}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-accent/80 uppercase">Status</label>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                        appointment.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-800' :
+                        appointment.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
+                        appointment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {appointment.status}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-primary/80 uppercase">Email</label>
-                  <p className="text-foreground mt-1">{taggedChair.email}</p>
+              ) : (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">No appointment scheduled yet</p>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-primary/80 uppercase">Location</label>
-                  <p className="text-foreground mt-1">
-                    {taggedChair.city}, {taggedChair.state}
-                  </p>
-                </div> */}
-              </div>
+              )}
+
+              {/* Action Buttons */}
               {clinicId && (
-                <Button
-                  onClick={() => setShowChairSelection(true)}
-                  className="mt-4 text-sm bg-primary/20 text-primary hover:bg-primary/30"
-                >
-                  Change Chair
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowChairSelection(true)}
+                    className="flex-1 text-sm bg-primary text-white hover:bg-primary/90"
+                  >
+                    {taggedChair && appointment ? 'Reschedule & Change Chair' : taggedChair ? 'Schedule Appointment' : 'Tag Chair & Schedule'}
+                  </Button>
+                  {appointment && (
+                    <Button
+                      onClick={() => setShowChairSelection(true)}
+                      variant="outline"
+                      className="text-sm border-border/30 text-foreground hover:bg-primary/10"
+                    >
+                      Reschedule
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           ) : (
              patient.pipelineStage.toLocaleLowerCase()==='scheduling'&&
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-yellow-800 mb-3">No infusion chair assigned to this patient yet.</p>
+              <p className="text-yellow-800 mb-3">No infusion chair or appointment assigned to this patient yet.</p>
               {clinicId ? (
                 <Button
                   onClick={() => setShowChairSelection(true)}
                   className="bg-primary text-white hover:bg-primary/90"
                 >
-                  Tag Chair
+                  Tag Chair & Create Appointment
                 </Button>
               ) : (
                 <p className="text-xs text-yellow-700">Unable to tag chair: clinic information not available</p>
@@ -463,10 +554,16 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
           clinicName={clinicName}
           patientId={patient.id}
           treatmentType={patient.treatmentType}
+          
+          appointment={appointment}
           onChairSelected={handleTagChair}
           onAppointmentCreated={async (appointmentId) => {
             console.log('Appointment created:', appointmentId);
-            // Optionally refresh patient data or show success message
+            await fetchAppointment();
+          }}
+          onAppointmentRescheduled={async (appointmentId) => {
+            console.log('Appointment rescheduled:', appointmentId);
+            await fetchAppointment();
           }}
         />
       )}

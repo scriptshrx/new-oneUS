@@ -37,6 +37,33 @@ const createAppointment = async (appointmentData) => {
     if (!chair || chair.clinicId !== clinicId) {
       throw new Error('Chair not found or does not belong to this clinic');
     }
+
+    // Validate chair is not already booked at this time
+    const conflictingAppointment = await prisma.appointment.findFirst({
+      where: {
+        clinicId,
+        assignedChair: chairId,
+        status: {
+          not: 'CANCELLED',
+        },
+        AND: [
+          {
+            scheduledStartTime: {
+              lt: new Date(scheduledEndTime || new Date(new Date(scheduledStartTime).getTime() + 60 * 60000)),
+            },
+          },
+          {
+            scheduledEndTime: {
+              gt: new Date(scheduledStartTime),
+            },
+          },
+        ],
+      },
+    });
+
+    if (conflictingAppointment) {
+      throw new Error('This chair is already booked for the requested time');
+    }
   }
 
   // Create appointment
@@ -166,27 +193,36 @@ const cancelAppointment = async (appointmentId) => {
   return appointment;
 };
 
-const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60) => {
+const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chairId = null) => {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Get all appointments for the clinic on that day
-  const appointments = await prisma.appointment.findMany({
-    where: {
-      clinicId,
-      scheduledDate: {
-        gte: startOfDay,
-        lte: endOfDay,
-      },
-      status: {
-        not: 'CANCELLED',
-      },
+  // Get appointments for the clinic on that day
+  // If chairId is provided, only get appointments for that specific chair
+  const where = {
+    clinicId,
+    scheduledDate: {
+      gte: startOfDay,
+      lte: endOfDay,
     },
+    status: {
+      not: 'CANCELLED',
+    },
+  };
+
+  // Only filter by chair if chairId is provided
+  if (chairId) {
+    where.assignedChair = chairId;
+  }
+
+  const appointments = await prisma.appointment.findMany({
+    where,
     select: {
       scheduledStartTime: true,
       scheduledEndTime: true,
+      assignedChair: true,
     },
   });
 
@@ -196,9 +232,13 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60) => {
   const slotDuration = durationMinutes;
 
   const slots = [];
+  
+  // Build booked times - if chairId is specified, only track that chair's bookings
+  // If no chairId, we still need to know which times are booked but allow same times on different chairs
   const bookedTimes = appointments.map(apt => ({
     start: new Date(apt.scheduledStartTime),
     end: apt.scheduledEndTime ? new Date(apt.scheduledEndTime) : null,
+    chair: apt.assignedChair,
   }));
 
   for (let hour = clinicOpenTime; hour < clinicCloseTime; hour++) {
@@ -213,12 +253,16 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60) => {
         continue;
       }
 
-      // Check if slot conflicts with existing appointments
+      // Check if slot conflicts with existing appointments in the same chair
       let isAvailable = true;
       for (const bookedSlot of bookedTimes) {
         if (slotStart < bookedSlot.end && slotEnd > bookedSlot.start) {
-          isAvailable = false;
-          break;
+          // Only block if no chairId specified (general availability check)
+          // or if checking for a specific chair and it's the same chair
+          if (!chairId || bookedSlot.chair === chairId) {
+            isAvailable = false;
+            break;
+          }
         }
       }
 

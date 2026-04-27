@@ -19,6 +19,17 @@ interface TimeSlot {
   display: string;
 }
 
+interface Appointment {
+  id: string;
+  scheduledDate: string;
+  scheduledStartTime: string;
+  scheduledEndTime?: string;
+  appointmentType: string;
+  treatmentType: string;
+  status: string;
+  assignedChair?: string;
+}
+
 interface ChairSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,8 +37,10 @@ interface ChairSelectionModalProps {
   clinicId: string;
   patientId: string;
   treatmentType?: string;
+  appointment?: Appointment | null;
   onChairSelected: (chairId: string) => Promise<void>;
   onAppointmentCreated?: (appointmentId: string) => Promise<void>;
+  onAppointmentRescheduled?: (appointmentId: string) => Promise<void>;
 }
 
 export default function ChairSelectionModal({
@@ -37,10 +50,13 @@ export default function ChairSelectionModal({
   clinicName,
   patientId,
   treatmentType = 'IV_THERAPY',
+  appointment = null,
   onChairSelected,
   onAppointmentCreated,
+  onAppointmentRescheduled,
 }: ChairSelectionModalProps) {
   const [step, setStep] = useState<'chair' | 'date' | 'time' | 'confirm'>('chair');
+  const [mode, setMode] = useState<'create' | 'reschedule'>('create');
   const [chairs, setChairs] = useState<Chair[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,13 +66,29 @@ export default function ChairSelectionModal({
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [createAppointment, setCreateAppointment] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
+      // Determine mode based on whether appointment exists
+      const appointmentMode = appointment ? 'reschedule' : 'create';
+      setMode(appointmentMode);
+      setStep('chair');
+      
+      // Reset state
+      setSelectedDate(undefined);
+      setSelectedTime(null);
+      setError(null);
+      
+      // Pre-fill chair if rescheduling
+      if (appointment && appointment.assignedChair) {
+        setSelectedChairId(appointment.assignedChair);
+      } else {
+        setSelectedChairId(null);
+      }
+      
       fetchChairs();
     }
-  }, [isOpen]);
+  }, [isOpen, appointment]);
 
   useEffect(() => {
     if (selectedDate && step === 'time') {
@@ -132,6 +164,56 @@ export default function ChairSelectionModal({
     setStep('confirm');
   };
 
+  const handleRescheduleAppointment = async () => {
+    if (!appointment || !selectedChairId || !selectedDate || !selectedTime) return;
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      // Update existing appointment
+      const updateResponse = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/appointments/${appointment.id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            scheduledDate: selectedDate.toISOString(),
+            scheduledStartTime: selectedTime,
+            scheduledEndTime: new Date(new Date(selectedTime).getTime() + 60 * 60000).toISOString(),
+          }),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json();
+        throw new Error(errorData.error || 'Failed to reschedule appointment');
+      }
+
+      // Update chair if changed
+      if (selectedChairId !== appointment.assignedChair) {
+        await onChairSelected(selectedChairId);
+      }
+
+      // Trigger callback
+      if (onAppointmentRescheduled) {
+        await onAppointmentRescheduled(appointment.id);
+      }
+
+      // Reset and close
+      setSelectedChairId(null);
+      setSelectedDate(undefined);
+      setSelectedTime(null);
+      setIsSubmitting(false)
+      setStep('chair');
+      onClose();
+    } catch (err) {
+      console.error('Error rescheduling appointment:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reschedule appointment';
+      setError(errorMessage);
+      setIsSubmitting(false);
+    }
+  };
+
   const handleCreateAppointment = async () => {
     if (!selectedChairId || !selectedDate || !selectedTime) return;
 
@@ -176,6 +258,7 @@ export default function ChairSelectionModal({
       setSelectedChairId(null);
       setSelectedDate(undefined);
       setSelectedTime(null);
+      setIsSubmitting(false)
       setStep('chair');
       onClose();
     } catch (err) {
@@ -211,6 +294,20 @@ export default function ChairSelectionModal({
     }
   };
 
+  const getModalTitle = () => {
+    if (mode === 'reschedule') {
+      if (step === 'chair') return 'Change Infusion Chair';
+      if (step === 'date') return 'Reschedule Appointment Date';
+      if (step === 'time') return 'Reschedule Appointment Time';
+      return 'Confirm Rescheduled Appointment';
+    }
+    
+    if (step === 'chair') return 'Select Infusion Chair';
+    if (step === 'date') return 'Select Appointment Date';
+    if (step === 'time') return 'Select Appointment Time';
+    return 'Confirm Appointment';
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -224,12 +321,12 @@ export default function ChairSelectionModal({
       >
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-border/30 bg-background z-10">
-          <h2 className="text-2xl font-bold text-foreground">
-            {step === 'chair' && 'Select Infusion Chair'}
-            {step === 'date' && 'Select Appointment Date'}
-            {step === 'time' && 'Select Appointment Time'}
-            {step === 'confirm' && 'Confirm Appointment'}
-          </h2>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">{getModalTitle()}</h2>
+            {mode === 'reschedule' && (
+              <p className="text-xs text-foreground/60 mt-1">Update existing appointment details</p>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
@@ -415,7 +512,9 @@ export default function ChairSelectionModal({
               </div>
 
               <p className="text-sm text-foreground/70">
-                Click <span className="font-semibold">Create Appointment</span> to schedule this treatment appointment.
+                {mode === 'reschedule' 
+                  ? <span> Click <span className="font-semibold">Reschedule Appointment</span> to update your appointment.</span>
+                  : <span> Click <span className="font-semibold">Create Appointment</span> to create your appointment.</span>}
               </p>
             </div>
           )}
@@ -463,11 +562,11 @@ export default function ChairSelectionModal({
 
           {step === 'confirm' && (
             <Button
-              onClick={handleCreateAppointment}
+              onClick={mode === 'reschedule' ? handleRescheduleAppointment : handleCreateAppointment}
               disabled={isSubmitting}
               className="bg-accent text-white hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Creating Appointment...' : 'Create Appointment'}
+              {isSubmitting ? (mode === 'reschedule' ? 'Rescheduling...' : 'Creating...') : (mode === 'reschedule' ? 'Reschedule Appointment' : 'Create Appointment')}
             </Button>
           )}
         </div>
