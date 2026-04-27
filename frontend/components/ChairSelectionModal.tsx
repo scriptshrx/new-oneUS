@@ -180,6 +180,7 @@ export default function ChairSelectionModal({
             scheduledDate: selectedDate.toISOString(),
             scheduledStartTime: selectedTime,
             scheduledEndTime: new Date(new Date(selectedTime).getTime() + 60 * 60000).toISOString(),
+            assignedChair: selectedChairId,
           }),
         }
       );

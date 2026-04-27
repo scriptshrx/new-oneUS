@@ -154,17 +154,69 @@ const updateAppointment = async (appointmentId, updateData) => {
   const {
     status,
     assignedNurseId,
+    scheduledDate,
     scheduledStartTime,
     scheduledEndTime,
+    assignedChair,
     homeAddress,
   } = updateData;
 
+  // Fetch existing appointment
+  const existingAppointment = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+  });
+
+  if (!existingAppointment) {
+    throw new Error('Appointment not found');
+  }
+
+  // If updating chair or time, validate no conflicts
+  if (assignedChair || scheduledStartTime) {
+    const chairToCheck = assignedChair || existingAppointment.assignedChair;
+    const startTime = scheduledStartTime ? new Date(scheduledStartTime) : existingAppointment.scheduledStartTime;
+    const endTime = scheduledEndTime ? new Date(scheduledEndTime) : existingAppointment.scheduledEndTime;
+
+    if (chairToCheck) {
+      const conflictingAppointment = await prisma.appointment.findFirst({
+        where: {
+          id: {
+            not: appointmentId, // Exclude current appointment
+          },
+          clinicId: existingAppointment.clinicId,
+          assignedChair: chairToCheck,
+          status: {
+            not: 'CANCELLED',
+          },
+          AND: [
+            {
+              scheduledStartTime: {
+                lt: endTime,
+              },
+            },
+            {
+              scheduledEndTime: {
+                gt: startTime,
+              },
+            },
+          ],
+        },
+      });
+
+      if (conflictingAppointment) {
+        throw new Error('This chair is already booked for the requested time');
+      }
+    }
+  }
+
+  // Build update payload
   const updatePayload = {};
 
   if (status) updatePayload.status = status;
   if (assignedNurseId) updatePayload.assignedNurseId = assignedNurseId;
+  if (scheduledDate) updatePayload.scheduledDate = new Date(scheduledDate);
   if (scheduledStartTime) updatePayload.scheduledStartTime = new Date(scheduledStartTime);
   if (scheduledEndTime) updatePayload.scheduledEndTime = new Date(scheduledEndTime);
+  if (assignedChair !== undefined) updatePayload.assignedChair = assignedChair;
   if (homeAddress) updatePayload.homeAddress = homeAddress;
 
   const appointment = await prisma.appointment.update({
