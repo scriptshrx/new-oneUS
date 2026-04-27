@@ -455,13 +455,19 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
       </div>
 
       {/* Chair Selection Modal */}
-      {clinicId && (
+      {clinicId && patient.id && (
         <ChairSelectionModal
           isOpen={showChairSelection}
           onClose={() => setShowChairSelection(false)}
           clinicId={clinicId}
           clinicName={clinicName}
+          patientId={patient.id}
+          treatmentType={patient.treatmentType}
           onChairSelected={handleTagChair}
+          onAppointmentCreated={async (appointmentId) => {
+            console.log('Appointment created:', appointmentId);
+            // Optionally refresh patient data or show success message
+          }}
         />
       )}
     </div>
