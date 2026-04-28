@@ -92,7 +92,7 @@ export default function InsuranceOnlyModal({
             {/* Tab List */}
             <TabsList className="flex w-full mb-6 bg-muted/50">
               <TabsTrigger value="insurance" className="flex items-center gap-2">
-                <span>Insurance Verification for <span className='font-semibold'>{patientName}</span></span>
+                <span>Insurance Verification {patientName&&'for'} <span className='font-semibold'>{patientName}</span></span>
               </TabsTrigger>
               {/* <TabsTrigger value="authorization" className="flex items-center gap-2">
                 <span>Prior Authorization</span>

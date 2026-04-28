@@ -51,15 +51,15 @@ export default function TestimonialsSection() {
       description: 'Average manual time required to complete insurance verification per patient, fully eliminated through automated EDI 270/271 processing within Scriptish.',
       source: 'Source: MGMA Healthcare Operations Benchmark Report',
     },
-    {
-      title: 'Missed Call Volume',
-      before: '30% inbound calls',
-      beforeLabel: 'Unanswered outside hours',
-      after: 'Now captured 24/7',
-      afterLabel: 'With automation',
-      description: 'Approximately 30% of infusion clinic call volume occurs outside business hours and remains unanswered, resulting in preventable patient leakage to competing providers.',
-      source: 'Source: Advisory Board Healthcare Access Study',
-    },
+    // {
+    //   title: 'Missed Call Volume',
+    //   before: '30% inbound calls',
+    //   beforeLabel: 'Unanswered outside hours',
+    //   after: 'Now captured 24/7',
+    //   afterLabel: 'With automation',
+    //   description: 'Approximately 30% of infusion clinic call volume occurs outside business hours and remains unanswered, resulting in preventable patient leakage to competing providers.',
+    //   source: 'Source: Advisory Board Healthcare Access Study',
+    // },
     {
       title: 'Prior Authorization Revenue Leakage',
       before: '$50,000+ annual exposure',
@@ -98,7 +98,7 @@ export default function TestimonialsSection() {
         </div>
 
         {/* Metrics Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2  gap-6 sm:gap-8">
           {metrics.map((metric, index) => (
             <MetricCard
               key={index}

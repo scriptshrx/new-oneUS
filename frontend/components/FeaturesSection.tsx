@@ -60,8 +60,8 @@ export default function FeaturesSection() {
     },
     {
       icon: '⚡',
-      title: 'Automated Prior Auth',
-      description: 'Automate the entire prior authorization process with intelligent workflow management.',
+      title: 'Prior Authorization',
+      description: 'Manage the entire prior authorization process with intelligent workflow management.',
       bgColor: 'hsla(100, 100%, 50%, 0.05)',
       textColor: 'hsl(100, 85%, 35%)',
       textColor2:'hsla(100, 85%, 35%, 0.7)',
@@ -85,15 +85,15 @@ export default function FeaturesSection() {
       textColor2:'hsla(210, 100%, 40%, 0.7)',
       image:'/patientPortal.png'
     },
-    {
-      icon: '🤖',
-      title: 'AI Voice Agent',
-      description: 'Intelligent voice assistant for patient intake, appointments, and follow-ups.',
-      bgColor: 'hsla(260, 90%, 55%, 0.05)',
-      textColor: 'hsl(260, 90%, 40%)',
-      textColor2:'hsla(260, 90%, 40%, 0.7)',
-      image:'/aiVoiceAgent.png'
-    },
+    // {
+    //   icon: '🤖',
+    //   title: 'AI Voice Agent',
+    //   description: 'Intelligent voice assistant for patient intake, appointments, and follow-ups.',
+    //   bgColor: 'hsla(260, 90%, 55%, 0.05)',
+    //   textColor: 'hsl(260, 90%, 40%)',
+    //   textColor2:'hsla(260, 90%, 40%, 0.7)',
+    //   image:'/aiVoiceAgent.png'
+    // },
     {
       icon: '📊',
       title: 'Analytics Dashboard',
@@ -148,7 +148,7 @@ export default function FeaturesSection() {
 
             </div>
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-accent mb-4 sm:mb-6 text-balance">
-            Everything You Need to <span className="text-primary">Automate</span>
+            Everything You Need to <span className="text-primary">to Manage Your Clinic</span>
           </h2>
           <p className="max-w-2xl mx-auto text-primary sm:text-lg text-foreground/60 text-balance leading-relaxed">
             Comprehensive suite of tools designed specifically for modern medical clinics.

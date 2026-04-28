@@ -80,6 +80,8 @@ const[showPriorAuth,setShowPriorAuth]=useState(false)
     }
   };
 
+  const[showAuth,setShowAuth]=useState(false)
+
   if (patientsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -131,6 +133,7 @@ const[showPriorAuth,setShowPriorAuth]=useState(false)
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-primary/50" />
             </div>
+            <button className='rounded-lg bg-blue-500 text-white p-2 px-4' onClick={()=>setShowAuth(true)}>Verify Auth</button>
             <p className="text-foreground/70">No patients is due for this pipeline</p>
           </div>
         ) : (
@@ -228,6 +231,14 @@ const[showPriorAuth,setShowPriorAuth]=useState(false)
           onClose={() => setShowPriorAuth(false)}
         />
       )}
+
+      {showAuth && (
+        <PriorAuthOnlyModal
+          patientName={''}
+          onClose={() => setShowAuth(false)}
+        />
+      )}
+    
 
       {/* Patient Detail Modal */}
       {/* {selectedPatient && (

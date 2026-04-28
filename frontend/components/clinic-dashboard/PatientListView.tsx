@@ -143,6 +143,8 @@ export default function PatientListView({
     }
   };
 
+  const[showInsur,setShowInssur]=useState(false)
+
   if (patientsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -194,6 +196,8 @@ export default function PatientListView({
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-primary/50" />
             </div>
+            {insuranceOnly && <button className='rounded-lg bg-blue-500 text-white p-2 px-4' onClick={()=>setShowInssur(true)}>Verify Insurance</button>}
+
             <p className="text-foreground/70">No patients to display</p>
           </div>
         ) : (
@@ -484,6 +488,15 @@ export default function PatientListView({
           onClose={() => {
             setShowInsurance(false);
             setSelectedPatient(null);
+          }}
+        />
+      )}
+      {showInsur && (
+        <InsuranceOnlyModal
+          patientName={''}
+          onClose={() => {
+            setShowInssur(false);
+            
           }}
         />
       )}

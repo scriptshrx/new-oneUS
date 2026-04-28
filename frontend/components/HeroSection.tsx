@@ -212,7 +212,7 @@ export default function HeroSection() {
           </h1>
 
           <p className="max-w-2xl mx-auto text-accent/80 sm:text-lg lg:text-xl mb-8 sm:mb-12 text-balance leading-relaxed">
-            Scriptish automates insurance verification, prior authorizations, and patient intake for IV therapy, ketamine, NAD+, and infusion clinics.
+            Scriptish provides insurance verification, prior authorizations, and patient intake for IV therapy, ketamine, NAD+, and infusion clinics.
           </p>
 
           {/* Stats */}
