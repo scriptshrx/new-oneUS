@@ -1,5 +1,5 @@
 const prisma = require('../db/client');
-const sendSMS = require('../utils/sms')
+const {sendSMS} = require('../utils/sms')
 const { hashPassword, comparePasswords, generateVerificationCode } = require('../utils/password');
 const {
   generateAccessToken,
