@@ -23,6 +23,7 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.7",
+    "twilio": "^6.0.0",
     "zeptomail": "^7.0.2"
   },
   "devDependencies": {

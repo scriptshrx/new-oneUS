@@ -1,6 +1,7 @@
 const prisma = require('../db/client');
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/email');
+const { sendSMS } = require('../utils/sms');
 
 class ChairService {
   /**
@@ -88,26 +89,15 @@ class ChairService {
         // ignore
       }
 
-      // Send account creation email (do not block on failure)
-    //   try {
-    //     const clinicName = clinic?.name || 'Your Clinic';
-    //     const subject = 'Your Chair Account Created';
-    //     const html = `
-    //       <h2>Account Created</h2>
-    //       <p>Hello ${name},</p>
-    //       <p>An account has been created for you as an infusion chair at <strong>${clinicName}</strong>.</p>
-    //       <p>Login details:</p>
-    //       <ul>
-    //         <li>Email: <strong>${email}</strong></li>
-    //         <li>Password: <strong>${plainPassword}</strong></li>
-    //       </ul>
-    //       <p>Please sign in and change your password after first login.</p>
-    //     `;
-
-    //     await sendEmail({ to: email, subject, html });
-    //   } catch (e) {
-    //     console.error('Failed to send chair account email:', e);
-    //   }
+      // Send account creation SMS (do not block on failure)
+      try {
+        const clinicName = clinic?.name || 'Your Clinic';
+        const message = `Hello! Your infusion chair account has been created at ${clinicName}. Chair Number: ${chairNumber}. Please log in to the system to get started.`;
+        
+        await sendSMS(chairNumber, message);
+      } catch (e) {
+        console.error('Failed to send chair account SMS:', e);
+      }
 
       return chair;
     } catch (error) {
