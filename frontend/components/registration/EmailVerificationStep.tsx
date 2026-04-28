@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { authService } from '@/lib/authService';
 
 interface EmailVerificationStepProps {
@@ -20,6 +20,17 @@ export default function EmailVerificationStep({ email, temporaryToken, onVerifie
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState('');
 
+const[isResending,setIsResending]=useState(false);
+const[clinic,setClinic]=useState(null)
+
+useEffect(()=>{
+  const clinicData = localStorage.getItem('clinic');
+  if(clinicData){
+    const clinicObj = JSON.parse(clinicData);
+setClinic(clinicObj);
+console.log('clinic set for verification',clinicObj)
+  }
+},[])
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     //mock-up successful verification
@@ -39,10 +50,10 @@ export default function EmailVerificationStep({ email, temporaryToken, onVerifie
         verificationCode,
       });
 
-      setIsVerified(true);
-      setTimeout(() => {
-        onVerified();
-      }, 1000);
+      // setIsVerified(true);
+      // setTimeout(() => {
+      //   onVerified();
+      // }, 1000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Verification failed. Please try again.';
       setError(errorMessage);
@@ -51,11 +62,13 @@ export default function EmailVerificationStep({ email, temporaryToken, onVerifie
   };
 
   const handleResendCode = async () => {
-    setIsSubmitting(true);
+    setIsResending(true);
     setError('');
 
     try {
-      await authService.resendVerificationCode(email);
+      const name = clinic?.name;
+      const primaryPhone = clinic?.primaryPhone;
+      await authService.resendVerificationCode(email,name,primaryPhone);
       setError(''); // Clear error on success
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to resend code. Please try again.';
@@ -144,14 +157,14 @@ export default function EmailVerificationStep({ email, temporaryToken, onVerifie
                 disabled={isSubmitting}
                 className="text-accent hover:text-accent/80 transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? 'Resending...' : 'Didn\'t receive it? Resend code'}
+                {isResending ? 'Resending...' : 'Didn\'t receive it? Resend code'}
               </button>
             </div>
 
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={isSubmitting || !verificationCode}
+              disabled={isSubmitting || isResending || !verificationCode}
               className="w-full"
             >
               {isSubmitting ? (

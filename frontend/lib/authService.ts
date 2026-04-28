@@ -89,7 +89,11 @@ export interface SignBAARequest {
   adminName: string;
   adminTitle: string;
 }
-
+interface ResendOTPInput{
+  name:string;
+  primaryPhone:string;
+  email:string
+}
 export interface SignBAAResponse {
   clinicId: string;
   status: string;
@@ -318,23 +322,22 @@ class AuthService {
   /**
    * Resend verification code
    */
-  async resendVerificationCode(email: string): Promise<{ message: string }> {
+  async resendVerificationCode(input:ResendOTPInput) {
+    
     try {
-      const temporaryToken = localStorage.getItem('temporaryToken');
-      
-      if (!temporaryToken) {
-        throw new Error('No temporary token found. Please register first.');
-      }
 
-      const response = await fetch(
+      // const temporaryToken = localStorage.getItem('temporaryToken');
+      
+      // if (!temporaryToken) {
+      //   throw new Error('No temporary token found. Please register first.');
+      // }
+
+      const response = await fetchWithAuth(
         `${this.apiBaseUrl}/auth/register/resend-verification`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${temporaryToken}`,
-          },
-          body: JSON.stringify({ email }),
+         
+          body: JSON.stringify({ input }),
         }
       );
 

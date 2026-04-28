@@ -136,6 +136,8 @@ const registerClinic = async (input) => {
   return {
     clinicId: clinic.id,
     accessToken,
+    name:clinic.name,
+    primaryPhone:clinic.primaryPhone,
     email:user.email,
     temporaryToken,
     nextStep: user ? 'VERIFY_EMAIL' : 'EMAIL_VERIFICATION_OPTIONAL',
@@ -143,6 +145,22 @@ const registerClinic = async (input) => {
   };
 };
 
+//handle resending of OTP
+const resendVerification = async(email,name,primaryPhone)=>{
+const OTP = generateVerificationCode(email);
+try{
+storeVerificationToken(email,OTP);
+console.log('Verification OTP generated and stored as:',OTP)
+const message = `Validate with: ${OTP} to create ${name} account. \nOr click https://scriptishrx.net/verify-email?code=${OTP}`;
+const to = primaryPhone;
+const response = await sendSMS(to,message);
+
+console.log('SMS sent successfully to',primaryPhone)
+}
+catch(err){
+  console.log('Error sending OTP',err)
+}
+}
 const verifyEmail = async (input) => {
   console.log('\x1b[1m📧 [VERIFY_EMAIL] START - Email verification initiated\x1b[0m', { email: input.email });
   const user = await prisma.user.findUnique({
@@ -637,6 +655,7 @@ module.exports = {
   login,
   forgotPassword,
   resetPassword,
+  resendVerification,
   logout,
   refreshAccessToken,
 };

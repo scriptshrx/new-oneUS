@@ -10,7 +10,9 @@ const {
   resetPassword,
   logout,
   refreshAccessToken,
+  resendVerification
 } = require('../services/authService');
+const { sendSMS } = require('../utils/sms');
 
 const router = Router();
 
@@ -24,6 +26,19 @@ router.post('/register/clinic', async (req, res, next) => {
     next(error);
   }
 });
+
+router.post('/register/resend-verification',async(req,res)=>{
+  console.log('starting to resend verification',req.body);
+  try{
+  const response = await resendVerification(req.body);
+  
+  res.status(201).json(response)
+  }
+  catch(e){console.log('Error sending OTP',e)}
+ 
+  
+
+})
 
 // POST /auth/register/hospital
 router.post('/register/hospital', async (req, res, next) => {

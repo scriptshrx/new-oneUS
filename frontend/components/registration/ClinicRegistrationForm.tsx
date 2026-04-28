@@ -117,7 +117,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
                !/^\d{5}(-\d{4})?$/.test(value) ? 'Invalid ZIP code format' : null;
       
       case 'primaryPhone':
-        return 'Phone number is required' 
+        return !value?'Phone number is required':'' 
               //  !/^\d{3}-\d{3}-\d{4}$/.test(value) ? 'Phone format: XXX-XXX-XXXX' : null;
       
       case 'workEmail':
@@ -526,6 +526,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
               </Label>
               <Input
                 id="primaryPhone"
+                type='text'
                 placeholder="312-555-0000"
                 value={formData.primaryPhone}
                 onChange={e => {

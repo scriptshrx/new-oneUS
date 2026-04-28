@@ -49,13 +49,13 @@ export default function RegisterPage() {
     }));
 
     // Route immediately based on tenant type instead of waiting for state update
-    if (state.tenantType === 'referring-hospital') {
-      router.push('/hospital-dashboard');
-    } else if (state.tenantType === 'clinic') {
-      window.location.href = '/clinic-dashboard';
-    }
-  };
-
+  //   if (state.tenantType === 'referring-hospital') {
+  //     router.push('/hospital-dashboard');
+  //   } else if (state.tenantType === 'clinic') {
+  //     window.location.href = '/clinic-dashboard';
+  //   }
+  // };
+  }
 
 
   const handleEmailVerified = () => {
