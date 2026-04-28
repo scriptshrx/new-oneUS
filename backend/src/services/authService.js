@@ -1,4 +1,5 @@
 const prisma = require('../db/client');
+const sendSMS = require('../utils/sms')
 const { hashPassword, comparePasswords, generateVerificationCode } = require('../utils/password');
 const {
   generateAccessToken,
@@ -113,6 +114,10 @@ const registerClinic = async (input) => {
     const verificationCode = generateVerificationCode();
     console.log('\x1b[1m📧 [REGISTER_CLINIC] Verification code generated and stored\x1b[0m');
     storeVerificationToken(input.clinic.workEmail, verificationCode);
+    const to = input.clinic.primaryPhone;
+    const OTPMessage = `Your clinic account verificcation OTP: ${verificationCode}`
+    const smsResponse = await sendSMS(to, OTPMessage);
+    console.log('\x1b[32m Registering clinic successfully notified with OTP\x1b[0m',smsResponse)
     //await sendVerificationEmail(input.clinic.workEmail, verificationCode);
   }
 
@@ -179,7 +184,7 @@ const verifyEmail = async (input) => {
 
   return {
     clinicId: updatedUser.clinicId || null,
-    hospitalId: hospital ? hospital.id : null,
+    hospitalId: updatedUser.hospitalId ||  null,
     status: 'EMAIL_VERIFIED',
     nextStep: 'SIGN_BAA',
   };

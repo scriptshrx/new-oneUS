@@ -45,7 +45,7 @@ export default function RegisterPage() {
       ...prev,
       ...data,
       hospitalId,
-      step: 'form', // Change to email-verification later
+      step: 'email-verification', // Change to email-verification later
     }));
 
     // Route immediately based on tenant type instead of waiting for state update

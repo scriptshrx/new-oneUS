@@ -57,7 +57,7 @@ class ChairService {
       // Validate the required fields
       const { chairNumber } = chairData;
 
-    
+    console.log('About to create chair for', chairData)
 
       // Generate a random 8-character password (alphanumeric)
       // const generateRandomPassword = (length = 8) => {
@@ -80,6 +80,8 @@ class ChairService {
           status: 'ACTIVE',
         },
       });
+
+      console.log('Chair is created successully')
 
       // Try to fetch clinic name for email context
       let clinic = null;

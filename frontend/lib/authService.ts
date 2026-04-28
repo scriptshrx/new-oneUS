@@ -2,7 +2,7 @@
  * Authentication API Service
  * Handles all auth-related API calls to the backend
  */
-
+import { fetchWithAuth } from "./fetchWithAuth";
 const API_BASE_URL = 'https://scriptishrxnewmark.onrender.com/v1';
 
 export interface LoginRequest {
@@ -249,14 +249,13 @@ class AuthService {
         throw new Error('No temporary token found. Please register first.');
       }
 
-      const response = await fetch(`${this.apiBaseUrl}/auth/register/verify-email`, {
+      const response = await fetchWithAuth(`${this.apiBaseUrl}/auth/register/verify-email`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${temporaryToken}`,
-        },
+     
         body: JSON.stringify(request),
       });
+
+     
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

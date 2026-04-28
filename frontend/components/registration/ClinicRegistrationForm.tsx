@@ -117,8 +117,8 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
                !/^\d{5}(-\d{4})?$/.test(value) ? 'Invalid ZIP code format' : null;
       
       case 'primaryPhone':
-        return !value ? 'Phone number is required' :
-               !/^\d{3}-\d{3}-\d{4}$/.test(value) ? 'Phone format: XXX-XXX-XXXX' : null;
+        return 'Phone number is required' 
+              //  !/^\d{3}-\d{3}-\d{4}$/.test(value) ? 'Phone format: XXX-XXX-XXXX' : null;
       
       case 'workEmail':
         return !value ? 'Work email is required' :
@@ -529,12 +529,9 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
                 placeholder="312-555-0000"
                 value={formData.primaryPhone}
                 onChange={e => {
-                  const val = e.target.value.replace(/\D/g, '');
-                  const formatted = val.length >= 3 ? (
-                    val.length >= 6 ? `${val.slice(0, 3)}-${val.slice(3, 6)}-${val.slice(6, 10)}` :
-                    `${val.slice(0, 3)}-${val.slice(3, 6)}`
-                  ) : val;
-                  handleChange('primaryPhone', formatted);
+                  const val = e.target.value;
+                  
+                  handleChange('primaryPhone', val);
                 }}
                 onBlur={() => handleBlur('primaryPhone')}
                 className={`${getFieldError('primaryPhone') ? 'border-destructive' : ''}`}
