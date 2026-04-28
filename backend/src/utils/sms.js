@@ -10,7 +10,7 @@ const client = twilio(
  * Send SMS message using Twilio
  * @param {string} to - Recipient phone number (E.164 format, e.g., +1234567890)
  * @param {string} message - Message body
- * @returns {Promise<Object>} - Twilio response
+ * @returns {Promise<Object>} - Twilio responses
  */
 const sendSMS = async (to, message) => {
   try {
