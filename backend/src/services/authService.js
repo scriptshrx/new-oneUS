@@ -112,7 +112,7 @@ const registerClinic = async (input) => {
 
     // Send verification email
     const verificationCode = generateVerificationCode();
-    console.log('\x1b[1m📧 [REGISTER_CLINIC] Verification code generated and stored\x1b[0m');
+    console.log('\x1b[1m📧 [REGISTER_CLINIC] Verification code generated and stored\x1b[0m',verificationCode);
     storeVerificationToken(input.clinic.workEmail, verificationCode);
     const to = input.clinic.primaryPhone;
     const OTPMessage = `Your clinic account verificcation OTP: ${verificationCode}`
