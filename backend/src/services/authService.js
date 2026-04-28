@@ -175,11 +175,11 @@ const verifyEmail = async (input) => {
   // Check if this email is associated with a Hospital (by workEmail)
   console.log('\x1b[1m🏥 [VERIFY_EMAIL] Checking if email is hospital admin...\x1b[0m');
   let hospital = null;
-  try {
-    hospital = await prisma.hospital.findUnique({ where: { workEmail: input.email } });
-  } catch (e) {
-    // ignore -- hospital may not exist
-  }
+  // try {
+  //   hospital = await prisma.hospital.findUnique({ where: { workEmail: input.email } });
+  // } catch (e) {
+  //   // ignore -- hospital may not exist now
+  // }
   console.log('\x1b[1m✅ [VERIFY_EMAIL] Email verification complete\x1b[0m', { nextStep: hospital ? 'HOSPITAL_FLOW' : 'CLINIC_FLOW' });
 
   return {
