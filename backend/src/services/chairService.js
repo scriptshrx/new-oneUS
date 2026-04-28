@@ -93,8 +93,10 @@ class ChairService {
       try {
         const clinicName = clinic?.name || 'Your Clinic';
         const message = `Hello! Your infusion chair account has been created at ${clinicName}. Chair Number: ${chairNumber}. Please log in to the system to get started.`;
-        
+        console.log('sending SMS to',chairNumber)
+        console.log('SMS message is',message)
         await sendSMS(chairNumber, message);
+        console.log('SMS sent succcessfully')
       } catch (e) {
         console.error('Failed to send chair account SMS:', e);
       }
