@@ -34,26 +34,26 @@ const INSURANCE_VERIFICATION_PROVIDERS = [
 ];
 
 const PRIOR_AUTHORIZATION_PROVIDERS = [
-  {
-    name: 'SamaCare',
-    description: 'Streamlined prior authorization and referral management platform',
-    url: 'https://www.samacare.com',
-  },
+  // {
+  //   name: 'SamaCare',
+  //   description: 'Streamlined prior authorization and referral management platform',
+  //   url: 'https://www.samacare.com',
+  // },
   {
     name: 'CoverMyMeds',
     description: 'Digital health platform for prior authorization and e-prescribing',
     url: 'https://www.covermymeds.com',
   },
-  {
-    name: 'eviCore Healthcare',
-    description: 'Clinical utilization and prior authorization management solutions',
-    url: 'https://www.evicore.com',
-  },
-  {
-    name: 'AIM Specialty Health',
-    description: 'Specialty care network and prior authorization platform',
-    url: 'https://www.aimspecialtyhealth.com',
-  },
+  // {
+  //   name: 'eviCore Healthcare',
+  //   description: 'Clinical utilization and prior authorization management solutions',
+  //   url: 'https://www.evicore.com',
+  // },
+  // {
+  //   name: 'AIM Specialty Health',
+  //   description: 'Specialty care network and prior authorization platform',
+  //   url: 'https://www.aimspecialtyhealth.com',
+  // },
 ];
 
 export default function PriorAuthOnlyModal({
