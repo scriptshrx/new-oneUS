@@ -51,7 +51,7 @@ console.log('Wake-up call from UptimeRobot')
 app.use('/v1/auth', authRoutes);
 app.use('/v1/clinics', clinicRoutes);
 app.use('/v1/referrals', referralRoutes);
-app.use('/v1/waitlist',waitListRoutes);
+app.use('/v1/waitlist',waitlistRoutes);
 app.use('/v1/patients',patientRoutes);
 
 app.use('/v1/appointments', appointmentRoutes);
