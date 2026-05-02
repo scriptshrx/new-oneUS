@@ -16,7 +16,7 @@ const joinWaitList=async(data)=>{
 }
 
 /**
- * Fetch all waitlist data from the databases
+ * Fetch all waitlist data from the database
  */
 async function getAllWaitlist() {
   try {
