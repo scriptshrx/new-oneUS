@@ -15,6 +15,20 @@ const joinWaitList=async(data)=>{
 
 }
 
+/**
+ * Fetch all waitlist data from the database
+ */
+async function getAllWaitlist() {
+  try {
+    const waitlist = await prisma.waitlist.findMany();
+    return waitlist;
+  } catch (error) {
+    console.error('Error fetching waitlist data:', error);
+    throw error;
+  }
+}
+
 module.exports={
-    joinWaitList
+    joinWaitList,
+    getAllWaitlist,
 }

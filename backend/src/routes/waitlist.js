@@ -22,4 +22,15 @@ router.post('/', async(req,res)=>{
     }
 })
 
+// Route to fetch all waitlist data
+router.get('/', async (req, res) => {
+  try {
+    const waitlist = await waitListService.getAllWaitlist();
+    res.status(200).json(waitlist);
+  } catch (error) {
+    console.error('Error fetching waitlist:', error);
+    res.status(500).json({ error: 'Failed to fetch waitlist' });
+  }
+});
+
 module.exports = router;

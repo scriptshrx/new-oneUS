@@ -6,6 +6,7 @@ import { useState, useEffect, createContext, useContext, SetStateAction } from '
 import { useRouter } from 'next/navigation';
 import { authService } from '@/lib/authService';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
+import WaitlistView from './hospital-dashboard/WaitlistView';
 
 interface HospitalDashboardLayoutProps {
   children: React.ReactNode;
@@ -73,7 +74,7 @@ interface Patient {
 }
 
 
-type ViewType = 'overview' | 'referrals' | 'analytics' | 'clinics' | 'partners';
+type ViewType = 'overview' | 'referrals' | 'analytics' | 'clinics' | 'partners' | 'waitlist';
 
 interface Hospital {
   id?: string;
@@ -117,6 +118,11 @@ const navItems = [
       {
         id: 'referrals' as ViewType,
         label: 'Referrals',
+        icon: Users,
+      },
+      {
+        id: 'waitlist' as ViewType,
+        label: 'View Waitlist',
         icon: Users,
       },
     ],
@@ -329,6 +335,16 @@ export default function HospitalDashboardLayout({ children }: HospitalDashboardL
     };
     fetchClinics();
   }, [router]);
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'waitlist':
+        return <WaitlistView />;
+      default:
+        return children;
+    }
+  };
+
   return (
     <DashboardContext.Provider value={{ currentView, loadingClinics, setCurrentView, patientsLoading, hospital, patients, setHospital, hospitalId, clinics, setClinics }}>
       <div className="flex h-screen bg-background">

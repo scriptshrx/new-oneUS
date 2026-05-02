@@ -8,6 +8,10 @@ import { ChevronDown } from 'lucide-react';
 export default function FooterSection() {
   const [isIPRVisible, setIPRVisible] = useState(false);
   const [isPrivacyVisible, setPrivacyVisible] = useState(false);
+  const [isHIPAAVisible, setHIPAAVisible] = useState(false);
+  const [isTermsVisible, setTermsVisible] = useState(false);
+  const [isPrivacyPolicyVisible, setPrivacyPolicyVisible] = useState(false);
+  const [isSecurityVisible, setSecurityVisible] = useState(false);
 
   return (
     <footer id="pricing" className="bg-card/50 border-t border-border/20 backdrop-blur-sm">
@@ -33,7 +37,7 @@ export default function FooterSection() {
         </div>
 
         {/* Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 mb-12 sm:mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12 mb-12 sm:mb-16">
           {/* Brand */}
           <div>
             <Link href="/" className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground/20 via-foreground to-foreground/20 bg-clip-text text-transparent mb-4 inline-block">
@@ -110,7 +114,7 @@ export default function FooterSection() {
           </div>
 
           {/* Legal */}
-          <div>
+          {/* <div>
             <h3 className="font-semibold text-foreground mb-4 text-sm sm:text-base">Legal</h3>
             <ul className="space-y-3">
               <li>
@@ -134,7 +138,7 @@ export default function FooterSection() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
 
    {/* Collapsible Sections */}
@@ -178,6 +182,101 @@ export default function FooterSection() {
               <p><strong>No Medical or Legal Advice.</strong> The Scriptish platform is an administrative workflow and coordination tool only. Nothing on this platform constitutes medical advice, clinical guidance, legal advice, or a substitute for the judgment of a licensed healthcare professional or legal counsel. Payer determinations, formulary decisions, and prior authorization outcomes are made solely by the relevant payer or plan. Scriptish LLC has no control over, and accepts no responsibility for, any payer decision or clinical outcome.</p>
               <p><strong>Third-Party Services.</strong> The platform may integrate with or link to third-party services, payer portals, or external websites. Scriptish LLC does not endorse, control, or assume responsibility for any third-party service or content. Your use of any third-party service is governed solely by that party's terms and privacy policy.</p>
               <p><strong>Governing Law & Dispute Resolution.</strong> These disclosures and any dispute arising from use of the platform are governed by the laws of the State of Illinois, without regard to its conflict-of-law provisions. Any dispute not resolved informally shall be submitted to binding arbitration under the rules of the American Arbitration Association (AAA) in Chicago, Illinois. YOU WAIVE ANY RIGHT TO A JURY TRIAL OR CLASS ACTION PROCEEDING. Nothing herein prevents Scriptish LLC from seeking injunctive or equitable relief in any court of competent jurisdiction to protect its intellectual property rights.</p>
+            </div>
+          )}
+
+          <button
+            onClick={() => setHIPAAVisible(!isHIPAAVisible)}
+            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
+          >
+            HIPAA Compliance
+            <ChevronDown
+              className={`w-5 h-5 transition-transform absolute left-60 ${isHIPAAVisible ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {isHIPAAVisible && (
+            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
+              <p><strong>HIPAA Compliance Overview:</strong></p>
+              <p>Scriptish LLC is committed to maintaining the confidentiality, integrity, and security of protected health information (PHI) in compliance with the Health Insurance Portability and Accountability Act of 1996 (HIPAA) and its implementing regulations. We adhere to the following principles:</p>
+              <ul className="list-disc pl-6">
+                <li><strong>Data Encryption:</strong> All PHI is encrypted using AES-256 encryption at rest and TLS 1.2+ during transmission.</li>
+                <li><strong>Access Controls:</strong> Role-based access controls ensure that only authorized personnel can access PHI.</li>
+                <li><strong>Audit Logging:</strong> Continuous monitoring and logging of access to PHI to detect and respond to unauthorized activities.</li>
+                <li><strong>Business Associate Agreements (BAAs):</strong> We maintain signed BAAs with all covered entities and subcontractors to ensure compliance.</li>
+                <li><strong>Training:</strong> All employees undergo regular HIPAA compliance training to stay updated on best practices and legal requirements.</li>
+                <li><strong>Incident Response:</strong> A robust incident response plan is in place to address potential breaches or security incidents promptly.</li>
+              </ul>
+              <p>By using Scriptish, you can trust that your clinic’s PHI is handled with the highest standards of security and compliance.</p>
+            </div>
+          )}
+
+          <button
+            onClick={() => setTermsVisible(!isTermsVisible)}
+            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
+          >
+            Terms of Service
+            <ChevronDown
+              className={`w-5 h-5 absolute left-55 transition-transform ${isTermsVisible ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {isTermsVisible && (
+            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
+              <p><strong>Terms of Service:</strong></p>
+              <p>By accessing or using the Scriptish platform, you agree to comply with and be bound by the following terms:</p>
+              <ul className="list-disc pl-6">
+                <li><strong>Account Responsibility:</strong> You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account.</li>
+                <li><strong>Prohibited Activities:</strong> You may not use the platform for any unlawful or unauthorized purpose, including but not limited to distributing malicious software or violating intellectual property rights.</li>
+                <li><strong>Termination:</strong> Scriptish reserves the right to suspend or terminate your access to the platform for violations of these terms.</li>
+                <li><strong>Modifications:</strong> We may update these terms from time to time, and continued use of the platform constitutes acceptance of the updated terms.</li>
+              </ul>
+              <p>For the full Terms of Service, please contact Scriptish LLC.</p>
+            </div>
+          )}
+
+          <button
+            onClick={() => setPrivacyPolicyVisible(!isPrivacyPolicyVisible)}
+            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
+          >
+            Privacy Policy
+            <ChevronDown
+              className={`w-5 h-5 transition-transform absolute left-50  ${isPrivacyPolicyVisible ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {isPrivacyPolicyVisible && (
+            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
+              <p><strong>Privacy Policy:</strong></p>
+              <p>Scriptish LLC is committed to protecting your privacy. This policy outlines how we collect, use, and safeguard your information:</p>
+              <ul className="list-disc pl-6">
+                <li><strong>Data Collection:</strong> We collect only the information necessary to provide and improve our services, including personal and clinic-related data.</li>
+                <li><strong>Data Usage:</strong> Your data is used solely for the purposes of delivering our services and is not sold or shared with third parties without your consent.</li>
+                <li><strong>Security Measures:</strong> We implement industry-standard security practices to protect your data from unauthorized access or breaches.</li>
+                <li><strong>Data Retention:</strong> Your data is retained only as long as necessary to fulfill the purposes outlined in this policy.</li>
+              </ul>
+              <p>For more details, please review our full Privacy Policy or contact us directly.</p>
+            </div>
+          )}
+
+          <button
+            onClick={() => setSecurityVisible(!isSecurityVisible)}
+            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
+          >
+            Security
+            <ChevronDown
+              className={`w-5 h-5 transition-transform absolute left-40 ${isSecurityVisible ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {isSecurityVisible && (
+            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
+              <p><strong>Security Practices:</strong></p>
+              <p>At Scriptish LLC, we prioritize the security of your data and implement the following measures to ensure its protection:</p>
+              <ul className="list-disc pl-6">
+                <li><strong>Encryption:</strong> All sensitive data is encrypted using AES-256 encryption at rest and TLS 1.2+ during transmission.</li>
+                <li><strong>Access Controls:</strong> Multi-factor authentication and role-based access controls are enforced to limit access to authorized personnel only.</li>
+                <li><strong>Continuous Monitoring:</strong> Real-time monitoring and logging of system activities to detect and respond to potential threats.</li>
+                <li><strong>Regular Audits:</strong> Periodic security audits and vulnerability assessments to identify and mitigate risks.</li>
+                <li><strong>Incident Response:</strong> A comprehensive incident response plan to address and resolve security breaches promptly.</li>
+              </ul>
+              <p>We are committed to maintaining the highest standards of security to protect your data and ensure compliance with industry regulations.</p>
             </div>
           )}
         </div>

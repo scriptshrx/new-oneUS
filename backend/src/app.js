@@ -5,7 +5,7 @@ const authRoutes = require('./routes/auth');
 const patientRoutes = require('./routes/patients')
 const clinicRoutes = require('./routes/clinics');
 const referralRoutes = require('./routes/referrals');
-const waitListRoutes = require('./routes/waitlist');
+const waitlistRoutes = require('./routes/waitlist');
 
 const chairRoutes = require('./routes/chairs');
 const appointmentRoutes = require('./routes/appointments');

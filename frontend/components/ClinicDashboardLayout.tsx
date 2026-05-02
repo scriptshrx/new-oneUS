@@ -12,11 +12,12 @@ import InsuranceVerifyView from './clinic-dashboard/InsuranceVerifyView';
 import PriorAuthView from './clinic-dashboard/PriorAuthView';
 import AccountSettings from './clinic-dashboard/AccountSettings';
 import PatientIntakeForm from './clinic-dashboard/PatientIntakeForm';
+import WaitlistView from './clinic-dashboard/WaitlistView';
 interface ClinicDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ViewType = 'dashboard' |  'accountSettings' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'logout';
+type ViewType = 'dashboard' |  'accountSettings' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'waitlist' | 'logout';
 
 interface Patient {
   // Core Patient Infos
@@ -128,6 +129,11 @@ const navItems = [
         id: 'archives' as ViewType,
         label: 'Archives',
         icon: Archive,
+      },
+      {
+        id: 'waitlist' as ViewType,
+        label: 'View Waitlist',
+        icon: Users,
       },
     ],
   },
@@ -358,6 +364,8 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
           return <PatientIntakeForm
         
           />
+      case 'waitlist':
+        return <WaitlistView />;
       case 'insuranceVerify':
         return <InsuranceVerifyView />;
       default:
