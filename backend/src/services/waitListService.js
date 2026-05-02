@@ -20,7 +20,7 @@ const joinWaitList=async(data)=>{
  */
 async function getAllWaitlist() {
   try {
-    const waitlist = await prisma.waitlist.findMany();
+    const waitlist = await prisma.waitList.findMany();
     return waitlist;
   } catch (error) {
     console.error('Error fetching waitlist data:', error);
