@@ -1,7 +1,8 @@
 const {Router} = require('express')
 
 const {
-   joinWaitList
+   joinWaitList,
+   getAllWaitlist
 } = require('../services/waitListService');
 
 const router = Router()
@@ -25,7 +26,7 @@ router.post('/', async(req,res)=>{
 // Route to fetch all waitlist data
 router.get('/', async (req, res) => {
   try {
-    const waitlist = await waitListService.getAllWaitlist();
+    const waitlist = await getAllWaitlist();
     res.status(200).json(waitlist);
   } catch (error) {
     console.error('Error fetching waitlist:', error);
