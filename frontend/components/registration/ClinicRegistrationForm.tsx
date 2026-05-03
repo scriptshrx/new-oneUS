@@ -319,11 +319,12 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
   return (
 !selectedRole?
 <div className='w-full max-w-800px flex items-center justify-center'>
-  <div className='bg-foreground rounded-lg p-4 flex space-y-5'>
-    <h1>Select Your Role</h1>
-    <div onClick={()=>{handleChange('role','CLINIC_ADMIN');setSelectedRole('CLINIC_ADMIN')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>CLINIC ADMIN</div>
-<div onClick={()=>{handleChange('role','NURSE');setSelectedRole('NURSE')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>NURSE</div>
-<div onClick={()=>{setSelectedRole('AUXILIARY_STAFF');handleChange('role','AUXILIARY_STAFF')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>AUXILIARY STAFF</div>
+<div className='bg-background rounded-lg p-8 flex flex-col space-y-4'>
+    <h1 className='text-2xl font-bold text-center mb-4'>Select Your Role</h1>
+    <div onClick={()=>{handleChange('role','CLINIC_ADMIN');setSelectedRole('CLINIC_ADMIN')}} className='p-3 px-4 font-semibold bg-foreground shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>CLINIC_ADMIN</div>
+    <div onClick={()=>{handleChange('role','AUXILLIARY_NURSE');setSelectedRole('AUXILLIARY_NURSE')}} className='p-3 px-4 font-semibold bg-gray-400 shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>AUXILLIARY_NURSE</div>
+    {/* <div onClick={()=>{handleChange('role','PHYSICIAN');setSelectedRole('PHYSICIAN')}} className='p-3 px-4 font-semibold bg-gray-400 shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>PHYSICIAN</div> */}
+    <div onClick={()=>{setSelectedRole('CLINIC_STAFF');handleChange('role','CLINIC_STAFF')}} className='p-3 px-4 font-semibold bg-purpple-600 text-white shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>CLINIC_STAFF</div>
   </div>
 
 </div>:
