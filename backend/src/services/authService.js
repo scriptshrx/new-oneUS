@@ -102,7 +102,7 @@ const registerClinic = async (input) => {
         passwordHash,
         firstName: input.admin.firstName,
         lastName: input.admin.lastName,
-        role: 'CLINIC_ADMIN',
+        role: input.admin.role,
         status: 'PENDING_EMAIL_VERIFICATION',
         clinicId: clinic.id,
 
@@ -139,6 +139,8 @@ const registerClinic = async (input) => {
     name:clinic.name,
     primaryPhone:clinic.primaryPhone,
     email:user.email,
+    role:user.role,
+
     temporaryToken,
     nextStep: user ? 'VERIFY_EMAIL' : 'EMAIL_VERIFICATION_OPTIONAL',
     userId: user?.id,
@@ -573,7 +575,7 @@ const registerHospital = async (input) => {
         
         firstName: input.admin.firstName,
         lastName: input.admin.lastName,
-        role: 'HOSPITAL_ADMIN',
+        role: input.admin.role,
         status: 'PENDING_EMAIL_VERIFICATION',
         hospitalId: hospital.id,
       },
@@ -591,7 +593,7 @@ const registerHospital = async (input) => {
     userId: user?.id || '',
     hospitalId: hospital.id,
     email: input.hospital.workEmail,
-    role: 'HOSPITAL_ADMIN',
+    role: input.admin.role,
   };
 
   const temporaryToken = generateTemporaryToken(tokenPayload, '10m'); // 10 minutes
@@ -602,6 +604,7 @@ const registerHospital = async (input) => {
     ...hospital,
     temporaryToken,
     accessToken,
+    role:user.role,
     nextStep: user ? 'VERIFY_EMAIL' : 'EMAIL_VERIFICATION_OPTIONAL',
     userId: user?.id,
   };

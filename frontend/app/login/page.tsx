@@ -220,6 +220,7 @@ export default function LoginPage() {
       if (response.hospitalId) {
         localStorage.setItem('hospital', JSON.stringify(response.org));
         localStorage.setItem('hospitalAdmin',JSON.stringify(response.user))
+        localStorage.setItem('role',response.role)
       
         localStorage.setItem('accessToken',response.accessToken)
         localStorage.setItem('refreshToken', response.refreshToken)
@@ -229,6 +230,7 @@ export default function LoginPage() {
         localStorage.setItem('clinicId', response.clinicId);
         localStorage.setItem('clinic',JSON.stringify(response.org));
         localStorage.setItem('accessToken',response.accessToken);
+        localStorage.setItem('role',response.role)
         localStorage.setItem('refreshToken', response.refreshToken);
         localStorage.setItem('clinicAdmin',JSON.stringify(response.user))
         localStorage.setItem('tenantType', 'clinic');

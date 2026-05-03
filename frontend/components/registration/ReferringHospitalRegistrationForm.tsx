@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,7 @@ interface FormData {
   stateLicenseNumber: string;
   primaryOfficeAddress: string;
   city: string;
+  role:string;
   state: string;
   zipCode: string;
   primaryPhone: string;
@@ -52,6 +53,9 @@ const US_STATES = [
 ];
 
 export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: ReferringHospitalRegistrationFormProps) {
+
+     const [selectedRole,setSelectedRole]=useState('')
+
   const [formData, setFormData] = useState<FormData>({
     name: '',
     npiNumber: '',
@@ -59,6 +63,7 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
     stateLicenseNumber: '',
     primaryOfficeAddress: '',
     city: '',
+    role:'',
     state: '',
     zipCode: '',
     primaryPhone: '',
@@ -76,6 +81,9 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [apiError, setApiError] = useState<string>('');
 
+  useEffect(()=>{
+    setSelectedRole('')
+  },[selectedRole])
   const router = useRouter()
   const validateField = (fieldName: string, value: any): string | null => {
     switch (fieldName) {
@@ -221,6 +229,7 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
           firstName: formData.contactPersonFirstName,
           lastName: formData.contactPersonLastName,
           title: formData.contactPersonTitle,
+          role:formData.role,
           password: formData.password,
         },
       };
@@ -238,6 +247,7 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
       
       console.log('Hospital created', response);
       localStorage.setItem('hospital', JSON.stringify(response));
+      localStorage.setItem('role',response.role)
 
       // Small delay to ensure console logs are rendered before redirect
       await new Promise(resolve => setTimeout(resolve, 5000));
@@ -260,7 +270,18 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
     return touched.has(fieldName) && !!errors[fieldName];
   };
 
+
   return (
+    !selectedRole?
+<div className='w-full max-w-800px flex items-center justify-center'>
+  <div className='bg-foreground rounded-lg p-4 flex space-y-5'>
+    <h1>Select Your Role</h1>
+    <div onClick={()=>{handleChange('role','HOSPITAL_ADMIN');setSelectedRole('HOSPITAL_ADMIN')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>CLINIC ADMIN</div>
+<div onClick={()=>{handleChange('role','PHYSICIAN');setSelectedRole('PHYSICIAN')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>NURSE</div>
+<div onClick={()=>{setSelectedRole('AUXILIARY_STAFF');handleChange('role','AUXILIARY_STAFF')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>AUXILIARY STAFF</div>
+  </div>
+
+</div>:
     <form onSubmit={handleSubmit}>
       {/* Back Button */}
       <button

@@ -85,6 +85,7 @@ interface DashboardContextType {
   setCurrentView: (view: ViewType) => void;
   patients: Patient[];
   patientsLoading: boolean;
+  role:string,
   patientsError: string | null;
   clinic: any | null;
   clinicId: string | null;
@@ -100,7 +101,11 @@ export const useClinicDashboardView = () => {
   return context;
 };
 
-const navItems = [
+
+
+export default function ClinicDashboardLayout({ children }: ClinicDashboardLayoutProps) {
+
+  const navItems = [
   {
     group: 'PATIENTS',
     items: [
@@ -203,8 +208,6 @@ const navItems = [
   },
 
 ];
-
-export default function ClinicDashboardLayout({ children }: ClinicDashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -214,7 +217,8 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   const router = useRouter();
   const [clinic, setClinic] = useState<any | null>(null);
   const[clinicId,setClinicId]=useState('')
-  
+  const[role,setRole]=useState('')
+const[allowedNavs,setAllowedNavs]=useState([])
   // Restore dashboard view from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -224,7 +228,18 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         localStorage.removeItem('dashboardView'); // Clear after using
       }
     }
-  }, []);
+    const roleCache = localStorage.getItem('role');
+    if(roleCache){
+      setRole(roleCache)
+    }
+
+   if(role==='CLINIC_ADMIN'){
+    setAllowedNavs(navItems)
+  }
+else{
+    setAllowedNavs(navItems.filter((nav)=>nav.group !==='VERIFICATIONS'))
+}
+  }, [role,allowedNavs]);
   
   // Fetch patients referred to this clinic
   useEffect(() => {
@@ -374,7 +389,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   };
 
   return (
-    <DashboardContext.Provider value={{ currentView, clinic, clinicId, setCurrentView, patients, patientsLoading, patientsError }}>
+    <DashboardContext.Provider value={{ currentView, role, clinic, clinicId, setCurrentView, patients, patientsLoading, patientsError }}>
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
         <div
@@ -396,7 +411,10 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
 
           {/* Navigation */}
           <nav className="p-4 space-y-6">
-            {navItems.map((group) => (
+            {
+            allowedNavs.length>0 && allowedNavs.map((group) => {
+             
+            return(
               <div key={group.group}>
                 <p className="text-xs font-bold text-primary/50 uppercase tracking-wider px-4 mb-2">
                   {group.group}
@@ -426,7 +444,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
                   })}
                 </div>
               </div>
-            ))}
+            )})}
           </nav>
 
           {/* Footer - Empty for now, logout moved to SETTINGS group */}

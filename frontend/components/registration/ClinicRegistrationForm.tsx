@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,7 @@ interface FormData {
   name: string;
   npiNumber: string;
   taxId: string;
+  role:string;
   stateLicenseNumber: string;
   streetAddress: string;
   city: string;
@@ -63,6 +64,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
+    role:'',
     npiNumber: '',
     taxId: '',
     stateLicenseNumber: '',
@@ -84,6 +86,13 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [apiError, setApiError] = useState<string>('');
+ const [selectedRole,setSelectedRole]=useState('')
+
+
+
+   useEffect(()=>{
+     setSelectedRole('')
+   },[selectedRole])
 
   const validateField = (fieldName: string, value: any): string | null => {
     const fieldLower = fieldName.toLowerCase();
@@ -258,6 +267,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
           treatmentTypesOffered: formData.treatmentTypesOffered,
         },
         admin: {
+          role:formData.role,
           firstName: adminFirstName,
           lastName: adminLastName,
           password: formData.password,
@@ -285,6 +295,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
       
       console.log('Clinic created', response);
       localStorage.setItem('clinic', JSON.stringify(response));
+      localStorage.setItem('role',response.role)
 
       // Call the onSubmit with the response data
       onSubmit({
@@ -304,7 +315,18 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
     return touched.has(fieldName) && !!errors[fieldName];
   };
 
+ 
   return (
+!selectedRole?
+<div className='w-full max-w-800px flex items-center justify-center'>
+  <div className='bg-foreground rounded-lg p-4 flex space-y-5'>
+    <h1>Select Your Role</h1>
+    <div onClick={()=>{handleChange('role','CLINIC_ADMIN');setSelectedRole('CLINIC_ADMIN')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>CLINIC ADMIN</div>
+<div onClick={()=>{handleChange('role','NURSE');setSelectedRole('NURSE')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>NURSE</div>
+<div onClick={()=>{setSelectedRole('AUXILIARY_STAFF');handleChange('role','AUXILIARY_STAFF')}} className='p-2 px-3 font-semibold bg-gray-400 shadow-sm'>AUXILIARY STAFF</div>
+  </div>
+
+</div>:
     <form onSubmit={handleSubmit}>
       {/* Back Button */}
       <button
@@ -339,6 +361,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
 
       {/* Form Sections */}
       <div className="space-y-8">
+       
         {/* Basic Information */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-foreground/90">Basic Information</h3>
