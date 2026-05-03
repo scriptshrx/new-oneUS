@@ -105,6 +105,8 @@ export const useClinicDashboardView = () => {
 
 export default function ClinicDashboardLayout({ children }: ClinicDashboardLayoutProps) {
 
+    const[role,setRole]=useState('')
+
   const navItems = [
   {
     group: 'PATIENTS',
@@ -114,17 +116,18 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         label: 'Dashboard',
         icon: LayoutDashboard,
       },
+      role&&role=='CLINIC_ADMIN'?
       {
         id:'intakeForm' as ViewType,
         label:'Intake Form',
         icon: NotebookPen
-      },
+      }:null,
       
-      {
+      role&&role=='CLINIC_ADMIN'?{
         id: 'patientsList' as ViewType,
         label: 'Patient CRM',
         icon: Users,
-      },
+      }:null,
       {
         id: 'patients' as ViewType,
         label: 'Patient Pipelines',
@@ -135,12 +138,12 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         label: 'Archives',
         icon: Archive,
       },
-      {
+      (role && role=='CLINIC_ADMIN')?{
         id: 'waitlist' as ViewType,
         label: 'View Waitlist',
         icon: Users,
-      },
-    ],
+      }:null,
+    ].filter(Boolean),
   },
   {
     group: 'ANALYTICS',
@@ -153,6 +156,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
       
     ],
   },
+  role&&role=='CLINIC_ADMIN'?
   {
     group: 'INFUSION CHAIRS',
     items: [
@@ -172,8 +176,8 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
         icon: UserPlus,
       },
       
-    ],
-  },
+    ].filter(Boolean),
+  }:null,
    
   {
     group: 'VERIFICATIONS',
@@ -194,17 +198,17 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   {
     group: 'SETTINGS',
     items: [
-      {
+      role&&role=='CLINIC_ADMIN'?{
         id: 'accountSettings' as ViewType,
         label: 'Account Settings',
         icon: UserCog,
-      },
+      }:null,
       {
         id: 'logout' as ViewType,
         label: 'Logout',
         icon: LogOut,
       },
-    ],
+    ].filter(Boolean),
   },
 
 ];
@@ -217,7 +221,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   const router = useRouter();
   const [clinic, setClinic] = useState<any | null>(null);
   const[clinicId,setClinicId]=useState('')
-  const[role,setRole]=useState('')
+
 const[allowedNavs,setAllowedNavs]=useState([])
   // Restore dashboard view from localStorage on mount
   useEffect(() => {
@@ -230,6 +234,7 @@ const[allowedNavs,setAllowedNavs]=useState([])
     }
     const roleCache = localStorage.getItem('role');
     if(roleCache){
+      console.log("The role is",roleCache)
       setRole(roleCache)
     }
 
@@ -237,9 +242,9 @@ const[allowedNavs,setAllowedNavs]=useState([])
     setAllowedNavs(navItems)
   }
 else{
-    setAllowedNavs(navItems.filter((nav)=>nav.group !==='VERIFICATIONS'))
+    setAllowedNavs(navItems.filter((nav)=>nav?.group !=='VERIFICATIONS'))
 }
-  }, [role,allowedNavs]);
+  }, []);
   
   // Fetch patients referred to this clinic
   useEffect(() => {
@@ -415,14 +420,15 @@ else{
             allowedNavs.length>0 && allowedNavs.map((group) => {
              
             return(
-              <div key={group.group}>
+              <div key={group?.group}>
                 <p className="text-xs font-bold text-primary/50 uppercase tracking-wider px-4 mb-2">
-                  {group.group}
+                  {group?.group}
                 </p>
                 <div className="space-y-2">
-                  {group.items.map((item) => {
+                  {group?.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = currentView === item.id;
+                    
                     return (
                       <button
                         key={item.id}

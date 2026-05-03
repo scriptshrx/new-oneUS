@@ -92,7 +92,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
 
    useEffect(()=>{
      setSelectedRole('')
-   },[selectedRole])
+   },[])
 
   const validateField = (fieldName: string, value: any): string | null => {
     const fieldLower = fieldName.toLowerCase();
