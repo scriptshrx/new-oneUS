@@ -30,11 +30,14 @@ export default function HospitalWaitlistView() {
         });
 
         if (!response.ok) {
+             console.log('Failed to fetch waitlist:',response);
           throw new Error(`Failed to fetch waitlist: ${response.statusText}`);
+        
         }
 
         const data = await response.json();
         setWaitlist(Array.isArray(data) ? data : data.waitlist || []);
+        console.log('Available waitlist:',data)
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch waitlist';
         setError(errorMessage);
@@ -82,20 +85,20 @@ export default function HospitalWaitlistView() {
           <table className="w-full">
             <thead className="bg-primary/10 border-b border-border/30">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Name</th>
+                {/* <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Name</th> */}
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Email</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Phone</th>
+                {/* <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Phone</th> */}
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Joined</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
               {waitlist.map((item) => (
                 <tr key={item.id} className="hover:bg-primary/5 transition-colors">
-                  <td className="px-6 py-3 text-sm text-foreground">{item.name || 'N/A'}</td>
+                  {/* <td className="px-6 py-3 text-sm text-foreground">{item.name || 'N/A'}</td> */}
                   <td className="px-6 py-3 text-sm text-foreground/70">{item.email}</td>
-                  <td className="px-6 py-3 text-sm text-foreground/70">{item.phone || 'N/A'}</td>
+                  {/* <td className="px-6 py-3 text-sm text-foreground/70">{item.phone || 'N/A'}</td> */}
                   <td className="px-6 py-3 text-sm text-foreground/60">
-                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
+                    {item.joinedAt ? new Date(item.joinedAt).toLocaleDateString() : 'N/A'}
                   </td>
                 </tr>
               ))}
