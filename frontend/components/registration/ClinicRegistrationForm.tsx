@@ -320,11 +320,11 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
 !selectedRole?
 <div className='w-full max-w-800px flex items-center justify-center'>
 <div className='bg-background rounded-lg p-8 flex flex-col space-y-4'>
-    <h1 className='text-2xl font-bold text-center mb-4'>Select Your Role</h1>
-    <div onClick={()=>{handleChange('role','CLINIC_ADMIN');setSelectedRole('CLINIC_ADMIN')}} className='p-3 px-4 font-semibold bg-foreground shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>CLINIC_ADMIN</div>
-    <div onClick={()=>{handleChange('role','AUXILLIARY_NURSE');setSelectedRole('AUXILLIARY_NURSE')}} className='p-3 px-4 font-semibold bg-gray-400 shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>AUXILLIARY_NURSE</div>
+    <h1 className='text-2xl font-bold text-center mb-4 text-purple-700'>Select Your Role</h1>
+    <div onClick={()=>{handleChange('role','CLINIC_ADMIN');setSelectedRole('CLINIC_ADMIN')}} className='p-3 px-4 font-semibold bg-foreground shadow-sm rounded cursor-pointer bg-purple-500 hover:bg-purple-600 text-white transition-colors'>CLINIC ADMIN</div>
+    <div onClick={()=>{handleChange('role','AUXILLIARY_NURSE');setSelectedRole('AUXILLIARY_NURSE')}} className='p-3 px-4 font-semibold bg-purple-500 shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors text-white'>AUXILLIARY NURSE</div>
     {/* <div onClick={()=>{handleChange('role','PHYSICIAN');setSelectedRole('PHYSICIAN')}} className='p-3 px-4 font-semibold bg-gray-400 shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>PHYSICIAN</div> */}
-    <div onClick={()=>{setSelectedRole('CLINIC_STAFF');handleChange('role','CLINIC_STAFF')}} className='p-3 px-4 font-semibold bg-purpple-600 text-white shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>CLINIC_STAFF</div>
+    <div onClick={()=>{setSelectedRole('CLINIC_STAFF');handleChange('role','CLINIC_STAFF')}} className='p-3 px-4 font-semibold bg-purple-500 text-white shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors'>CLINIC STAFF</div>
   </div>
 
 </div>:

@@ -124,7 +124,7 @@ function AnimatedStat({ value, suffix, label, icon, index = 0, image }: StatItem
         )}
 
         {/* Main border */}
-        <div className="absolute inset-0 rounded-2xl backdrop-blur-[0.02px] border-[6px] border-gray-600" />
+        <div className="absolute inset-0 rounded-2xl backdrop-blur-[0.02px] border-[6px] border-purple-800" />
 
         {/* ✨ Top-right shiny corner */}
         <div className="absolute top-0 right-0 pointer-events-none">
@@ -176,7 +176,7 @@ export default function HeroSection() {
       
       >
         <img
-          src="/clinician4.png"
+          src="/clinician5.jpg"
           alt="Clinician"
           className="w-full h-full object-cover"
         />
@@ -194,9 +194,9 @@ export default function HeroSection() {
                 className="flex items-center h-[40px] moveHighlight -top-[100px] rounded-full px-[2px] relative overflow-hidden justify-center"
                 style={{ clipPath: 'inset(0)' }}
               >
-                <div className="h-[500%] absolute rotateInner w-[200%] bg-gradient-to-tr from-transparent via-transparent to-primary" />
+                <div className="h-[500%] absolute rotateInner w-[200%] bg-gradient-to-tr from-transparent via-transparent to-purple-500" />
                 <div
-                  className={`text-center items-center justify-center flex h-[38px] bg-accent/20 dark:bg-accent/20 text-accent dark:text-accent-foreground z-[400] rounded-full dark:border self-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold`}
+                  className={`text-center items-center justify-center flex h-[38px] bg-purple-500/20 dark:bg-accent/20 text-purple-600 dark:text-accent-foreground z-[400] rounded-full dark:border self-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold`}
                 >
                   {highlight}
                 </div>
