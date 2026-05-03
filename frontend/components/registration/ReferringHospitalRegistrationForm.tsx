@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import DashboardPage from '@/app/clinic-dashboard/page';
+// import DashboardPage from '@/app/clinic-dashboard/page';
 import { useRouter } from 'next/navigation';
 
 interface ReferringHospitalRegistrationFormProps {
