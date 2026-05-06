@@ -32,7 +32,8 @@
   "admin": {
     "firstName": "John",
     "lastName": "Admin",
-    "password": "SecurePassword123!"
+    "password": "SecurePassword123!",
+    "role": "CLINIC_ADMIN"
   }
 }
 ```

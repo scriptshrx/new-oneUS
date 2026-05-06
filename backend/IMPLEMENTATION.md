@@ -48,10 +48,10 @@ backend/
 
 1. **POST `/v1/auth/register/clinic`**
    - Register new clinic with eligibility checks
-   - Creates clinic and admin user
-   - Sends verification email
+   - Creates clinic and admin user with selected role (CLINIC_ADMIN, AUXILLIARY_STAFF, NURSE, PHYSICIAN)
+   - Sends verification OTP to phone
    - Returns temporary JWT token
-   - Response includes: `clinicId`, `temporaryToken`, `nextStep: "VERIFY_EMAIL"`
+   - Response includes: `clinicId`, `temporaryToken`, `nextStep: "VERIFY_EMAIL"`, `role`
 
 2. **POST `/v1/auth/register/verify-email`**
    - Verify work email with code sent via email

@@ -26,6 +26,13 @@ const {
 
 const registerClinic = async (input) => {
   console.log('\x1b[1m📋 [REGISTER_CLINIC] START - Clinic registration initiated\x1b[0m', { email: input?.clinic?.workEmail });
+  
+  // Validate role
+  const VALID_CLINIC_ROLES = ['CLINIC_ADMIN', 'AUXILLIARY_STAFF', 'NURSE', 'PHYSICIAN'];
+  if (!input.admin?.role || !VALID_CLINIC_ROLES.includes(input.admin.role)) {
+    throw new ValidationError(`Invalid role. Must be one of: ${VALID_CLINIC_ROLES.join(', ')}`);
+  }
+  
   // Check if clinic already exists
   if (!prisma || !prisma.clinic) {
     console.error('Prisma client or prisma.clinic is undefined', { prismaKeys: prisma && Object.keys(prisma) });
@@ -126,7 +133,7 @@ const registerClinic = async (input) => {
     clinicId: clinic.id,
     
     email: input.clinic.workEmail,
-    role: 'CLINIC_ADMIN',
+    role: input.admin?.role || 'CLINIC_ADMIN',
   };
 
   const temporaryToken = generateTemporaryToken(tokenPayload,'10m'); // 10 minutes

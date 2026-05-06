@@ -106,112 +106,137 @@ export const useClinicDashboardView = () => {
 export default function ClinicDashboardLayout({ children }: ClinicDashboardLayoutProps) {
 
     const[role,setRole]=useState('')
+    const router = useRouter();
 
-  const navItems = [
-  {
-    group: 'PATIENTS',
-    items: [
-      {
-        id: 'dashboard' as ViewType,
-        label: 'Dashboard',
-        icon: LayoutDashboard,
-      },
-      role&&role=='CLINIC_ADMIN'?
-      {
-        id:'intakeForm' as ViewType,
-        label:'Intake Form',
-        icon: NotebookPen
-      }:null,
-      
-      role&&role=='CLINIC_ADMIN'?{
-        id: 'patientsList' as ViewType,
-        label: 'Patient CRM',
-        icon: Users,
-      }:null,
-      {
-        id: 'patients' as ViewType,
-        label: 'Patient Pipelines',
-        icon: Workflow,
-      },
-      {
-        id: 'archives' as ViewType,
-        label: 'Archives',
-        icon: Archive,
-      },
-      (role && role=='CLINIC_ADMIN')?{
-        id: 'waitlist' as ViewType,
-        label: 'View Waitlist',
-        icon: Users,
-      }:null,
-    ].filter(Boolean),
-  },
-  {
-    group: 'ANALYTICS',
-    items: [
-      {
-        id: 'analytics' as ViewType,
-        label: 'Analytics',
-        icon: BarChart3,
-      },
-      
-    ],
-  },
-  role&&role=='CLINIC_ADMIN'?
-  {
-    group: 'INFUSION CHAIRS',
-    items: [
-      {
-        id: 'allChairs' as ViewType,
-        label: 'Chairs View',
-        icon: Users2,
-      },
-      {
-        id: 'chairsPipeline' as ViewType,
-        label: 'Chairs Pipeline',
-        icon: Workflow,
-      },
-      {
-        id: 'addChairs' as ViewType,
-        label: 'Add Chairs',
-        icon: UserPlus,
-      },
-      
-    ].filter(Boolean),
-  }:null,
-   
-  {
-    group: 'VERIFICATIONS',
-    items: [
-      {
-        id: 'insuranceVerify' as ViewType,
-        label: 'Insurance Verify',
-        icon: BookmarkCheck,
-      },
-      {
-        id: 'priorAuth' as ViewType,
-        label: 'Prior Auth',
-        icon: UserRoundCheck,
-      },
-    ],
-  },
-  
-  {
-    group: 'SETTINGS',
-    items: [
-      role&&role=='CLINIC_ADMIN'?{
-        id: 'accountSettings' as ViewType,
-        label: 'Account Settings',
-        icon: UserCog,
-      }:null,
-      {
-        id: 'logout' as ViewType,
-        label: 'Logout',
-        icon: LogOut,
-      },
-    ].filter(Boolean),
-  },
+    // Define role-based permissions
+    // CLINIC_ADMIN: All access
+    // AUXILIARY_STAFF: Chair View, Intake Form
+    // NURSE: Chair View, Verifications (Insurance Verify, Prior Auth)
+    const ROLE_PERMISSIONS: Record<string, ViewType[]> = {
+      'CLINIC_ADMIN': ['dashboard', 'intakeForm', 'patientsList', 'patients', 'archives', 'waitlist', 'allChairs', 'chairsPipeline', 'addChairs', 'insuranceVerify', 'priorAuth', 'accountSettings', 'analytics', 'logout'],
+      'AUXILIARY_STAFF': ['dashboard', 'intakeForm', 'allChairs', 'logout'],
+      'NURSE': ['dashboard', 'allChairs', 'insuranceVerify', 'priorAuth', 'logout'],
+    };
 
-];
+    // Navigation items with role access control
+    const getNavItems = () => {
+      const items = [
+        {
+          group: 'PATIENTS',
+          items: [
+            {
+              id: 'dashboard' as ViewType,
+              label: 'Dashboard',
+              icon: LayoutDashboard,
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
+            },
+            {
+              id: 'intakeForm' as ViewType,
+              label: 'Intake Form',
+              icon: NotebookPen,
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF'],
+            },
+            {
+              id: 'patientsList' as ViewType,
+              label: 'Patient CRM',
+              icon: Users,
+              allowedRoles: ['CLINIC_ADMIN'],
+            },
+            {
+              id: 'patients' as ViewType,
+              label: 'Patient Pipelines',
+              icon: Workflow,
+              allowedRoles: ['CLINIC_ADMIN'],
+            },
+            {
+              id: 'archives' as ViewType,
+              label: 'Archives',
+              icon: Archive,
+              allowedRoles: ['CLINIC_ADMIN'],
+            },
+            {
+              id: 'waitlist' as ViewType,
+              label: 'View Waitlist',
+              icon: Users,
+              allowedRoles: ['CLINIC_ADMIN'],
+            },
+          ].filter(item => item.allowedRoles.includes(role)),
+        },
+        {
+          group: 'ANALYTICS',
+          items: [
+            {
+              id: 'analytics' as ViewType,
+              label: 'Analytics',
+              icon: BarChart3,
+              allowedRoles: ['CLINIC_ADMIN'],
+            },
+          ].filter(item => item.allowedRoles.includes(role)),
+        },
+        ...(role === 'CLINIC_ADMIN' || role === 'AUXILIARY_STAFF' || role === 'NURSE' ? [{
+          group: 'INFUSION CHAIRS',
+          items: [
+            {
+              id: 'allChairs' as ViewType,
+              label: 'Chairs View',
+              icon: Users2,
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
+            },
+            {
+              id: 'chairsPipeline' as ViewType,
+              label: 'Chairs Pipeline',
+              icon: Workflow,
+              allowedRoles: ['CLINIC_ADMIN'],
+            },
+            {
+              id: 'addChairs' as ViewType,
+              label: 'Add Chairs',
+              icon: UserPlus,
+              allowedRoles: ['CLINIC_ADMIN'],
+            },
+          ].filter(item => item.allowedRoles.includes(role)),
+        }] : []),
+        {
+          group: 'VERIFICATIONS',
+          items: [
+            {
+              id: 'insuranceVerify' as ViewType,
+              label: 'Insurance Verify',
+              icon: BookmarkCheck,
+              allowedRoles: ['CLINIC_ADMIN', 'NURSE'],
+            },
+            {
+              id: 'priorAuth' as ViewType,
+              label: 'Prior Auth',
+              icon: UserRoundCheck,
+              allowedRoles: ['CLINIC_ADMIN', 'NURSE'],
+            },
+          ].filter(item => item.allowedRoles.includes(role)),
+        },
+        {
+          group: 'SETTINGS',
+          items: [
+            {
+              id: 'accountSettings' as ViewType,
+              label: 'Account Settings',
+              icon: UserCog,
+              allowedRoles: ['CLINIC_ADMIN'],
+            },
+            {
+              id: 'logout' as ViewType,
+              label: 'Logout',
+              icon: LogOut,
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
+            },
+          ].filter(item => item.allowedRoles.includes(role)),
+        },
+      ];
+
+      // Filter out empty groups
+      return items.filter(group => group.items.length > 0);
+    };
+
+    const navItems = getNavItems();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -222,7 +247,6 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   const [clinic, setClinic] = useState<any | null>(null);
   const[clinicId,setClinicId]=useState('')
 
-const[allowedNavs,setAllowedNavs]=useState([])
   // Restore dashboard view from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -237,14 +261,20 @@ const[allowedNavs,setAllowedNavs]=useState([])
       console.log("The role is",roleCache)
       setRole(roleCache)
     }
-
-   if(role==='CLINIC_ADMIN'){
-    setAllowedNavs(navItems)
-  }
-else{
-    setAllowedNavs(navItems.filter((nav)=>nav?.group !=='VERIFICATIONS'))
-}
   }, []);
+
+  // Validate view access whenever role or currentView changes
+  useEffect(() => {
+    if (role) {
+      const allowedViews = ROLE_PERMISSIONS[role] || [];
+      
+      // If current view is not allowed, redirect to dashboard
+      if (currentView !== 'dashboard' && !allowedViews.includes(currentView)) {
+        console.warn(`Access denied to view: ${currentView} for role: ${role}`);
+        setCurrentView('dashboard');
+      }
+    }
+  }, [role, currentView]);
   
   // Fetch patients referred to this clinic
   useEffect(() => {
@@ -380,17 +410,31 @@ else{
             clinicId={clinicId}
           />
         );
-        case 'intakeForm':
-          return <PatientIntakeForm
-        
-          />
+      case 'intakeForm':
+        return <PatientIntakeForm />
       case 'waitlist':
         return <WaitlistView />;
       case 'insuranceVerify':
         return <InsuranceVerifyView />;
+      case 'logout':
+        // Handle logout
+        handleLogout();
+        return null;
       default:
         return children;
     }
+  };
+
+  const handleLogout = () => {
+    // Clear all stored data
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('clinic');
+    localStorage.removeItem('role');
+    localStorage.removeItem('hospitalId');
+    localStorage.removeItem('dashboardView');
+    // Redirect to login
+    router.push('/login');
   };
 
   return (
@@ -416,16 +460,13 @@ else{
 
           {/* Navigation */}
           <nav className="p-4 space-y-6">
-            {
-            allowedNavs.length>0 && allowedNavs.map((group) => {
-             
-            return(
-              <div key={group?.group}>
+            {navItems && navItems.map((group) => (
+              <div key={group.group}>
                 <p className="text-xs font-bold text-primary/50 uppercase tracking-wider px-4 mb-2">
-                  {group?.group}
+                  {group.group}
                 </p>
                 <div className="space-y-2">
-                  {group?.items.map((item) => {
+                  {group.items.map((item: any) => {
                     const Icon = item.icon;
                     const isActive = currentView === item.id;
                     
@@ -434,10 +475,10 @@ else{
                         key={item.id}
                         onClick={() => {
                           setCurrentView(item.id);
-                          localStorage.setItem('dashboardView',item.id);
+                          localStorage.setItem('dashboardView', item.id);
                           setIsSidebarOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 ${item.id=='logout'&&'bg-red-500/20 text-red-600'} px-4 py-3 rounded-lg transition-all ${
+                        className={`w-full flex items-center gap-3 ${item.id === 'logout' && 'bg-red-500/20 text-red-600'} px-4 py-3 rounded-lg transition-all ${
                           isActive
                             ? 'bg-primary/50 text-white border border-primary/50'
                             : 'text-foreground/70 hover:bg-primary/30 hover:text-primary'
@@ -450,7 +491,7 @@ else{
                   })}
                 </div>
               </div>
-            )})}
+            ))}
           </nav>
 
           {/* Footer - Empty for now, logout moved to SETTINGS group */}

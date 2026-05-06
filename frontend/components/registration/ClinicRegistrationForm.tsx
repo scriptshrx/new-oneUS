@@ -98,6 +98,9 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
     const fieldLower = fieldName.toLowerCase();
 
     switch (fieldName) {
+      case 'role':
+        return !value ? 'Role is required' : null;
+      
       case 'name':
         return !value?.trim() ? 'Clinic name is required' : null;
       
@@ -322,9 +325,9 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
 <div className='bg-background rounded-lg p-8 flex flex-col space-y-4'>
     <h1 className='text-2xl font-bold text-center mb-4 text-purple-700'>Select Your Role</h1>
     <div onClick={()=>{handleChange('role','CLINIC_ADMIN');setSelectedRole('CLINIC_ADMIN')}} className='p-3 px-4 font-semibold bg-foreground shadow-sm rounded cursor-pointer bg-purple-500 hover:bg-purple-600 text-white transition-colors'>CLINIC ADMIN</div>
-    <div onClick={()=>{handleChange('role','AUXILLIARY_NURSE');setSelectedRole('AUXILLIARY_NURSE')}} className='p-3 px-4 font-semibold bg-purple-500 shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors text-white'>AUXILLIARY NURSE</div>
-    {/* <div onClick={()=>{handleChange('role','PHYSICIAN');setSelectedRole('PHYSICIAN')}} className='p-3 px-4 font-semibold bg-gray-400 shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>PHYSICIAN</div> */}
-    <div onClick={()=>{setSelectedRole('CLINIC_STAFF');handleChange('role','CLINIC_STAFF')}} className='p-3 px-4 font-semibold bg-purple-500 text-white shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors'>CLINIC STAFF</div>
+    <div onClick={()=>{handleChange('role','AUXILLIARY_STAFF');setSelectedRole('AUXILLIARY_STAFF')}} className='p-3 px-4 font-semibold bg-purple-500 shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors text-white'>AUXILIARY STAFF</div>
+    <div onClick={()=>{handleChange('role','NURSE');setSelectedRole('NURSE')}} className='p-3 px-4 font-semibold bg-purple-500 shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors text-white'>NURSE</div>
+    <div onClick={()=>{setSelectedRole('PHYSICIAN');handleChange('role','PHYSICIAN')}} className='p-3 px-4 font-semibold bg-purple-500 text-white shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors'>PHYSICIAN</div>
   </div>
 
 </div>:
