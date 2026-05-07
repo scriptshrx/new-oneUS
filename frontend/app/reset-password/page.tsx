@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,11 +14,15 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const[token,setToken]=useState('')
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+//   const searchParams = useSearchParams();
+//   const token = searchParams.get('token');
 
   useEffect(() => {
+
+
+    const token = localStorage.getItem('accessToken')
     if (!token) {
       router.push('/forgot-password');
     }
