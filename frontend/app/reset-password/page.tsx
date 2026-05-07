@@ -14,19 +14,17 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const[token,setToken]=useState('')
+  const [token, setToken] = useState('');
   const router = useRouter();
-//   const searchParams = useSearchParams();
-//   const token = searchParams.get('token');
 
   useEffect(() => {
-
-
-    const token = localStorage.getItem('accessToken')
-    if (!token) {
+    const storedToken = localStorage.getItem('resetToken');
+    if (!storedToken) {
       router.push('/forgot-password');
+      return;
     }
-  }, [token, router]);
+    setToken(storedToken);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

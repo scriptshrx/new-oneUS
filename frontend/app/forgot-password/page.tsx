@@ -24,7 +24,9 @@ export default function ForgotPasswordPage() {
     try {
       const response = await authService.requestPasswordReset(email, npiNumber);
       // Navigate to reset password page with token
+      localStorage.setItem('resetToken',response.resetToken)
       router.push(`/reset-password?token=${response.resetToken}`);
+
     } catch (err: any) {
       setError(err.message || 'Failed to request password reset');
     } finally {
