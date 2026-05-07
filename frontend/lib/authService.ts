@@ -414,14 +414,14 @@ class AuthService {
   /**
    * Request password reset
    */
-  async requestPasswordReset(email: string, phoneNumber: string): Promise<{ resetToken: string }> {
+  async requestPasswordReset(email: string, npiNumber: string): Promise<{ resetToken: string }> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/auth/password/forgot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, phoneNumber }),
+        body: JSON.stringify({ email, npiNumber }),
       });
 
       if (!response.ok) {

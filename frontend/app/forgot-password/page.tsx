@@ -11,7 +11,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [npiNumber, setNpiNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
     setError('');
 
     try {
-      const response = await authService.requestPasswordReset(email, phoneNumber);
+      const response = await authService.requestPasswordReset(email, npiNumber);
       // Navigate to reset password page with token
       router.push(`/reset-password?token=${response.resetToken}`);
     } catch (err: any) {
@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
             Forgot your password?
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email and phone number to reset your password
+            Enter your email and NPI number to reset your password
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -62,19 +62,18 @@ export default function ForgotPasswordPage() {
               />
             </div>
             <div>
-              <Label htmlFor="phoneNumber" className="sr-only">
-                Phone number
+              <Label htmlFor="npiNumber" className="sr-only">
+                NPI Number
               </Label>
               <Input
-                id="phoneNumber"
-                name="phoneNumber"
-                type="tel"
-                autoComplete="tel"
+                id="npiNumber"
+                name="npiNumber"
+                type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Phone number"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="10-digit NPI number"
+                value={npiNumber}
+                onChange={(e) => setNpiNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
               />
             </div>
           </div>

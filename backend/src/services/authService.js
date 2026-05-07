@@ -424,8 +424,8 @@ const login = async (input) => {
 };
 
 const forgotPassword = async (input) => {
-  console.log('\x1b[1m🔐 [FORGOT_PASSWORD] START - Password reset requested\x1b[0m', { email: input.email, phoneNumber: input.phoneNumber });
-  const { email, phoneNumber } = input;
+  console.log('\x1b[1m🔐 [FORGOT_PASSWORD] START - Password reset requested\x1b[0m', { email: input.email, npiNumber: input.npiNumber });
+  const { email, npiNumber } = input;
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -441,21 +441,19 @@ const forgotPassword = async (input) => {
     throw new NotFoundError('User not found');
   }
 
-  let associatedPhone;
-  if (user.patientId && user.patient) {
-    associatedPhone = user.patient.phoneNumber;
-  } else if (user.clinicId && user.clinic) {
-    associatedPhone = user.clinic.primaryPhone;
+  let associatedNpi;
+  if (user.clinicId && user.clinic) {
+    associatedNpi = user.clinic.npiNumber;
   } else if (user.hospitalId && user.hospital) {
-    associatedPhone = user.hospital.primaryPhone;
+    associatedNpi = user.hospital.npiNumber;
   } else {
-    console.log('\x1b[1m⚠️ [FORGOT_PASSWORD] User not associated with clinic, hospital, or patient\x1b[0m');
-    throw new ValidationError('User not associated with clinic, hospital, or patient');
+    console.log('\x1b[1m⚠️ [FORGOT_PASSWORD] User not associated with clinic or hospital\x1b[0m');
+    throw new ValidationError('User not associated with clinic or hospital');
   }
 
-  if (associatedPhone !== phoneNumber) {
-    console.log('\x1b[1m❌ [FORGOT_PASSWORD] Phone number does not match\x1b[0m');
-    throw new UnauthorizedError('Phone number does not match');
+  if (associatedNpi !== npiNumber) {
+    console.log('\x1b[1m❌ [FORGOT_PASSWORD] NPI number does not match\x1b[0m');
+    throw new UnauthorizedError('NPI number does not match');
   }
 
   // Generate reset token
