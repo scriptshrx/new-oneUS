@@ -106,7 +106,7 @@ export const useClinicDashboardView = () => {
 export default function ClinicDashboardLayout({ children }: ClinicDashboardLayoutProps) {
 
     const[role,setRole]=useState('')
-    const router = useRouter();
+
 
     // Define role-based permissions
     // CLINIC_ADMIN: All access
