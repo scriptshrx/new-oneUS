@@ -425,15 +425,38 @@ const login = async (input) => {
 };
 
 const forgotPassword = async (input) => {
-  console.log('\x1b[1m🔐 [FORGOT_PASSWORD] START - Password reset requested\x1b[0m', { email: input.email });
+  console.log('\x1b[1m🔐 [FORGOT_PASSWORD] START - Password reset requested\x1b[0m', { email: input.email, phoneNumber: input.phoneNumber });
+  const { email, phoneNumber } = input;
+
   const user = await prisma.user.findUnique({
-    where: { email: input.email },
+    where: { email },
+    include: {
+      clinic: true,
+      hospital: true,
+      patient: true,
+    },
   });
 
   if (!user) {
-    console.log('\x1b[1m⚠️ [FORGOT_PASSWORD] User not found (security: no email sent)\x1b[0m', { email: input.email });
-    // For security, don't reveal if user exists
-    return { message: 'If email exists, reset link has been sent' };
+    console.log('\x1b[1m⚠️ [FORGOT_PASSWORD] User not found\x1b[0m', { email });
+    throw new NotFoundError('User not found');
+  }
+
+  let associatedPhone;
+  if (user.patientId && user.patient) {
+    associatedPhone = user.patient.phoneNumber;
+  } else if (user.clinicId && user.clinic) {
+    associatedPhone = user.clinic.primaryPhone;
+  } else if (user.hospitalId && user.hospital) {
+    associatedPhone = user.hospital.primaryPhone;
+  } else {
+    console.log('\x1b[1m⚠️ [FORGOT_PASSWORD] User not associated with clinic, hospital, or patient\x1b[0m');
+    throw new ValidationError('User not associated with clinic, hospital, or patient');
+  }
+
+  if (associatedPhone !== phoneNumber) {
+    console.log('\x1b[1m❌ [FORGOT_PASSWORD] Phone number does not match\x1b[0m');
+    throw new UnauthorizedError('Phone number does not match');
   }
 
   // Generate reset token
@@ -442,7 +465,6 @@ const forgotPassword = async (input) => {
     {
       userId: user.id,
       email: user.email,
-      role: user.role,
     },
     '1h' // 1 hour
   );
@@ -453,19 +475,20 @@ const forgotPassword = async (input) => {
   storePasswordResetToken(user.email, resetToken);
   console.log('\x1b[1m✓ [FORGOT_PASSWORD] Reset token stored\x1b[0m');
 
-  // Send password reset email
-  console.log('\x1b[1m📧 [FORGOT_PASSWORD] Sending password reset email...\x1b[0m');
-  await sendPasswordResetEmail(user.email, resetToken);
-  console.log('\x1b[1m✅ [FORGOT_PASSWORD] Password reset email sent\x1b[0m');
-
-  return { message: 'Password reset link sent to email' };
+  return { resetToken };
 };
 
 const resetPassword = async (input) => {
   console.log('\x1b[1m🔐 [RESET_PASSWORD] START - Password reset initiated\x1b[0m');
+  const { resetToken, newPassword, confirmPassword } = input;
+
+  if (newPassword !== confirmPassword) {
+    throw new ValidationError('Passwords do not match');
+  }
+
   // Verify the reset token
   console.log('\x1b[1m🔍 [RESET_PASSWORD] Verifying reset token...\x1b[0m');
-  const email = verifyPasswordResetToken(input.resetToken);
+  const email = verifyPasswordResetToken(resetToken);
   if (!email) {
     console.log('\x1b[1m❌ [RESET_PASSWORD] Invalid or expired reset token\x1b[0m');
     throw new UnauthorizedError('Invalid or expired reset token');
@@ -486,7 +509,7 @@ const resetPassword = async (input) => {
 
   // Hash new password
   console.log('\x1b[1m🔐 [RESET_PASSWORD] Hashing new password...\x1b[0m');
-  const passwordHash = await hashPassword(input.newPassword);
+  const passwordHash = await hashPassword(newPassword);
   console.log('\x1b[1m✓ [RESET_PASSWORD] Password hashed\x1b[0m');
 
   // Update password
@@ -499,7 +522,7 @@ const resetPassword = async (input) => {
 
   // Delete reset token
   console.log('\x1b[1m🗑️ [RESET_PASSWORD] Deleting reset token...\x1b[0m');
-  deletePasswordResetToken(input.resetToken);
+  deletePasswordResetToken(resetToken);
   console.log('\x1b[1m✓ [RESET_PASSWORD] Reset token deleted\x1b[0m');
 
   return { message: 'Password reset successful' };
