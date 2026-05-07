@@ -8,7 +8,6 @@ const {
 } = require('../utils/jwt');
 const {
   sendVerificationEmail,
-  sendPasswordResetEmail,
 } = require('../utils/email');
 const {
   storeVerificationToken,
