@@ -10,11 +10,11 @@ import { routerServerGlobal } from 'next/dist/server/lib/router-utils/router-ser
 import { useRouter } from 'next/navigation';
 
 interface EmailVerificationStepProps {
-  email: string;
+
   temporaryToken: string;
-  name:string;
+
   onVerified: () => void;
-  phone:string;
+ 
   onBack: () => void;
 }
 
@@ -40,7 +40,7 @@ useEffect(()=>{
       console.log('Hydrated formData:',formData)
     const form = JSON.parse(formData);
         setEmail(form.workEmail)
-        setPhone(form.workEmail)
+        setPhone(form.primaryPhone)
         setName(form.name)
     }
   const clinicData = localStorage.getItem('clinic');
@@ -95,7 +95,7 @@ console.log('clinic set for verification',clinicObj)
     try {
  
     
-      await authService.resendVerificationCode(email,name,phone);
+      await authService.resendVerificationCode({email,name,phone});
       setError(''); // Clear error on success
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to resend code. Please try again.';
@@ -137,16 +137,16 @@ console.log('clinic set for verification',clinicObj)
             <div className='w-full md:w-[60%] md:border-r-[1px] border-r-0 border-accent/20 pr-8 md:mr-8'>
           <div className="mb-10">
             <h2 className="text-3xl font-bold text-foreground mb-2">
-              Verify Your Email
+              Verify Primary Phone Number
             </h2>
             <p className="text-foreground/70">
-              We've sent a verification code to <span className="font-semibold text-foreground">{email}</span>.
+              We've sent a verification code to <span className="font-semibold text-foreground">{phone}</span>.
               Enter it below to continue.
             </p>
 
             {/* Info Box */}
           <div className="mt-8 p-4 bg-accent/5 border border-accent/10 rounded-lg text-sm text-foreground/70">
-            <p>Check your email (including spam folder) for the verification code. It expires in 30 minutes.</p>
+            <p>Check your SMS for the verification code. It expires in 30 minutes.</p>
           </div>
           </div>
           </div>
@@ -200,7 +200,7 @@ console.log('clinic set for verification',clinicObj)
                   Verifying...
                 </>
               ) : (
-                'Verify Email'
+                'Verify Phone'
               )}
             </Button>
           </form></div>

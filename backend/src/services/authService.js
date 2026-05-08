@@ -154,16 +154,17 @@ const registerClinic = async (input) => {
 };
 
 //handle resending of OTP
-const resendVerification = async(email,name,primaryPhone)=>{
-const OTP = generateVerificationCode(email);
+const resendVerification = async(input)=>{
+const OTP = generateVerificationCode(input.email);
 try{
-storeVerificationToken(email,OTP);
+storeVerificationToken(input.mail,OTP);
 console.log('Verification OTP generated and stored as:',OTP)
-const message = `Validate with: ${OTP} to create ${name} account. \nOr click https://scriptishrx.net/verify-email?code=${OTP}`;
-const to = primaryPhone;
+const message = `Validate with: ${OTP} to create ${input.name} account. \nOr click https://scriptishrx.net/verify-email?code=${OTP}`;
+const to = input.phone;
 const response = await sendSMS(to,message);
 
-console.log('SMS sent successfully to',primaryPhone)
+console.log('SMS sent successfully to',to)
+console.log('Message sent is:',message)
 }
 catch(err){
   console.log('Error sending OTP',err)
@@ -643,7 +644,7 @@ const registerHospital = async (input) => {
 
     // Send verification email
     const verificationCode = generateVerificationCode();
-    console.log('\x1b[1m📧 [REGISTER_HOSPITAL] Verification code generated and stored\x1b[0m');
+    console.log('\x1b[1m📧 [REGISTER_HOSPITAL] Verification code generated and stored\x1b[0m',verificationCode);
     storeVerificationToken(input.hospital.workEmail, verificationCode);
     //await sendVerificationEmail(input.hospital.workEmail, verificationCode);
   }

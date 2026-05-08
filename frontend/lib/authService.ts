@@ -324,6 +324,7 @@ class AuthService {
    * Resend verification code
    */
   async resendVerificationCode(input:ResendOTPInput) {
+    console.log('Resend inpu:',input)
     
     try {
 

@@ -115,9 +115,8 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
                !/^\d{5}(-\d{4})?$/.test(value) ? 'Invalid ZIP code format' : null;
       
       case 'primaryPhone':
-        return !value ? 'Phone number is required' :
-               !/^\d{3}-\d{3}-\d{4}$/.test(value) ? 'Phone format: XXX-XXX-XXXX' : null;
-      
+        return !value ? 'Phone number is required' : null
+              
       case 'workEmail':
         return !value ? 'Work email is required' :
                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Invalid email format' :
@@ -229,7 +228,7 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
           firstName: formData.contactPersonFirstName,
           lastName: formData.contactPersonLastName,
           title: formData.contactPersonTitle,
-          role:formData.role,
+          role:'HOSPITAL_ADMIN',
           password: formData.password,
         },
       };
@@ -504,15 +503,13 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
               </Label>
               <Input
                 id="primaryPhone"
-                placeholder="312-555-0000"
+                type='text'
+                placeholder="+3125550000"
                 value={formData.primaryPhone}
                 onChange={e => {
-                  const val = e.target.value.replace(/\D/g, '');
-                  const formatted = val.length >= 3 ? (
-                    val.length >= 6 ? `${val.slice(0, 3)}-${val.slice(3, 6)}-${val.slice(6, 10)}` :
-                    `${val.slice(0, 3)}-${val.slice(3, 6)}`
-                  ) : val;
-                  handleChange('primaryPhone', formatted);
+                  const val = e.target.value;
+                  
+                  handleChange('primaryPhone', val);
                 }}
                 onBlur={() => handleBlur('primaryPhone')}
                 className={`${getFieldError('primaryPhone') ? 'border-destructive' : ''}`}
