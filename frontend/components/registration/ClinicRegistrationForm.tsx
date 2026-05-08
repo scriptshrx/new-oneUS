@@ -241,7 +241,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
 
     setIsSubmitting(true);
     setApiError('');
-    
+    localStorage.setItem('formData',JSON.stringify(formData))
     try {
       // Parse admin name from first/last if available, otherwise use clinic name
       const adminName = `${(formData as any).adminFirstName || 'Admin'} ${(formData as any).adminLastName || 'User'}`;

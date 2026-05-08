@@ -10,11 +10,13 @@ import { authService } from '@/lib/authService';
 interface EmailVerificationStepProps {
   email: string;
   temporaryToken: string;
+  name:string;
   onVerified: () => void;
+  phone:string;
   onBack: () => void;
 }
 
-export default function EmailVerificationStep({ email, temporaryToken, onVerified, onBack }: EmailVerificationStepProps) {
+export default function EmailVerificationStep({ email, phone, name, temporaryToken, onVerified, onBack }: EmailVerificationStepProps) {
   const [verificationCode, setVerificationCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -33,7 +35,7 @@ console.log('clinic set for verification',clinicObj)
 },[])
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    //mock-up successful verification
+    //mock-up successful verificationha
     
     
     if (!verificationCode.trim()) {
@@ -66,9 +68,9 @@ console.log('clinic set for verification',clinicObj)
     setError('');
 
     try {
-      const name = clinic?.name;
-      const primaryPhone = clinic?.primaryPhone;
-      await authService.resendVerificationCode(email,name,primaryPhone);
+ 
+    
+      await authService.resendVerificationCode(email,name,phone);
       setError(''); // Clear error on success
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to resend code. Please try again.';

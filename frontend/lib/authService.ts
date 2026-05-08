@@ -92,7 +92,8 @@ export interface SignBAARequest {
 }
 interface ResendOTPInput{
   name:string;
-  primaryPhone:string;
+  phone:string;
+
   email:string
 }
 export interface SignBAAResponse {

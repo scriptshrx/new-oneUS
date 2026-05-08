@@ -55,6 +55,7 @@ router.post('/register/hospital', async (req, res, next) => {
 router.post('/register/verify-email', temporaryTokenMiddleware, async (req, res, next) => {
   try {
     const input = req.body;
+    console.log('Email verification req.body:',req.body)
     const result = await verifyEmail(input);
     res.json(result);
   } catch (error) {
