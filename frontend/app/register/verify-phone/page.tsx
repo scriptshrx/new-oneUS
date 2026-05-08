@@ -144,7 +144,7 @@ useEffect(() => {
   };
 
   return (
-    <div className='max-w-[1000px]'>
+    <div className='max-w-[1000px] flex mx-auto'>
       {/* Back Button */}
       {!isVerified && (
         <button
