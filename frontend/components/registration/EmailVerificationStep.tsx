@@ -96,11 +96,13 @@ console.log('clinic set for verification',clinicObj)
  
     
       await authService.resendVerificationCode({email,name,phone});
+      setIsResending(false)
       setError(''); // Clear error on success
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to resend code. Please try again.';
       setError(errorMessage);
     } finally {
+      setIsResending(false)
       setIsSubmitting(false);
     }
   };

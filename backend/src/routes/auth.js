@@ -30,7 +30,7 @@ router.post('/register/clinic', async (req, res, next) => {
 router.post('/register/resend-verification',async(req,res)=>{
   console.log('starting to resend verification',req.body);
   try{
-  const response = await resendVerification(req.body);
+  const response = await resendVerification(req.body.input);
   
   res.status(201).json(response)
   }
