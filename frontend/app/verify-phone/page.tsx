@@ -257,4 +257,3 @@ export default function PhoneVerification(props: PhoneVerificationStepProps) {
     </Suspense>
   );
 }
-}
