@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { authService } from '@/lib/authService';
+import { routerServerGlobal } from 'next/dist/server/lib/router-utils/router-server-context';
+import { useRouter } from 'next/navigation';
 
 interface EmailVerificationStepProps {
   email: string;
@@ -16,16 +18,31 @@ interface EmailVerificationStepProps {
   onBack: () => void;
 }
 
-export default function EmailVerificationStep({ email, phone, name, temporaryToken, onVerified, onBack }: EmailVerificationStepProps) {
+export default function EmailVerificationStep({temporaryToken, onVerified, onBack }: EmailVerificationStepProps) {
   const [verificationCode, setVerificationCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState('');
+  const router =  useRouter()
 
 const[isResending,setIsResending]=useState(false);
 const[clinic,setClinic]=useState(null)
 
+const[email,setEmail]=useState('')
+  const[phone,setPhone]=useState('')
+  const[name,setName]=useState('')
+
+
 useEffect(()=>{
+     const formData = localStorage.getItem('formData')
+     console.log('Hydrated formData:',formData)
+    if(formData){
+      console.log('Hydrated formData:',formData)
+    const form = JSON.parse(formData);
+        setEmail(form.workEmail)
+        setPhone(form.workEmail)
+        setName(form.name)
+    }
   const clinicData = localStorage.getItem('clinic');
   if(clinicData){
     const clinicObj = JSON.parse(clinicData);
@@ -47,10 +64,18 @@ console.log('clinic set for verification',clinicObj)
     setError('');
 
     try {
-      await authService.verifyEmail({
+     const response =  await authService.verifyEmail({
         email,
         verificationCode,
+
       });
+
+      console.log('Email verification response:',response);
+      if(response.nextStep==='SIGN_BAA'){
+
+        router.push('/signBAA')
+        
+      }
 
       // setIsVerified(true);
       // setTimeout(() => {

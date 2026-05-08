@@ -87,8 +87,7 @@ export interface VerifyEmailResponse {
 export interface SignBAARequest {
   email: string;
   signatureData: string;
-  adminName: string;
-  adminTitle: string;
+ 
 }
 interface ResendOTPInput{
   name:string;

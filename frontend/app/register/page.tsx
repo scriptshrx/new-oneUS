@@ -28,20 +28,7 @@ export default function RegisterPage() {
     step: 'type-selection',
     formData: {},
   });
-  const[email,setEmail]=useState('')
-  const[phone,setPhone]=useState('')
-  const[name,setName]=useState('')
-
-  useEffect(()=>{
-    const formData = localStorage.getItem('formData')
-    if(formData){
-    const form = JSON.parse(formData);
-        setEmail(form.workEmail)
-        setPhone(form.workEmail)
-        setName(form.name)
-    }
-
-  },[])
+  
     const router = useRouter();
 
   const handleTenantTypeSelect = (type: TenantType) => {
@@ -159,9 +146,7 @@ export default function RegisterPage() {
 
             {state.step === 'email-verification' && (
               <EmailVerificationStep
-                email={email}
-                phone={phone}
-                name={name}
+               
                 temporaryToken={state.formData?.temporaryToken || ''}
                 onVerified={handleEmailVerified}
                 onBack={handleBackClick}

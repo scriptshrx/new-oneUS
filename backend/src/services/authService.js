@@ -170,6 +170,7 @@ catch(err){
 }
 }
 const verifyEmail = async (input) => {
+
   console.log('\x1b[1m📧 [VERIFY_EMAIL] START - Email verification initiated\x1b[0m', { email: input.email });
   const user = await prisma.user.findUnique({
     where: { email: input.email },
@@ -220,27 +221,64 @@ const signBAA = async (input) => {
   console.log('\x1b[1m📝 [SIGN_BAA] START - BAA signing initiated\x1b[0m', { email: input.email });
   const user = await prisma.user.findUnique({
     where: { email: input.email },
-    include: { clinic: true },
+    include: { clinic: true, hospital: true },
   });
 
-  if (!user || !user.clinic) {
-    console.log('\x1b[1m❌ [SIGN_BAA] User or clinic not found\x1b[0m', { email: input.email });
-    throw new NotFoundError('User or clinic not found');
+  if (!user) {
+    console.log('\x1b[1m❌ [SIGN_BAA] User not found\x1b[0m', { email: input.email });
+    throw new NotFoundError('User not found');
   }
-  console.log('\x1b[1m✓ [SIGN_BAA] User and clinic found\x1b[0m', { userId: user.id, clinicId: user.clinicId });
 
-  // Update clinic status
-  console.log('\x1b[1m🔄 [SIGN_BAA] Updating clinic status to ACTIVE...\x1b[0m');
-  const clinic = await prisma.clinic.update({
-    where: { id: user.clinicId },
-    data: {
-      status: 'ACTIVE',
-      baaSignedAt: new Date(),
-      baaSignedBy: input.adminName,
-      activatedAt: new Date(),
-    },
-  });
-  console.log('\x1b[1m✅ [SIGN_BAA] Clinic status updated\x1b[0m', { clinicId: clinic.id, status: clinic.status });
+  // Determine if user is clinic or hospital
+  const isClinicUser = !!user.clinicId;
+  const isHospitalUser = !!user.hospitalId;
+
+  if (!isClinicUser && !isHospitalUser) {
+    console.log('\x1b[1m❌ [SIGN_BAA] User not associated with clinic or hospital\x1b[0m', { userId: user.id });
+    throw new NotFoundError('User not associated with any organization');
+  }
+
+  let org = null;
+  let tokenPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  // Handle clinic BAA signing
+  if (isClinicUser) {
+    console.log('\x1b[1m✓ [SIGN_BAA] User and clinic found\x1b[0m', { userId: user.id, clinicId: user.clinicId });
+    
+    console.log('\x1b[1m🔄 [SIGN_BAA] Updating clinic status to ACTIVE...\x1b[0m');
+    org = await prisma.clinic.update({
+      where: { id: user.clinicId },
+      data: {
+        status: 'ACTIVE',
+        baaSignedAt: new Date(),
+        baaSignedBy: input.adminName || input.email,
+        activatedAt: new Date(),
+      },
+    });
+    console.log('\x1b[1m✅ [SIGN_BAA] Clinic status updated\x1b[0m', { clinicId: org.id, status: org.status });
+    tokenPayload.clinicId = user.clinicId;
+  }
+  // Handle hospital BAA signing
+  else if (isHospitalUser) {
+    console.log('\x1b[1m✓ [SIGN_BAA] User and hospital found\x1b[0m', { userId: user.id, hospitalId: user.hospitalId });
+    
+    console.log('\x1b[1m🔄 [SIGN_BAA] Updating hospital status to ACTIVE...\x1b[0m');
+    org = await prisma.hospital.update({
+      where: { id: user.hospitalId },
+      data: {
+        status: 'ACTIVE',
+        baaSignedAt: new Date(),
+        baaSignedBy: input.adminName || input.email,
+        activatedAt: new Date(),
+      },
+    });
+    console.log('\x1b[1m✅ [SIGN_BAA] Hospital status updated\x1b[0m', { hospitalId: org.id, status: org.status });
+    tokenPayload.hospitalId = user.hospitalId;
+  }
 
   // Update user status
   console.log('\x1b[1m🔄 [SIGN_BAA] Updating user status to ACTIVE...\x1b[0m');
@@ -252,19 +290,13 @@ const signBAA = async (input) => {
   });
   console.log('\x1b[1m✅ [SIGN_BAA] User status updated\x1b[0m', { userId: updatedUser.id, status: updatedUser.status });
 
-  const tokenPayload = {
-    userId: updatedUser.id,
-    clinicId: clinic.id,
-    email: updatedUser.email,
-    role: updatedUser.role,
-  };
-
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
   console.log('\x1b[1m🎟️ [SIGN_BAA] Tokens generated, BAA signing complete\x1b[0m');
 
   return {
-    clinicId: clinic.id,
+    ...(isClinicUser && { clinicId: org.id }),
+    ...(isHospitalUser && { hospitalId: org.id }),
     status: 'ACTIVE',
     accessToken,
     refreshToken,
