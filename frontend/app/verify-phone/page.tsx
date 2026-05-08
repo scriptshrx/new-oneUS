@@ -87,7 +87,7 @@ useEffect(() => {
 }, [verificationCode, email, isSubmitting, router]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    //mock-up successful verificationha
+    //mock-up successful verification
     
     
     if (!verificationCode.trim()) {
