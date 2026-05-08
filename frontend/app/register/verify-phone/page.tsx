@@ -144,7 +144,7 @@ useEffect(() => {
   };
 
   return (
-    <div>
+    <div className='max-w-[1000px]'>
       {/* Back Button */}
       {!isVerified && (
         <button
