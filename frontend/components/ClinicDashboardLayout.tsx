@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3, Zap, Mic, Database, MessageSquare, CreditCard, BrainCircuit, Bot, Users2, UserPlus, BookmarkCheck, UserRoundCheck, UserCog, FileUser, NotebookPen } from 'lucide-react';
+import { Building2, Users, MenuIcon, MenuSquare, Settings, LogOut, Menu, X, Archive, LayoutDashboard, Workflow, BarChart3, Zap, Mic, Database, MessageSquare, CreditCard, BrainCircuit, Bot, Users2, UserPlus, BookmarkCheck, UserRoundCheck, UserCog, FileUser, NotebookPen, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, createContext, useContext, useEffect } from 'react';
 import { authService } from '@/lib/authService';
@@ -13,11 +13,12 @@ import PriorAuthView from './clinic-dashboard/PriorAuthView';
 import AccountSettings from './clinic-dashboard/AccountSettings';
 import PatientIntakeForm from './clinic-dashboard/PatientIntakeForm';
 import WaitlistView from './clinic-dashboard/WaitlistView';
+import Scheduling from './clinic-dashboard/scheduling';
 interface ClinicDashboardLayoutProps {
   children: React.ReactNode;
 }
 
-type ViewType = 'dashboard' |  'accountSettings' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'waitlist' | 'logout';
+type ViewType = 'dashboard' |  'accountSettings' | 'insuranceVerify'| 'priorAuth' | 'patientsList' | 'patients' | 'scheduling' | 'archives' | 'settings' | 'intakeForm' | 'analytics' | 'voiceAgents' | 'knowledgeBase' | 'automatedSMS' | 'subscriptions' | 'allChairs' | 'chairsPipeline' | 'addChairs' | 'waitlist' | 'logout';
 
 interface Patient {
   // Core Patient Infos
@@ -113,7 +114,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
     // AUXILIARY_STAFF: Chair View, Intake Form
     // NURSE: Chair View, Verifications (Insurance Verify, Prior Auth)
     const ROLE_PERMISSIONS: Record<string, ViewType[]> = {
-      'CLINIC_ADMIN': ['dashboard', 'intakeForm', 'patientsList', 'patients', 'archives', 'waitlist', 'allChairs', 'chairsPipeline', 'addChairs', 'insuranceVerify', 'priorAuth', 'accountSettings', 'analytics', 'logout'],
+      'CLINIC_ADMIN': ['dashboard', 'intakeForm', 'patientsList', 'patients', 'scheduling', 'archives', 'waitlist', 'allChairs', 'chairsPipeline', 'addChairs', 'insuranceVerify', 'priorAuth', 'accountSettings', 'analytics', 'logout'],
       'AUXILIARY_STAFF': ['dashboard', 'intakeForm', 'allChairs', 'logout'],
       'NURSE': ['dashboard', 'allChairs', 'insuranceVerify', 'priorAuth', 'logout'],
     };
@@ -141,6 +142,12 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               label: 'Patient CRM',
               icon: Users,
               allowedRoles: ['CLINIC_ADMIN'],
+            },
+            {
+              id:'scheduling' as ViewType,
+              label:'Scheduling',
+              icon:Calendar,
+              allowedRoles:['CLINIC_ADMIN']
             },
             {
               id: 'patients' as ViewType,
@@ -393,6 +400,17 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
   // Render the appropriate view based on currentView
   const renderView = () => {
     switch (currentView) {
+      case 'scheduling':
+        return (
+          <Scheduling
+            patients={patients}
+            patientsError={patientsError}
+            patientsLoading={patientsLoading}
+            insuranceOnly={false}
+            clinicId={clinicId}
+            onBack={() => setCurrentView('dashboard')}
+          />
+        );
       case 'allChairs':
         return <AllChairsView />;
       case 'chairsPipeline':

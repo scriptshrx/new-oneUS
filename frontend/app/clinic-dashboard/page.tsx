@@ -9,6 +9,7 @@ import PatientListView from '@/components/clinic-dashboard/PatientListView';
 import PatientIntakeForm from '@/components/clinic-dashboard/PatientIntakeForm';
 import AnalyticsView from '@/components/clinic-dashboard/AnalyticsView';
 import SettingsView from '@/components/clinic-dashboard/SettingsView';
+import Scheduling from '@/components/clinic-dashboard/scheduling';
 import AIConciergeComingSoon from '@/components/clinic-dashboard/AIConciergeComingSoon';
 
 export default function ClinicDashboardPage() {
@@ -54,6 +55,18 @@ export default function ClinicDashboardPage() {
         patients={patients}
         patientsError={patientsError}
         patientsLoading={patientsLoading}
+        onBack={() => setCurrentView('dashboard')}
+      />
+    );
+  }
+
+   if (currentView === 'scheduling') {
+    return (
+      <Scheduling
+        patients={patients}
+        patientsError={patientsError}
+        patientsLoading={patientsLoading}
+        insuranceOnly={false}
         onBack={() => setCurrentView('dashboard')}
       />
     );
