@@ -99,6 +99,7 @@ console.log('clinic set for verification',clinicObj)
       setIsResending(false)
       setError(''); // Clear error on success
     } catch (err) {
+      console.log('ERR:',err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to resend code. Please try again.';
       setError(errorMessage);
     } finally {

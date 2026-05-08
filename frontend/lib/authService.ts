@@ -343,14 +343,7 @@ class AuthService {
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error ||
-            errorData.message ||
-            `Failed to resend verification: ${response.statusText}`
-        );
-      }
+     
 
       return await response.json();
     } catch (error) {

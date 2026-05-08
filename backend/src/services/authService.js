@@ -165,6 +165,7 @@ const response = await sendSMS(to,message);
 
 console.log('SMS sent successfully to',to)
 console.log('Message sent is:',message)
+return response
 }
 catch(err){
   console.log('Error sending OTP',err)
