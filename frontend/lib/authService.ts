@@ -343,9 +343,9 @@ class AuthService {
         }
       );
 
-     
-
-      return await response.json();
+     const resData = await response.json()
+console.log('Resend OTP response:', resData)
+      return await resData;
     } catch (error) {
       throw this.handleError(error);
     }

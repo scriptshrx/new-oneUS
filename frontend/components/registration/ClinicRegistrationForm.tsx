@@ -749,7 +749,7 @@ export default function ClinicRegistrationForm({ onSubmit, onBack }: ClinicRegis
               Processing...
             </>
           ) : (
-            'Continue to Email Verification'
+            'Continue to Phone Verification'
           )}
         </Button>
         <Button

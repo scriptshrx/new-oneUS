@@ -205,6 +205,8 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
 
     setIsSubmitting(true);
     setApiError('');
+
+    localStorage.setItem('formData',JSON.stringify(formData))
     
     try {
       const registrationData = {
@@ -699,7 +701,7 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
               Processing...
             </>
           ) : (
-            'Continue to Email Verification'
+            'Continue to Phone Verification'
           )}
         </Button>
          <Button
