@@ -12,9 +12,10 @@ const storeVerificationToken = (email, code) => {
 };
 
 const verifyVerificationToken = (email, code) => {
+  console.log('Verification tokens store:',verificationTokens)
   const token = verificationTokens.get(email);
 
-  if (!token) return false;
+  if (!token) {console.log('No token is in store anymore');return false;}
   if (Date.now() > token.expiresAt) {
     verificationTokens.delete(email);
     return false;
@@ -54,4 +55,5 @@ module.exports = {
   storePasswordResetToken,
   verifyPasswordResetToken,
   deletePasswordResetToken,
+  
 };
