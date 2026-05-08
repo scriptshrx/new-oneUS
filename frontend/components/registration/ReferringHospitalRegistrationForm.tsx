@@ -698,7 +698,7 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Processing...
+              Processing ...
             </>
           ) : (
             'Continue to Phone Verification'
