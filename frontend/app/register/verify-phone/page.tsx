@@ -144,7 +144,7 @@ useEffect(() => {
   };
 
   return (
-    <div className='max-w-[1000px] md:mt-20 mx-auto'>
+    <div className='max-w-[1000px] md:mt-20 mx-auto p-8'>
       {/* Back Button */}
       {!isVerified && (
         <button
