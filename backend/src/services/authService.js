@@ -159,7 +159,7 @@ const OTP = generateVerificationCode(input.email);
 try{
 storeVerificationToken(input.mail,OTP);
 console.log('Verification OTP generated and stored as:',OTP)
-const message = `Validate with: ${OTP} to create ${input.name} account. \nOr click https://scriptishrx.net/verify-email?code=${OTP}`;
+const message = `Validate with: ${OTP} to create ${input.name} account. \nOr click https://scriptishrx.net/register/verify-phone?code=${OTP}`;
 const to = input.phone;
 const response = await sendSMS(to,message);
 

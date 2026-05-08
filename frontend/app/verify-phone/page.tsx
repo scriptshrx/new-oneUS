@@ -18,7 +18,7 @@ interface PhoneVerificationStepProps {
   onBack: () => void;
 }
 
-export default function PhoneVerification({temporaryToken, onVerified, onBack }: EmailVerificationStepProps) {
+export default function PhoneVerification({temporaryToken, onVerified, onBack }: PhoneVerificationStepProps) {
   const [verificationCode, setVerificationCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
