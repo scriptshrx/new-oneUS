@@ -170,7 +170,7 @@ useEffect(() => {
         </div>
       ) : (
         <>
-          {/* Header */}
+          {/* Headers */}
           <div className='flex flex-col gap-2 md:flex-row'>
             <div className='w-full md:w-[60%] md:border-r-[1px] border-r-0 border-accent/20 pr-8 md:mr-8'>
           <div className="mb-10">
