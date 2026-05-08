@@ -190,6 +190,8 @@ class ChairService {
         },
       });
 
+      console.log('ALL chair:',chairs)
+
       return chairs;
     } catch (error) {
       throw new Error(`Failed to fetch chairs with patients: ${error.message}`);
