@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { authService } from '@/lib/authService';
 import { routerServerGlobal } from 'next/dist/server/lib/router-utils/router-server-context';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -18,7 +18,7 @@ interface PhoneVerificationStepProps {
   onBack: () => void;
 }
 
-export default function PhoneVerification({temporaryToken, onVerified, onBack }: PhoneVerificationStepProps) {
+function PhoneVerificationContent({temporaryToken, onVerified, onBack }: PhoneVerificationStepProps) {
   const [verificationCode, setVerificationCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -248,4 +248,13 @@ useEffect(() => {
       )}
     </div>
   );
+}
+
+export default function PhoneVerification(props: PhoneVerificationStepProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PhoneVerificationContent {...props} />
+    </Suspense>
+  );
+}
 }
