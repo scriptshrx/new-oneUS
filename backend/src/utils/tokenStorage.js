@@ -1,7 +1,7 @@
 const verificationTokens = new Map();
 const passwordResetTokens = new Map();
 
-const TOKEN_EXPIRY_MS = 30 * 60 * 2000; // 10 minutes
+const TOKEN_EXPIRY_MS = 30 * 60 * 2000; // 30 minutes
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
 const storeVerificationToken = (email, code) => {
