@@ -73,7 +73,7 @@ console.log('clinic set for verification',clinicObj)
       console.log('Email verification response:',response);
       if(response.nextStep==='SIGN_BAA'){
 
-        router.push('/signBAA')
+        router.push('/register/signBAA')
         
       }
 
