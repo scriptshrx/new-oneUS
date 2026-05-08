@@ -414,18 +414,21 @@ class AuthService {
   /**
    * Request password reset
    */
-  async requestPasswordReset(email: string): Promise<{ message: string }> {
+  async requestPasswordReset(email: string, npiNumber: string): Promise<{ resetToken: string }> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/auth/password/forgot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, npiNumber }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to request password reset: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || errorData.message || `Failed to request password reset: ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -439,7 +442,8 @@ class AuthService {
    */
   async resetPassword(
     resetToken: string,
-    newPassword: string
+    newPassword: string,
+    confirmPassword: string
   ): Promise<{ message: string }> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/auth/password/reset`, {
@@ -450,6 +454,7 @@ class AuthService {
         body: JSON.stringify({
           resetToken,
           newPassword,
+          confirmPassword,
         }),
       });
 

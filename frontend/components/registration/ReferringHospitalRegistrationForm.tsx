@@ -272,18 +272,18 @@ export default function ReferringHospitalRegistrationForm({ onSubmit, onBack }: 
 
 
   return (
-    !selectedRole?
-<div className='w-full max-w-800px flex items-center justify-center'>
+//     !selectedRole?
+// <div className='w-full max-w-800px flex items-center justify-center'>
   
-   <div className='bg-background rounded-lg p-8 flex flex-col space-y-4'>
-    <h1 className='text-2xl font-bold text-center mb-4 text-purple-700'>Select Your Role</h1>
-    <div onClick={()=>{handleChange('role','HOSPITAL_ADMIN');setSelectedRole('HHOSPITAL_ADMIN')}} className='p-3 px-4 font-semibold bg-foreground shadow-sm rounded cursor-pointer bg-purple-500 hover:bg-purple-600 text-white transition-colors'>HOSPITAL ADMIN</div>
-    <div onClick={()=>{handleChange('role','PHYSICIAN');setSelectedRole('PHYSICIAN')}} className='p-3 px-4 font-semibold bg-purple-500 shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors text-white'>PHYSICIAN</div>
-    {/* <div onClick={()=>{handleChange('role','PHYSICIAN');setSelectedRole('PHYSICIAN')}} className='p-3 px-4 font-semibold bg-gray-400 shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>PHYSICIAN</div> */}
-    <div onClick={()=>{setSelectedRole('HOSPITAL_STAFF');handleChange('role','HOPSITAL_STAFF')}} className='p-3 px-4 font-semibold bg-purple-500 text-white shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors'>HOPSPITAL STAFF</div>
-  </div>
+//    <div className='bg-background rounded-lg p-8 flex flex-col space-y-4'>
+//     <h1 className='text-2xl font-bold text-center mb-4 text-purple-700'>Select Your Role</h1>
+//     <div onClick={()=>{handleChange('role','HOSPITAL_ADMIN');setSelectedRole('HHOSPITAL_ADMIN')}} className='p-3 px-4 font-semibold bg-foreground shadow-sm rounded cursor-pointer bg-purple-500 hover:bg-purple-600 text-white transition-colors'>HOSPITAL ADMIN</div>
+//     <div onClick={()=>{handleChange('role','PHYSICIAN');setSelectedRole('PHYSICIAN')}} className='p-3 px-4 font-semibold bg-purple-500 shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors text-white'>PHYSICIAN</div>
+//     {/* <div onClick={()=>{handleChange('role','PHYSICIAN');setSelectedRole('PHYSICIAN')}} className='p-3 px-4 font-semibold bg-gray-400 shadow-sm rounded cursor-pointer hover:bg-gray-500 transition-colors'>PHYSICIAN</div> */}
+//     <div onClick={()=>{setSelectedRole('HOSPITAL_STAFF');handleChange('role','HOPSITAL_STAFF')}} className='p-3 px-4 font-semibold bg-purple-500 text-white shadow-sm rounded cursor-pointer hover:bg-purple-600 transition-colors'>HOPSPITAL STAFF</div>
+//   </div>
 
-</div>:
+// </div>:
     <form onSubmit={handleSubmit}>
       {/* Back Button */}
       <button
