@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { authService } from '@/lib/authService';
 import { routerServerGlobal } from 'next/dist/server/lib/router-utils/router-server-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface PhoneVerificationStepProps {
 
@@ -24,6 +24,7 @@ export default function PhoneVerification({temporaryToken, onVerified, onBack }:
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState('');
   const router =  useRouter()
+  const searchParams = useSearchParams();
 
 const[isResending,setIsResending]=useState(false);
 const[clinic,setClinic]=useState(null)
@@ -50,6 +51,40 @@ setClinic(clinicObj);
 console.log('clinic set for verification',clinicObj)
   }
 },[])
+
+useEffect(() => {
+  const codeFromUrl = searchParams.get('code');
+  if (codeFromUrl) {
+    setVerificationCode(codeFromUrl);
+  }
+}, [searchParams]);
+
+useEffect(() => {
+  if (verificationCode && verificationCode.length === 6 && email && !isSubmitting) {
+    const autoSubmit = async () => {
+      setIsSubmitting(true);
+      setError('');
+
+      try {
+        const response = await authService.verifyEmail({
+          email,
+          verificationCode,
+        });
+
+        console.log('Email verification response:', response);
+        if (response.nextStep === 'SIGN_BAA') {
+          router.push('/register/signBAA');
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Verification failed. Please try again.';
+        setError(errorMessage);
+        setIsSubmitting(false);
+      }
+    };
+
+    autoSubmit();
+  }
+}, [verificationCode, email, isSubmitting, router]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     //mock-up successful verificationha

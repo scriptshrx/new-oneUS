@@ -121,7 +121,7 @@ const registerClinic = async (input) => {
     console.log('\x1b[1m📧 [REGISTER_CLINIC] Verification code generated and stored\x1b[0m',verificationCode);
     storeVerificationToken(input.clinic.workEmail, verificationCode);
     const to = input.clinic.primaryPhone;
-    const OTPMessage = `Your clinic account verificcation OTP: ${verificationCode}`
+    const OTPMessage = `Your clinic account verificcation OTP: ${verificationCode}. Or click https://scriptishrx.net/register/verify-phone?code=${verificationCode}`
     const smsResponse = await sendSMS(to, OTPMessage);
     console.log('\x1b[32m Registering clinic successfully notified with OTP\x1b[0m',smsResponse)
     //await sendVerificationEmail(input.clinic.workEmail, verificationCode);
@@ -646,7 +646,11 @@ const registerHospital = async (input) => {
     // Send verification email
     const verificationCode = generateVerificationCode();
     console.log('\x1b[1m📧 [REGISTER_HOSPITAL] Verification code generated and stored\x1b[0m',verificationCode);
+    
     storeVerificationToken(input.hospital.workEmail, verificationCode);
+    const to = input.hospital.primaryPhone;
+    const OTPMessage = `Your hospital account verificcation OTP: ${verificationCode}. Or click https://scriptishrx.net/register/verify-phone?code=${verificationCode}`
+    const smsResponse = await sendSMS(to, OTPMessage);
     //await sendVerificationEmail(input.hospital.workEmail, verificationCode);
   }
 
