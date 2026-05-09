@@ -26,8 +26,11 @@ const INSURANCE_PLAN_TYPES = [
   { id: 'PPO', label: 'PPO - Preferred Provider Organization' },
   { id: 'HMO', label: 'HMO - Health Maintenance Organization' },
   { id: 'EPO', label: 'EPO - Exclusive Provider Organization' },
-  { id: 'POS', label: 'POS - Point of Service' },
-  { id: 'INDEMNITY', label: 'Indemnity - Fee-for-Service' },
+ 
+  {id:'MEDICARE', label:'United States MEDICARE'},
+  {id:'MEDICAID', label:'United States MEDICAID'}
+
+ 
 ];
 
 interface IntakeFormData {
