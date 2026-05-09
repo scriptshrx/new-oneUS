@@ -459,7 +459,7 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
               Phone <span className="text-destructive">*</span>
             </Label>
             <Input
-              placeholder="312-555-0000"
+              placeholder="+125550000"
               value={formData.patientPhone}
               onChange={(e) => handleChange('patientPhone', e.target.value)}
               className="bg-background/50 border-border/30"
