@@ -2,6 +2,7 @@ const prisma = require('../db/client');
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/email');
 const { sendSMS } = require('../utils/sms');
+const dayjs = require('dayjs')
 
 class ChairService {
   /**
@@ -222,6 +223,25 @@ class ChairService {
       if (!patient) {
         throw new Error('Patient not found');
       }
+      const clinic = await prisma.clinic.findUnique({
+        where:{id:patient.clinicId}
+      });
+
+      console.log('Clinic fetched successfully for this patient to bind chair')
+
+      const clinicAddress = clinic.streetAddress;
+      const clinicPhoneNumber = clinic.primaryPhone;
+         const appointment = await prisma.appointment.findFirst({
+      where:{patientId:patient.id}
+    });
+
+    console.log('Appointment fetched for this patient',appointment);
+
+    const aptType = dayjs(appointment.appointmentType).format('MMM DD, YYYY hh:mm A');
+    const scheduleDate = dayjs(appointment.scheduleDate).format('MMM DD, YYYY hh:mm A');
+    const startingTime = dayjs(appointment.scheduleStartTime).format('MMM DD, YYYY hh:mm A');
+    const scheduleEndTime = dayjs(appointment.scheduledEndTime).format('MMM DD, YYYY hh:mm A')
+
 
       // Verify chair belongs to the same clinic as the patient
       if (chair.clinicId !== patient.clinicId) {
@@ -237,6 +257,13 @@ class ChairService {
         include: { infusionChair: true },
       });
 
+      //Send message to patient:
+const to = patient.phoneNumber;
+const patientName = patient.lastName
+const message = `Hello ${patientName}, you are now scheduled for ${aptType} on ${scheduleDate}. Starts: ${startingTime}, and Ends: ${scheduleEndTime}\nPlease endeavour to be present\n
+Call ${clinicPhoneNumber} for more info. \nAddress: ${clinicAddress}`
+const smsSent = await sendSMS(to,message);
+console.log('SMS sent successfully to the patient:',smsSent)
       return updatedPatient;
     } catch (error) {
       throw new Error(`Failed to tag chair to patient: ${error.message}`);

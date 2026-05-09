@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ChairService = require('../services/chairService');
 const { authMiddleware } = require('../middleware/auth');
+const { appointment } = require('../db/client');
 
 // Middleware to verify clinic ownership
 const verifyClinicOwnership = async (req, res, next) => {
@@ -177,7 +178,7 @@ router.patch('/patients/:patientId/tag-chair', authMiddleware, async (req, res) 
     }
 
     const patient = await ChairService.tagChairToPatient(patientId, chairId);
-
+ 
     res.json({
       success: true,
       data: patient,
