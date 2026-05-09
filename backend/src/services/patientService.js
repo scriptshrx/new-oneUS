@@ -7,6 +7,18 @@ const patients = await prisma.patient.findMany({
 return patients;
 }
 
+const fetchPatientById = async(patientId)=>{
+    const patient = await prisma.patient.findUnique({
+      where:{id:patientId}
+    })
+
+    console.log('Patient fetched by id successfully')
+    return patient
+  }
+
+    //fetch patient by patient id
+
+
 const fetchPatientsByChairId = async(chairId) => {
   const patients = await prisma.patient.findMany({
     where: { infusionChairId: chairId },
@@ -21,6 +33,8 @@ const fetchPatientsByChairId = async(chairId) => {
       }
     },
   });
+  
+
   
   // Flatten referral data into patient object
   return patients.map(patient => {
@@ -38,4 +52,4 @@ const fetchPatientsByChairId = async(chairId) => {
   });
 }
 
-module.exports={fetchAllPatients, fetchPatientsByChairId}
+module.exports={fetchAllPatients, fetchPatientsByChairId, fetchPatientById}
