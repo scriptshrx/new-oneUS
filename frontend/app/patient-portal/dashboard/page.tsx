@@ -423,7 +423,7 @@ export default function PatientDashboardPage() {
         {/* HIPAA Notice */}
         <div className="mt-12 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
           <p className="text-xs text-blue-300/80">
-            🔒 <strong>Privacy Notice:</strong> All your medical information is transmitted using
+            <span className='text-gray-600'>🔒</span> <strong>Privacy Notice:</strong> All your medical information is transmitted using
             256-bit encryption and stored in HIPAA-compliant servers. Your privacy and security
             are our top priority.
           </p>
