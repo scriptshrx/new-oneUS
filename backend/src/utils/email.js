@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 var {SendMailClient} = require("zeptomail");
+const {sendSMS} = require('./sms')
 
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE || 'gmail',
@@ -103,31 +104,19 @@ const sendBAASignatureInstructions = (email, clinicName) => {
   });
 };
 
-const sendPatientPortalLoginLink = (email, patientName, verificationCode) => {
-  const portalLink = `${process.env.FRONTEND_URL}/patient-portal/login?code=${verificationCode}&email=${email}`;
+const sendPatientPortalLink = (patientName,patientPhone,patientId) => {
+  const portalLink = `https://scriptishrx.net/patient-portal?patientId=${patientId}`;
 
-  return sendEmail({
-    to: email,
-    subject: 'Your Patient Portal Access - Scriptish',
-    html: `
-      <h2>Welcome to Scriptish Patient Portal</h2>
-      <p>Hi ${patientName},</p>
-      <p>Your referral has been received and a patient account has been created for you.</p>
-      <p>Click below to access your patient portal:</p>
-      <a href="${portalLink}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-        Access Patient Portal
-      </a>
-      <p>Or use this verification code: <strong>${verificationCode}</strong></p>
-      <p>This link expires in 24 hours.</p>
-      <p>If you have any questions, please contact support@scriptish.com</p>
-    `,
-  });
-};
+const message = `Hello ${patientName}, here is your Scriptish portal access link: ${portalLink}`
+const sentMsg = await sendSMS(patientPhone,message);
+console.log('Patient successfully notified with access link',sentMsg);
+return sentMsg
+}
 
 module.exports = {
   sendEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendBAASignatureInstructions,
-  sendPatientPortalLoginLink,
+  sendPatientPortalLink,
 };

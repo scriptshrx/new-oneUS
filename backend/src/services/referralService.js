@@ -1,7 +1,7 @@
 const prisma = require('../db/client');
 const { NotFoundError, ValidationError, ConflictError } = require('../middleware/errorHandler');
 const { generateVerificationCode } = require('../utils/password');
-const { sendPatientPortalLoginLink } = require('../utils/email');
+const { sendPatientPortalLink } = require('../utils/email');
 
 const createReferral = async (input, hospitalIdParam) => {
   // Validate required fields
@@ -60,7 +60,9 @@ const createReferral = async (input, hospitalIdParam) => {
       pipelineStage: 'NEW_REFERRAL',
     },
   });
-
+const patientName = input.patientInfo.firstName;
+const patientPhone = input.patientInfo.phone;
+const patientId = patient.id;
   // Create insurance information if provided
   if (input.insurance) {
     await prisma.insuranceInformation.create({
@@ -99,22 +101,20 @@ const createReferral = async (input, hospitalIdParam) => {
 
   // Create a temporary login link for patient (magic link approach)
   // Store this for patient portal access
-  const patientVerificationCode = generateVerificationCode();
-  const tokenStorage = require('../utils/tokenStorage');
-  tokenStorage.storeVerificationToken(patient.emailAddress, patientVerificationCode);
 
+  await sendPatientPortalLink(patientName,patientPhone,patientId)
   // Send patient portal login email with verification code
-  try {
-    await sendPatientPortalLoginLink(
-      patient.emailAddress,
-      `${patient.firstName} ${patient.lastName}`,
-      patientVerificationCode
-    );
-    console.log(`✅ Patient portal login email sent to ${patient.emailAddress}`);
-  } catch (error) {
-    console.error(`⚠️ Failed to send patient portal email to ${patient.emailAddress}:`, error);
-    // Don't fail the referral creation if email fails, just log it
-  }
+  // try {
+  //   await sendPatientPortalLoginLink(
+  //     patient.emailAddress,
+  //     `${patient.firstName} ${patient.lastName}`,
+  //     patientVerificationCode
+  //   );
+  //   console.log(`✅ Patient portal login email sent to ${patient.emailAddress}`);
+  // } catch (error) {
+  //   console.error(`⚠️ Failed to send patient portal email to ${patient.emailAddress}:`, error);
+  //   // Don't fail the referral creation if email fails, just log it
+  // }
 
   return {
     referralId: referral.id,

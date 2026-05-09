@@ -23,7 +23,7 @@ router.post('/', authMiddleware, async (req, res, next) => {
 
     // Pass hospitalId from authenticated user when available
     const result = await createReferral(req.body, req.user.hospitalId);
-    console.log('✅ [REFERRALS] Referral created successfully:', result.id);
+    console.log('✅ [REFERRALS] Referral created successfully:', result.referralId);
     return res.status(201).json(result);
   } catch (error) {
     console.error('💥 [REFERRALS] Error creating referral:', error);
