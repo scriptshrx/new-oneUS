@@ -360,7 +360,7 @@ export default function PatientDashboardPage() {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Intake Form */}
-          <button className="group relative p-6 rounded-2xl border-2 border-border/30 hover:border-accent/50 hover:bg-primary/20 bg-primary/10 transition-all text-left">
+          {/* <button className="group relative p-6 rounded-2xl border-2 border-border/30 hover:border-accent/50 hover:bg-primary/20 bg-primary/10 transition-all text-left">
             <div
               className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity"
               style={{
@@ -380,7 +380,7 @@ export default function PatientDashboardPage() {
           </button>
 
           {/* Send Message */}
-          <button className="group relative p-6 rounded-2xl border-2 border-border/30 hover:border-accent/50 hover:bg-primary/20 bg-primary/10 transition-all text-left">
+          {/* <button className="group relative p-6 rounded-2xl border-2 border-border/30 hover:border-accent/50 hover:bg-primary/20 bg-primary/10 transition-all text-left">
             <div
               className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity"
               style={{
@@ -397,10 +397,10 @@ export default function PatientDashboardPage() {
                 Send a message to your clinic staff
               </p>
             </div>
-          </button>
+          </button> */}
 
           {/* View Documents */}
-          <button className="group relative p-6 rounded-2xl border-2 border-border/30 hover:border-accent/50 hover:bg-primary/20 bg-primary/10 transition-all text-left">
+          {/*<button className="group relative p-6 rounded-2xl border-2 border-border/30 hover:border-accent/50 hover:bg-primary/20 bg-primary/10 transition-all text-left">
             <div
               className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity"
               style={{
@@ -417,7 +417,7 @@ export default function PatientDashboardPage() {
                 View consent forms and signed documents
               </p>
             </div>
-          </button>
+          </button> */}
         </div>
 
         {/* HIPAA Notice */}
