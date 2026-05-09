@@ -237,7 +237,7 @@ class ChairService {
 
     console.log('Appointment fetched for this patient',appointment);
 
-    const aptType = dayjs(appointment.appointmentType).format('MMM DD, YYYY hh:mm A');
+    const aptType = appointment.appointmentType;
     const scheduleDate = dayjs(appointment.scheduleDate).format('MMM DD, YYYY hh:mm A');
     const startingTime = dayjs(appointment.scheduleStartTime).format('MMM DD, YYYY hh:mm A');
     const scheduleEndTime = dayjs(appointment.scheduledEndTime).format('MMM DD, YYYY hh:mm A')
