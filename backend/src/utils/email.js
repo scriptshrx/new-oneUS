@@ -105,7 +105,7 @@ const sendBAASignatureInstructions = (email, clinicName) => {
 };
 
 const sendPatientPortalLink = (patientName,patientPhone,patientId) => {
-  const portalLink = `https://scriptishrx.net/patient-portal?patientId=${patientId}`;
+  const portalLink = `https://scriptishrx.net/patient-portal/dashboard?patientId=${patientId}`;
 
 const message = `Hello ${patientName}, here is your Scriptish portal access link: ${portalLink}`
 const sentMsg = await sendSMS(patientPhone,message);
