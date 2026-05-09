@@ -270,6 +270,7 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
       setSuccessMessage(
         `✓ Patient intake submitted successfully! ${result.patientName} has been added to ${clinic.name}.`
       );
+      setIsSubmitting(false)
 
       setShowInsuranceModal(true)
 
