@@ -348,7 +348,7 @@ export default function AnalyticsView({
                         tick={{ fontSize: 12, fontWeight: 600 }}
                       />
                       <YAxis
-                        stroke="rgba(255,255,255,0.6)"
+                        stroke="rgba(16, 14, 14, 0.6)"
                         tick={{ fontSize: 12 }}
                         label={{ value: 'Number of Patients', angle: -90, position: 'insideLeft', offset: 10 }}
                       />
