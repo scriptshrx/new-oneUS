@@ -341,7 +341,7 @@ export default function AnalyticsView({
                       <CartesianGrid strokeDasharray="4 4" stroke="rgba(100,100,100,0.1)" vertical={false} />
                       <XAxis
                         dataKey="stage"
-                        stroke="rgba(255,255,255,0.6)"
+                        stroke="rgba(16, 14, 14, 0.6)"
                         angle={-45}
                         textAnchor="end"
                         height={100}
