@@ -252,14 +252,23 @@ class ChairService {
       if (appointment.scheduledEndTime) {
         scheduleEndTimeLocal = convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone);
       } else {
-        // Add 1 hour to UTC start time, then convert to local timezone
-        const endTimeUTC = new Date(new Date(appointment.scheduledStartTime).getTime() + 60 * 60000);
+        // Add 1 hour (3600000 ms) to UTC start time, then convert to local timezone
+        const endTimeUTC = new Date(appointment.scheduledStartTime.getTime() + 3600000);
         scheduleEndTimeLocal = convertUTCToClinicTime(endTimeUTC, clinicTimezone);
       }
       
       const scheduleDate = dayjs(scheduledDateLocal).format('MMM DD, YYYY hh:mm A');
       const startingTime = dayjs(scheduleStartTimeLocal).format('MMM DD, YYYY hh:mm A');
       const scheduleEndTime = dayjs(scheduleEndTimeLocal).format('MMM DD, YYYY hh:mm A');
+
+      // Debug logging
+      console.log('DEBUG chairService - tagChairToPatient:');
+      console.log('  scheduleStartTimeLocal:', scheduleStartTimeLocal);
+      console.log('  scheduleEndTimeLocal:', scheduleEndTimeLocal);
+      console.log('  startingTime (formatted):', startingTime);
+      console.log('  scheduleEndTime (formatted):', scheduleEndTime);
+      console.log('  appointment.scheduledStartTime (UTC):', appointment.scheduledStartTime);
+      console.log('  appointment.scheduledEndTime (UTC):', appointment.scheduledEndTime);
 
 
       // Verify chair belongs to the same clinic as the patient
