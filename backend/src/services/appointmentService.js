@@ -1,4 +1,10 @@
 const prisma = require('../db/client');
+const {
+  getTimezoneForState,
+  convertClinicTimeToUTC,
+  convertUTCToClinicTime,
+  getClinicHoursUTC,
+} = require('../utils/timezone');
 
 const createAppointment = async (appointmentData) => {
   const {
@@ -19,6 +25,18 @@ const createAppointment = async (appointmentData) => {
     throw new Error('Missing required appointment fields: patientId, clinicId, scheduledDate, scheduledStartTime');
   }
 
+  // Fetch clinic to get timezone information
+  const clinic = await prisma.clinic.findUnique({
+    where: { id: clinicId },
+    select: { state: true },
+  });
+
+  if (!clinic) {
+    throw new Error('Clinic not found');
+  }
+
+  const clinicTimezone = getTimezoneForState(clinic.state);
+
   // Validate that patient exists and belongs to clinic
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
@@ -27,6 +45,12 @@ const createAppointment = async (appointmentData) => {
   if (!patient || patient.clinicId !== clinicId) {
     throw new Error('Patient not found or does not belong to this clinic');
   }
+
+  // Convert local clinic times to UTC for storage
+  const scheduledStartTimeUTC = convertClinicTimeToUTC(scheduledStartTime, clinicTimezone);
+  const scheduledEndTimeUTC = scheduledEndTime
+    ? convertClinicTimeToUTC(scheduledEndTime, clinicTimezone)
+    : null;
 
   // Validate chair belongs to clinic (if provided)
   if (chairId) {
@@ -49,12 +73,12 @@ const createAppointment = async (appointmentData) => {
         AND: [
           {
             scheduledStartTime: {
-              lt: new Date(scheduledEndTime || new Date(new Date(scheduledStartTime).getTime() + 60 * 60000)),
+              lt: scheduledEndTimeUTC || new Date(scheduledStartTimeUTC.getTime() + 60 * 60000),
             },
           },
           {
             scheduledEndTime: {
-              gt: new Date(scheduledStartTime),
+              gt: scheduledStartTimeUTC,
             },
           },
         ],
@@ -66,15 +90,15 @@ const createAppointment = async (appointmentData) => {
     }
   }
 
-  // Create appointment
+  // Create appointment with UTC times
   const appointment = await prisma.appointment.create({
     data: {
       patientId,
       clinicId,
       appointmentType,
       scheduledDate: new Date(scheduledDate),
-      scheduledStartTime: new Date(scheduledStartTime),
-      scheduledEndTime: scheduledEndTime ? new Date(scheduledEndTime) : null,
+      scheduledStartTime: scheduledStartTimeUTC,
+      scheduledEndTime: scheduledEndTimeUTC,
       treatmentType,
       drug,
       dose,
@@ -87,7 +111,14 @@ const createAppointment = async (appointmentData) => {
     },
   });
 
-  return appointment;
+  // Convert returned times back to clinic timezone for display
+  return {
+    ...appointment,
+    scheduledStartTime: convertUTCToClinicTime(appointment.scheduledStartTime, clinicTimezone),
+    scheduledEndTime: appointment.scheduledEndTime
+      ? convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone)
+      : null,
+  };
 };
 
 const getAppointment = async (appointmentId) => {
@@ -95,7 +126,7 @@ const getAppointment = async (appointmentId) => {
     where: { id: appointmentId },
     include: {
       patient: true,
-      clinic: true,
+      clinic: { select: { state: true } },
       assignedNurse: true,
     },
   });
@@ -104,7 +135,16 @@ const getAppointment = async (appointmentId) => {
     throw new Error('Appointment not found');
   }
 
-  return appointment;
+  const clinicTimezone = getTimezoneForState(appointment.clinic.state);
+
+  // Convert times back to clinic timezone for display
+  return {
+    ...appointment,
+    scheduledStartTime: convertUTCToClinicTime(appointment.scheduledStartTime, clinicTimezone),
+    scheduledEndTime: appointment.scheduledEndTime
+      ? convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone)
+      : null,
+  };
 };
 
 const getAppointmentsByPatient = async (patientId) => {
@@ -112,16 +152,37 @@ const getAppointmentsByPatient = async (patientId) => {
     where: { patientId },
     include: {
       patient: true,
-      clinic: true,
+      clinic: { select: { state: true } },
       assignedNurse: true,
     },
-    orderBy: { scheduledDate: 'desc' },
+    orderBy: { scheduledStartTime: 'desc' },
   });
 
-  return appointments;
+  // Convert times back to clinic timezone for display
+  return appointments.map(apt => {
+    const clinicTimezone = getTimezoneForState(apt.clinic.state);
+    return {
+      ...apt,
+      scheduledStartTime: convertUTCToClinicTime(apt.scheduledStartTime, clinicTimezone),
+      scheduledEndTime: apt.scheduledEndTime
+        ? convertUTCToClinicTime(apt.scheduledEndTime, clinicTimezone)
+        : null,
+    };
+  });
 };
 
 const getAppointmentsByClinic = async (clinicId, filters = {}) => {
+  // Fetch clinic for timezone info
+  const clinic = await prisma.clinic.findUnique({
+    where: { id: clinicId },
+    select: { state: true },
+  });
+
+  if (!clinic) {
+    throw new Error('Clinic not found');
+  }
+
+  const clinicTimezone = getTimezoneForState(clinic.state);
   const where = { clinicId };
 
   if (filters.status) {
@@ -129,12 +190,16 @@ const getAppointmentsByClinic = async (clinicId, filters = {}) => {
   }
 
   if (filters.startDate || filters.endDate) {
-    where.scheduledDate = {};
+    where.scheduledStartTime = {};
     if (filters.startDate) {
-      where.scheduledDate.gte = new Date(filters.startDate);
+      // Convert clinic timezone date to UTC for query
+      const startDateUTC = convertClinicTimeToUTC(new Date(filters.startDate), clinicTimezone);
+      where.scheduledStartTime.gte = startDateUTC;
     }
     if (filters.endDate) {
-      where.scheduledDate.lte = new Date(filters.endDate);
+      // Convert clinic timezone date to UTC for query
+      const endDateUTC = convertClinicTimeToUTC(new Date(filters.endDate), clinicTimezone);
+      where.scheduledStartTime.lte = endDateUTC;
     }
   }
 
@@ -144,10 +209,17 @@ const getAppointmentsByClinic = async (clinicId, filters = {}) => {
       patient: true,
       assignedNurse: true,
     },
-    orderBy: { scheduledDate: 'asc' },
+    orderBy: { scheduledStartTime: 'asc' },
   });
 
-  return appointments;
+  // Convert times back to clinic timezone for display
+  return appointments.map(apt => ({
+    ...apt,
+    scheduledStartTime: convertUTCToClinicTime(apt.scheduledStartTime, clinicTimezone),
+    scheduledEndTime: apt.scheduledEndTime
+      ? convertUTCToClinicTime(apt.scheduledEndTime, clinicTimezone)
+      : null,
+  }));
 };
 
 const updateAppointment = async (appointmentId, updateData) => {
@@ -161,20 +233,27 @@ const updateAppointment = async (appointmentId, updateData) => {
     homeAddress,
   } = updateData;
 
-  // Fetch existing appointment
+  // Fetch existing appointment with clinic info
   const existingAppointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
+    include: { clinic: { select: { state: true } } },
   });
 
   if (!existingAppointment) {
     throw new Error('Appointment not found');
   }
 
+  const clinicTimezone = getTimezoneForState(existingAppointment.clinic.state);
+
   // If updating chair or time, validate no conflicts
   if (assignedChair || scheduledStartTime) {
     const chairToCheck = assignedChair || existingAppointment.assignedChair;
-    const startTime = scheduledStartTime ? new Date(scheduledStartTime) : existingAppointment.scheduledStartTime;
-    const endTime = scheduledEndTime ? new Date(scheduledEndTime) : existingAppointment.scheduledEndTime;
+    const startTime = scheduledStartTime
+      ? convertClinicTimeToUTC(scheduledStartTime, clinicTimezone)
+      : existingAppointment.scheduledStartTime;
+    const endTime = scheduledEndTime
+      ? convertClinicTimeToUTC(scheduledEndTime, clinicTimezone)
+      : existingAppointment.scheduledEndTime;
 
     if (chairToCheck) {
       const conflictingAppointment = await prisma.appointment.findFirst({
@@ -208,14 +287,14 @@ const updateAppointment = async (appointmentId, updateData) => {
     }
   }
 
-  // Build update payload
+  // Build update payload with UTC times
   const updatePayload = {};
 
   if (status) updatePayload.status = status;
   if (assignedNurseId) updatePayload.assignedNurseId = assignedNurseId;
   if (scheduledDate) updatePayload.scheduledDate = new Date(scheduledDate);
-  if (scheduledStartTime) updatePayload.scheduledStartTime = new Date(scheduledStartTime);
-  if (scheduledEndTime) updatePayload.scheduledEndTime = new Date(scheduledEndTime);
+  if (scheduledStartTime) updatePayload.scheduledStartTime = convertClinicTimeToUTC(scheduledStartTime, clinicTimezone);
+  if (scheduledEndTime) updatePayload.scheduledEndTime = convertClinicTimeToUTC(scheduledEndTime, clinicTimezone);
   if (assignedChair !== undefined) updatePayload.assignedChair = assignedChair;
   if (homeAddress) updatePayload.homeAddress = homeAddress;
 
@@ -229,7 +308,14 @@ const updateAppointment = async (appointmentId, updateData) => {
     },
   });
 
-  return appointment;
+  // Convert times back to clinic timezone for display
+  return {
+    ...appointment,
+    scheduledStartTime: convertUTCToClinicTime(appointment.scheduledStartTime, clinicTimezone),
+    scheduledEndTime: appointment.scheduledEndTime
+      ? convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone)
+      : null,
+  };
 };
 
 const cancelAppointment = async (appointmentId) => {
@@ -238,24 +324,43 @@ const cancelAppointment = async (appointmentId) => {
     data: { status: 'CANCELLED' },
     include: {
       patient: true,
-      clinic: true,
+      clinic: { select: { state: true } },
     },
   });
 
-  return appointment;
+  const clinicTimezone = getTimezoneForState(appointment.clinic.state);
+
+  // Convert times back to clinic timezone for display
+  return {
+    ...appointment,
+    scheduledStartTime: convertUTCToClinicTime(appointment.scheduledStartTime, clinicTimezone),
+    scheduledEndTime: appointment.scheduledEndTime
+      ? convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone)
+      : null,
+  };
 };
 
 const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chairId = null) => {
-  const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
+  // Fetch clinic to get timezone
+  const clinic = await prisma.clinic.findUnique({
+    where: { id: clinicId },
+    select: { state: true },
+  });
+
+  if (!clinic) {
+    throw new Error('Clinic not found');
+  }
+
+  const clinicTimezone = getTimezoneForState(clinic.state);
+
+  // Get clinic hours in UTC
+  const { startOfDay, endOfDay } = getClinicHoursUTC(date, clinicTimezone, 8, 17);
 
   // Get appointments for the clinic on that day
   // If chairId is provided, only get appointments for that specific chair
   const where = {
     clinicId,
-    scheduledDate: {
+    scheduledStartTime: {
       gte: startOfDay,
       lte: endOfDay,
     },
@@ -278,7 +383,7 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chair
     },
   });
 
-  // Default clinic hours: 8 AM to 5 PM
+  // Default clinic hours: 8 AM to 5 PM (in clinic's local timezone)
   const clinicOpenTime = 8;
   const clinicCloseTime = 17;
   const slotDuration = durationMinutes;
@@ -293,22 +398,28 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chair
     chair: apt.assignedChair,
   }));
 
+  // Generate slots in clinic's local timezone
   for (let hour = clinicOpenTime; hour < clinicCloseTime; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
-      const slotStart = new Date(date);
-      slotStart.setHours(hour, minute, 0, 0);
-      const slotEnd = new Date(slotStart);
-      slotEnd.setMinutes(slotStart.getMinutes() + slotDuration);
+      // Create slot time in clinic's local timezone
+      const slotStartLocal = new Date(date);
+      slotStartLocal.setHours(hour, minute, 0, 0);
+      const slotEndLocal = new Date(slotStartLocal);
+      slotEndLocal.setMinutes(slotStartLocal.getMinutes() + slotDuration);
 
       // Check if slot is within clinic hours
-      if (slotEnd.getHours() > clinicCloseTime) {
+      if (slotEndLocal.getHours() > clinicCloseTime) {
         continue;
       }
+
+      // Convert to UTC for conflict checking
+      const slotStartUTC = convertClinicTimeToUTC(slotStartLocal, clinicTimezone);
+      const slotEndUTC = convertClinicTimeToUTC(slotEndLocal, clinicTimezone);
 
       // Check if slot conflicts with existing appointments in the same chair
       let isAvailable = true;
       for (const bookedSlot of bookedTimes) {
-        if (slotStart < bookedSlot.end && slotEnd > bookedSlot.start) {
+        if (slotStartUTC < bookedSlot.end && slotEndUTC > bookedSlot.start) {
           // Only block if no chairId specified (general availability check)
           // or if checking for a specific chair and it's the same chair
           if (!chairId || bookedSlot.chair === chairId) {
@@ -320,9 +431,10 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chair
 
       if (isAvailable) {
         slots.push({
-          startTime: slotStart.toISOString(),
-          endTime: slotEnd.toISOString(),
-          display: `${slotStart.getHours().toString().padStart(2, '0')}:${slotStart.getMinutes().toString().padStart(2, '0')}`,
+          startTime: slotStartUTC.toISOString(),
+          endTime: slotEndUTC.toISOString(),
+          display: `${slotStartLocal.getHours().toString().padStart(2, '0')}:${slotStartLocal.getMinutes().toString().padStart(2, '0')}`,
+          clinicLocalTime: slotStartLocal.toISOString(),
         });
       }
     }
