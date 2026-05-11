@@ -246,10 +246,15 @@ class ChairService {
       const scheduledDateLocal = convertUTCToClinicTime(appointment.scheduledDate, clinicTimezone);
       const scheduleStartTimeLocal = convertUTCToClinicTime(appointment.scheduledStartTime, clinicTimezone);
       
-      // Handle case where endTime might be null - calculate as 1 hour after start time
-      let scheduleEndTimeLocal = appointment.scheduledEndTime 
-        ? convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone)
-        : new Date(new Date(scheduleStartTimeLocal).getTime() + 60 * 60000);
+      // Handle case where endTime might be null - calculate as 1 hour after start time in UTC
+      let scheduleEndTimeLocal;
+      if (appointment.scheduledEndTime) {
+        scheduleEndTimeLocal = convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone);
+      } else {
+        // Add 1 hour to UTC start time, then convert to local timezone
+        const endTimeUTC = new Date(new Date(appointment.scheduledStartTime).getTime() + 60 * 60000);
+        scheduleEndTimeLocal = convertUTCToClinicTime(endTimeUTC, clinicTimezone);
+      }
       
       const scheduleDate = dayjs(scheduledDateLocal).format('MMM DD, YYYY hh:mm A');
       const startingTime = dayjs(scheduleStartTimeLocal).format('MMM DD, YYYY hh:mm A');
