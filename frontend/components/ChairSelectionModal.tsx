@@ -186,7 +186,13 @@ export default function ChairSelectionModal({
           body: JSON.stringify({
             scheduledDate: selectedDate.toISOString(),
             scheduledStartTime: selectedTimeDisplay,  // ← Send clinic's local time, not UTC
-            scheduledEndTime: new Date(new Date(selectedTimeDisplay).getTime() + 60 * 60000).toISOString(),
+            scheduledEndTime: (() => {
+              // Add 1 hour to clinic local time string without timezone conversion
+              const [datePart, timePart] = selectedTimeDisplay.split('T');
+              const [hours, minutes, seconds = '00'] = timePart.split(':');
+              const newHours = (parseInt(hours) + 1).toString().padStart(2, '0');
+              return `${datePart}T${newHours}:${minutes}:${seconds}`;
+            })(),
             assignedChair: selectedChairId,
           }),
         }
@@ -242,7 +248,13 @@ export default function ChairSelectionModal({
             appointmentType: 'IN_CLINIC',
             scheduledDate: selectedDate.toISOString(),
             scheduledStartTime: selectedTimeDisplay,  // ← Send clinic's local time, not UTC
-            scheduledEndTime: new Date(new Date(selectedTimeDisplay).getTime() + 60 * 60000).toISOString(),
+            scheduledEndTime: (() => {
+              // Add 1 hour to clinic local time string without timezone conversion
+              const [datePart, timePart] = selectedTimeDisplay.split('T');
+              const [hours, minutes, seconds = '00'] = timePart.split(':');
+              const newHours = (parseInt(hours) + 1).toString().padStart(2, '0');
+              return `${datePart}T${newHours}:${minutes}:${seconds}`;
+            })(),
             treatmentType,
           }),
         }
