@@ -108,14 +108,38 @@ const convertUTCToClinicTime = (utcDate, timezone) => {
 
 /**
  * Convert a date/time from clinic's local timezone to UTC
+ * Correctly handles ISO strings without timezone suffix (interprets as clinic local time)
  * @param {Date|string} localDate - Local clinic date to convert
  * @param {string} timezone - IANA timezone identifier
  * @returns {Date} UTC date
  */
 const convertClinicTimeToUTC = (localDate, timezone) => {
-  const date = new Date(localDate);
+  let dateStr;
   
-  // Get the UTC representation and the local representation
+  // If it's a string without timezone, parse it as clinic local time components
+  if (typeof localDate === 'string' && !localDate.endsWith('Z') && !localDate.includes('+')) {
+    dateStr = localDate;
+  } else {
+    const date = new Date(localDate);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    dateStr = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  }
+  
+  // Parse the local time components
+  const [datePart, timePart] = dateStr.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes, seconds = 0] = timePart.split(':').map(Number);
+  
+  // Create a temporary date assuming the components are in the clinic's timezone
+  // We'll use a reference date and calculate the offset
+  const tempDate = new Date(year, month - 1, day, hours, minutes, seconds);
+  
+  // Get what time this temporary date represents in UTC
   const utcFormatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'UTC',
     year: 'numeric',
@@ -127,7 +151,8 @@ const convertClinicTimeToUTC = (localDate, timezone) => {
     hour12: false,
   });
   
-  const localFormatter = new Intl.DateTimeFormat('en-US', {
+  // Get what time this temporary date represents in the clinic's timezone
+  const clinicFormatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',
@@ -139,21 +164,24 @@ const convertClinicTimeToUTC = (localDate, timezone) => {
   });
   
   const utcParts = {};
-  utcFormatter.formatToParts(date).forEach(({ type, value }) => {
+  utcFormatter.formatToParts(tempDate).forEach(({ type, value }) => {
     utcParts[type] = value;
   });
   
-  const localParts = {};
-  localFormatter.formatToParts(date).forEach(({ type, value }) => {
-    localParts[type] = value;
+  const clinicParts = {};
+  clinicFormatter.formatToParts(tempDate).forEach(({ type, value }) => {
+    clinicParts[type] = value;
   });
   
-  // Calculate the offset
+  // Create dates from the formatted strings to calculate offset
   const utcTime = new Date(`${utcParts.year}-${utcParts.month}-${utcParts.day}T${utcParts.hour}:${utcParts.minute}:${utcParts.second}Z`).getTime();
-  const localTime = new Date(`${localParts.year}-${localParts.month}-${localParts.day}T${localParts.hour}:${localParts.minute}:${localParts.second}Z`).getTime();
+  const clinicTime = new Date(`${clinicParts.year}-${clinicParts.month}-${clinicParts.day}T${clinicParts.hour}:${clinicParts.minute}:${clinicParts.second}Z`).getTime();
   
-  const offset = localTime - utcTime;
-  return new Date(date.getTime() - offset);
+  // The offset is the difference between what the temp date represents in each timezone
+  const offset = utcTime - clinicTime;
+  
+  // Apply the offset to convert clinic local time to UTC
+  return new Date(tempDate.getTime() + offset);
 };
 
 /**
