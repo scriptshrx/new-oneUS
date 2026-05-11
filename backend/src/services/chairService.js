@@ -273,8 +273,7 @@ class ChairService {
       //Send message to patient:
 const to = patient.phoneNumber;
 const patientName = patient.lastName
-const message = `Hello ${patientName}, you are now scheduled for ${aptType} on ${scheduleDate}. Starts: ${startingTime}, and Ends: ${scheduleEndTime}.\nPlease endeavour to be present.\n
-Call ${clinicPhoneNumber} for more info. \nAddress: ${clinicAddress}`
+const message = `Hello ${patientName}, you are now scheduled for ${aptType} on ${scheduleDate}. Starts: ${startingTime}, and Ends: ${scheduleEndTime}. Please endeavour to be present. Call ${clinicPhoneNumber} for more info. Address: ${clinicAddress}`
 const smsSent = await sendSMS(to,message);
 console.log('SMS sent successfully to the patient:',smsSent)
       return updatedPatient;
