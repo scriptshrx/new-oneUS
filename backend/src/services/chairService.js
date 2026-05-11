@@ -245,7 +245,11 @@ class ChairService {
       // Convert UTC times to clinic's local timezone
       const scheduledDateLocal = convertUTCToClinicTime(appointment.scheduledDate, clinicTimezone);
       const scheduleStartTimeLocal = convertUTCToClinicTime(appointment.scheduledStartTime, clinicTimezone);
-      const scheduleEndTimeLocal = convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone);
+      
+      // Handle case where endTime might be null - calculate as 1 hour after start time
+      let scheduleEndTimeLocal = appointment.scheduledEndTime 
+        ? convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone)
+        : new Date(new Date(scheduleStartTimeLocal).getTime() + 60 * 60000);
       
       const scheduleDate = dayjs(scheduledDateLocal).format('MMM DD, YYYY hh:mm A');
       const startingTime = dayjs(scheduleStartTimeLocal).format('MMM DD, YYYY hh:mm A');
@@ -269,7 +273,7 @@ class ChairService {
       //Send message to patient:
 const to = patient.phoneNumber;
 const patientName = patient.lastName
-const message = `Hello ${patientName}, you are now scheduled for ${aptType} on ${scheduleDate}. Starts: ${startingTime}, and Ends: ${scheduleEndTime}\nPlease endeavour to be present\n
+const message = `Hello ${patientName}, you are now scheduled for ${aptType} on ${scheduleDate}. Starts: ${startingTime}, and Ends: ${scheduleEndTime}.\nPlease endeavour to be present.\n
 Call ${clinicPhoneNumber} for more info. \nAddress: ${clinicAddress}`
 const smsSent = await sendSMS(to,message);
 console.log('SMS sent successfully to the patient:',smsSent)
