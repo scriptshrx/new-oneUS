@@ -2,7 +2,8 @@ const prisma = require('../db/client');
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/email');
 const { sendSMS } = require('../utils/sms');
-const dayjs = require('dayjs')
+const dayjs = require('dayjs');
+const { getTimezoneForState, convertUTCToClinicTime } = require('../utils/timezone');
 
 class ChairService {
   /**
@@ -231,16 +232,24 @@ class ChairService {
 
       const clinicAddress = clinic.streetAddress;
       const clinicPhoneNumber = clinic.primaryPhone;
-         const appointment = await prisma.appointment.findFirst({
-      where:{patientId:patient.id}
-    });
+      const clinicTimezone = getTimezoneForState(clinic.state);
+      
+      const appointment = await prisma.appointment.findFirst({
+        where: { patientId: patient.id }
+      });
 
-    console.log('Appointment fetched for this patient',appointment);
+      console.log('Appointment fetched for this patient', appointment);
 
-    const aptType = appointment.appointmentType;
-    const scheduleDate = dayjs(appointment.scheduleDate).format('MMM DD, YYYY hh:mm A');
-    const startingTime = dayjs(appointment.scheduleStartTime).format('MMM DD, YYYY hh:mm A');
-    const scheduleEndTime = dayjs(appointment.scheduledEndTime).format('MMM DD, YYYY hh:mm A')
+      const aptType = appointment.appointmentType;
+      
+      // Convert UTC times to clinic's local timezone
+      const scheduledDateLocal = convertUTCToClinicTime(appointment.scheduledDate, clinicTimezone);
+      const scheduleStartTimeLocal = convertUTCToClinicTime(appointment.scheduledStartTime, clinicTimezone);
+      const scheduleEndTimeLocal = convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone);
+      
+      const scheduleDate = dayjs(scheduledDateLocal).format('MMM DD, YYYY hh:mm A');
+      const startingTime = dayjs(scheduleStartTimeLocal).format('MMM DD, YYYY hh:mm A');
+      const scheduleEndTime = dayjs(scheduleEndTimeLocal).format('MMM DD, YYYY hh:mm A');
 
 
       // Verify chair belongs to the same clinic as the patient
