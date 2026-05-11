@@ -22,6 +22,14 @@ const URGENCY_LEVELS = [
   { id: 'EMERGENT', label: 'Emergent' },
 ];
 
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+];
+
 const INSURANCE_PLAN_TYPES = [
   { id: 'PPO', label: 'PPO - Preferred Provider Organization' },
   { id: 'HMO', label: 'HMO - Health Maintenance Organization' },
@@ -490,13 +498,18 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
               onChange={(e) => handleChange('patientCity', e.target.value)}
               className="bg-background/50 border-border/30"
             />
-            <Input
-              placeholder="State"
-              maxLength={2}
-              value={formData.patientState}
-              onChange={(e) => handleChange('patientState', e.target.value.toUpperCase())}
-              className="bg-background/50 border-border/30"
-            />
+            <div>
+              <Select value={formData.patientState} onValueChange={(val) => handleChange('patientState', val)}>
+                <SelectTrigger className="bg-background/50 border-border/30 text-foreground">
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent className="border-border/30">
+                  {US_STATES.map(state => (
+                    <SelectItem key={state} value={state}>{state}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Input
               placeholder="ZIP"
               value={formData.patientZipCode}
