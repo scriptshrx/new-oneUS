@@ -17,6 +17,7 @@ interface TimeSlot {
   startTime: string;
   endTime: string;
   display: string;
+  clinicLocalTime?: string;
 }
 
 interface Appointment {
@@ -63,6 +64,7 @@ export default function ChairSelectionModal({
   const [selectedChairId, setSelectedChairId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedTimeDisplay, setSelectedTimeDisplay] = useState<string | null>(null);
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -77,6 +79,7 @@ export default function ChairSelectionModal({
       // Reset state
       setSelectedDate(undefined);
       setSelectedTime(null);
+      setSelectedTimeDisplay(null);
       setError(null);
       
       // Pre-fill chair if rescheduling
@@ -136,6 +139,7 @@ export default function ChairSelectionModal({
       const data = await response.json();
       setAvailableSlots(data.data || []);
       setSelectedTime(null);
+      setSelectedTimeDisplay(null);
     } catch (err) {
       console.error('Error fetching slots:', err);
       setError(
@@ -160,7 +164,10 @@ export default function ChairSelectionModal({
   };
 
   const handleSelectTime = (timeSlot: TimeSlot) => {
-    setSelectedTime(timeSlot.startTime);
+    setSelectedTime(timeSlot.startTime); // UTC time for API
+    // Use clinicLocalTime for display, or fallback to parsing the display string
+    const displayTime = timeSlot.clinicLocalTime || timeSlot.startTime;
+    setSelectedTimeDisplay(displayTime);
     setStep('confirm');
   };
 
@@ -178,8 +185,8 @@ export default function ChairSelectionModal({
           method: 'PATCH',
           body: JSON.stringify({
             scheduledDate: selectedDate.toISOString(),
-            scheduledStartTime: selectedTime,
-            scheduledEndTime: new Date(new Date(selectedTime).getTime() + 60 * 60000).toISOString(),
+            scheduledStartTime: selectedTimeDisplay,  // ← Send clinic's local time, not UTC
+            scheduledEndTime: new Date(new Date(selectedTimeDisplay).getTime() + 60 * 60000).toISOString(),
             assignedChair: selectedChairId,
           }),
         }
@@ -204,6 +211,7 @@ export default function ChairSelectionModal({
       setSelectedChairId(null);
       setSelectedDate(undefined);
       setSelectedTime(null);
+      setSelectedTimeDisplay(null);
       setIsSubmitting(false)
       setStep('chair');
       onClose();
@@ -233,8 +241,8 @@ export default function ChairSelectionModal({
             chairId: selectedChairId,
             appointmentType: 'IN_CLINIC',
             scheduledDate: selectedDate.toISOString(),
-            scheduledStartTime: selectedTime,
-            scheduledEndTime: new Date(new Date(selectedTime).getTime() + 60 * 60000).toISOString(),
+            scheduledStartTime: selectedTimeDisplay,  // ← Send clinic's local time, not UTC
+            scheduledEndTime: new Date(new Date(selectedTimeDisplay).getTime() + 60 * 60000).toISOString(),
             treatmentType,
           }),
         }
@@ -259,6 +267,7 @@ export default function ChairSelectionModal({
       setSelectedChairId(null);
       setSelectedDate(undefined);
       setSelectedTime(null);
+      setSelectedTimeDisplay(null);
       setIsSubmitting(false)
       setStep('chair');
       onClose();
@@ -277,6 +286,7 @@ export default function ChairSelectionModal({
     } else if (step === 'time') {
       setStep('date');
       setSelectedTime(null);
+      setSelectedTimeDisplay(null);
     } else if (step === 'confirm') {
       setStep('time');
     }
@@ -499,11 +509,13 @@ export default function ChairSelectionModal({
                   <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Appointment Time</p>
                   <p className="text-foreground font-semibold flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    {new Date(selectedTime).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true,
-                    })}
+                    {selectedTimeDisplay
+                      ? new Date(selectedTimeDisplay).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })
+                      : 'N/A'}
                   </p>
                 </div>
                 <div>
