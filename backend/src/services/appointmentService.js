@@ -4,6 +4,7 @@ const {
   convertClinicTimeToUTC,
   convertUTCToClinicTime,
   getClinicHoursUTC,
+  formatClinicLocalTime,
 } = require('../utils/timezone');
 
 const createAppointment = async (appointmentData) => {
@@ -434,7 +435,7 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chair
           startTime: slotStartUTC.toISOString(),
           endTime: slotEndUTC.toISOString(),
           display: `${slotStartLocal.getHours().toString().padStart(2, '0')}:${slotStartLocal.getMinutes().toString().padStart(2, '0')}`,
-          clinicLocalTime: slotStartLocal.toISOString(),
+          clinicLocalTime: formatClinicLocalTime(slotStartLocal),  // Send as local time without UTC conversion
         });
       }
     }

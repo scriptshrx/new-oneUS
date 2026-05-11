@@ -510,11 +510,15 @@ export default function ChairSelectionModal({
                   <p className="text-foreground font-semibold flex items-center gap-2">
                     <Clock className="w-4 h-4" />
                     {selectedTimeDisplay
-                      ? new Date(selectedTimeDisplay).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true,
-                        })
+                      ? (() => {
+                          // Parse the clinic local time string directly without timezone conversion
+                          const parts = selectedTimeDisplay.split('T')[1]?.split(':') || [];
+                          const hours = parseInt(parts[0] || '0');
+                          const minutes = parseInt(parts[1] || '0');
+                          const ampm = hours >= 12 ? 'PM' : 'AM';
+                          const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+                          return `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                        })()
                       : 'N/A'}
                   </p>
                 </div>
