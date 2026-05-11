@@ -49,9 +49,19 @@ const createAppointment = async (appointmentData) => {
 
   // Convert local clinic times to UTC for storage
   const scheduledStartTimeUTC = convertClinicTimeToUTC(scheduledStartTime, clinicTimezone);
-  const scheduledEndTimeUTC = scheduledEndTime
-    ? convertClinicTimeToUTC(scheduledEndTime, clinicTimezone)
-    : null;
+  
+  // If scheduledEndTime not provided, calculate it as 1 hour after start time
+  let scheduledEndTimeUTC;
+  if (scheduledEndTime) {
+    scheduledEndTimeUTC = convertClinicTimeToUTC(scheduledEndTime, clinicTimezone);
+  } else {
+    // Calculate end time as 1 hour after start in clinic local time
+    const [datePart, timePart] = scheduledStartTime.split('T');
+    const [hours, minutes, seconds = '00'] = timePart.split(':');
+    const newHours = (parseInt(hours) + 1).toString().padStart(2, '0');
+    const calculatedEndTime = `${datePart}T${newHours}:${minutes}:${seconds}`;
+    scheduledEndTimeUTC = convertClinicTimeToUTC(calculatedEndTime, clinicTimezone);
+  }
 
   // Validate chair belongs to clinic (if provided)
   if (chairId) {
@@ -295,7 +305,16 @@ const updateAppointment = async (appointmentId, updateData) => {
   if (assignedNurseId) updatePayload.assignedNurseId = assignedNurseId;
   if (scheduledDate) updatePayload.scheduledDate = new Date(scheduledDate);
   if (scheduledStartTime) updatePayload.scheduledStartTime = convertClinicTimeToUTC(scheduledStartTime, clinicTimezone);
-  if (scheduledEndTime) updatePayload.scheduledEndTime = convertClinicTimeToUTC(scheduledEndTime, clinicTimezone);
+  if (scheduledEndTime) {
+    updatePayload.scheduledEndTime = convertClinicTimeToUTC(scheduledEndTime, clinicTimezone);
+  } else if (scheduledStartTime) {
+    // If updating start time but no end time provided, calculate end as 1 hour after start
+    const [datePart, timePart] = scheduledStartTime.split('T');
+    const [hours, minutes, seconds = '00'] = timePart.split(':');
+    const newHours = (parseInt(hours) + 1).toString().padStart(2, '0');
+    const calculatedEndTime = `${datePart}T${newHours}:${minutes}:${seconds}`;
+    updatePayload.scheduledEndTime = convertClinicTimeToUTC(calculatedEndTime, clinicTimezone);
+  }
   if (assignedChair !== undefined) updatePayload.assignedChair = assignedChair;
   if (homeAddress) updatePayload.homeAddress = homeAddress;
 
