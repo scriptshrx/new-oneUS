@@ -312,11 +312,34 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                       <div className="flex-1">
                         <label className="text-xs font-semibold text-accent/80 uppercase">Date & Time</label>
                         <p className="text-foreground font-semibold text-sm">
-                          {format(new Date(appointment.scheduledStartTime), 'EEEE, MMMM d, yyyy')}
+                          {(() => {
+                            // Parse ISO string directly without timezone conversion
+                            const dateParts = appointment.scheduledStartTime.split('T')[0]?.split('-') || [];
+                            const date = new Date(dateParts.join('-') + 'T00:00:00Z');
+                            return format(date, 'EEEE, MMMM d, yyyy');
+                          })()}
                         </p>
                         <p className="text-foreground/80 text-sm">
-                          {format(new Date(appointment.scheduledStartTime), 'h:mm a')}
-                          {appointment.scheduledEndTime && ` - ${format(new Date(appointment.scheduledEndTime), 'h:mm a')}`}
+                          {(() => {
+                            // Parse ISO string without timezone conversion
+                            const startParts = appointment.scheduledStartTime.split('T')[1]?.split(':') || [];
+                            const startHours = parseInt(startParts[0] || '0');
+                            const startMinutes = parseInt(startParts[1] || '0');
+                            const startAmpm = startHours >= 12 ? 'PM' : 'AM';
+                            const startDisplay = startHours > 12 ? startHours - 12 : (startHours === 0 ? 12 : startHours);
+                            
+                            let endDisplay = '';
+                            if (appointment.scheduledEndTime) {
+                              const endParts = appointment.scheduledEndTime.split('T')[1]?.split(':') || [];
+                              const endHours = parseInt(endParts[0] || '0');
+                              const endMinutes = parseInt(endParts[1] || '0');
+                              const endAmpm = endHours >= 12 ? 'PM' : 'AM';
+                              const displayHours = endHours > 12 ? endHours - 12 : (endHours === 0 ? 12 : endHours);
+                              endDisplay = ` - ${displayHours}:${String(endMinutes).padStart(2, '0')} ${endAmpm}`;
+                            }
+                            
+                            return `${startDisplay}:${String(startMinutes).padStart(2, '0')} ${startAmpm}${endDisplay}`;
+                          })()}
                         </p>
                       </div>
                     </div>
