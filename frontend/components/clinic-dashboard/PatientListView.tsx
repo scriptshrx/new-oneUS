@@ -78,22 +78,31 @@ const getStatusColor = (status: string | undefined) => {
 
 const getDisplayDate = (patient: Patient) => {
   // Check if patient has a scheduled appointment
-  if (patient.appointment?.startTime) {
-    return new Date(patient.appointment.startTime).toLocaleDateString();
-  }
-  if (patient.appointmentStartTime) {
-    return new Date(patient.appointmentStartTime).toLocaleDateString();
-  }
-  if (patient.nextAppointmentTime) {
-    return new Date(patient.nextAppointmentTime).toLocaleDateString();
+  if (patient.appointment?.scheduledStartTime) {
+    const dateParts = patient.appointment.scheduledStartTime.split('T')[0]?.split('-') || [];
+    const date = new Date(dateParts.join('-') + 'T00:00:00Z');
+    return date.toLocaleDateString();
   }
   // Fall back to referred date
   return patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'N/A';
 };
 
+const getDateTimeDisplay = (patient: Patient) => {
+  // Check if patient has a scheduled appointment - return time display
+  if (patient.appointment?.scheduledStartTime) {
+    const startParts = patient.appointment.scheduledStartTime.split('T')[1]?.split(':') || [];
+    const startHours = parseInt(startParts[0] || '0');
+    const startMinutes = parseInt(startParts[1] || '0');
+    const startAmpm = startHours >= 12 ? 'PM' : 'AM';
+    const startDisplay = startHours > 12 ? startHours - 12 : (startHours === 0 ? 12 : startHours);
+    return `${startDisplay}:${String(startMinutes).padStart(2, '0')} ${startAmpm}`;
+  }
+  return '';
+};
+
 const getDateLabel = (patient: Patient) => {
   // Check if patient has a scheduled appointment
-  if (patient.appointment?.startTime || patient.appointmentStartTime || patient.nextAppointmentTime) {
+  if (patient.appointment?.scheduledStartTime) {
     return 'Scheduled';
   }
   return 'Referred';
@@ -369,6 +378,9 @@ export default function PatientListView({
                                         <Calendar className="w-4 h-4" />
                                         {getDisplayDate(patient)}
                                       </div>
+                                      {getDateTimeDisplay(patient) && (
+                                        <span className="text-xs font-semibold text-accent">{getDateTimeDisplay(patient)}</span>
+                                      )}
                                       <span className="text-xs text-foreground/50">{getDateLabel(patient)}</span>
                                     </div>
                                   </td>
@@ -473,6 +485,9 @@ export default function PatientListView({
                                   <Calendar className="w-4 h-4" />
                                   {getDisplayDate(patient)}
                                 </div>
+                                {getDateTimeDisplay(patient) && (
+                                  <span className="text-xs font-semibold text-accent">{getDateTimeDisplay(patient)}</span>
+                                )}
                                 <span className="text-xs text-foreground/50">{getDateLabel(patient)}</span>
                               </div>
                             </td>
