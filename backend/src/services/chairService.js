@@ -232,6 +232,7 @@ class ChairService {
 
       const clinicAddress = clinic.streetAddress;
       const clinicState = clinic.state;
+      const clinicName = clinic.name;
       const clinicPhoneNumber = clinic.primaryPhone;
       const clinicTimezone = getTimezoneForState(clinic.state);
       
@@ -288,7 +289,7 @@ class ChairService {
       //Send message to patient:
 const to = patient.phoneNumber;
 const patientName = patient.lastName
-const message = `Hello ${patientName}, you are now scheduled for ${aptType} on ${scheduleDate}. Starts: ${startingTime}, and Ends: ${scheduleEndTime}. Please ensure to be present on time. Call ${clinicPhoneNumber} for more info. Address: ${clinicAddress}, ${clinicState}`
+const message = `Hello ${patientName}, you are now scheduled for ${aptType} at ${clinicName}. Starts: ${startingTime}, and Ends: ${scheduleEndTime}. Please ensure to be present on time. Call ${clinicPhoneNumber} for more info. Address: ${clinicAddress}, ${clinicState}`
 const smsSent = await sendSMS(to,message);
 console.log('SMS sent successfully to the patient:',smsSent)
       return updatedPatient;
