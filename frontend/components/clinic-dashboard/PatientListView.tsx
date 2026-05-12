@@ -76,6 +76,29 @@ const getStatusColor = (status: string | undefined) => {
   }
 };
 
+const getDisplayDate = (patient: Patient) => {
+  // Check if patient has a scheduled appointment
+  if (patient.appointment?.startTime) {
+    return new Date(patient.appointment.startTime).toLocaleDateString();
+  }
+  if (patient.appointmentStartTime) {
+    return new Date(patient.appointmentStartTime).toLocaleDateString();
+  }
+  if (patient.nextAppointmentTime) {
+    return new Date(patient.nextAppointmentTime).toLocaleDateString();
+  }
+  // Fall back to referred date
+  return patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'N/A';
+};
+
+const getDateLabel = (patient: Patient) => {
+  // Check if patient has a scheduled appointment
+  if (patient.appointment?.startTime || patient.appointmentStartTime || patient.nextAppointmentTime) {
+    return 'Scheduled';
+  }
+  return 'Referred';
+};
+
 const pipelineStages = [
   { id: 'new_referral', detail: 'New Referral', label: 'New Referral' },
   { id: 'insurance', detail: 'Insurance Verification', label: 'Insurance' },
@@ -341,11 +364,12 @@ export default function PatientListView({
                                   </td>
 
                                    <td className="px-6 py-4 border-r border-primary/40">
-                                    <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                      <Calendar className="w-4 h-4" />
-                                      {patient.createdAt
-                                        ? new Date(patient.createdAt).toLocaleDateString()
-                                        : 'N/A'}
+                                    <div className="flex flex-col gap-1 text-sm text-foreground/70">
+                                      <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4" />
+                                        {getDisplayDate(patient)}
+                                      </div>
+                                      <span className="text-xs text-foreground/50">{getDateLabel(patient)}</span>
                                     </div>
                                   </td>
                                 </tr>
@@ -444,11 +468,12 @@ export default function PatientListView({
                               </span>
                             </td>
                             <td className="px-6 py-4 border-r border-primary/40">
-                              <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                <Calendar className="w-4 h-4" />
-                                {patient.createdAt
-                                  ? new Date(patient.createdAt).toLocaleDateString()
-                                  : 'N/A'}
+                              <div className="flex flex-col gap-1 text-sm text-foreground/70">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4" />
+                                  {getDisplayDate(patient)}
+                                </div>
+                                <span className="text-xs text-foreground/50">{getDateLabel(patient)}</span>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right">
