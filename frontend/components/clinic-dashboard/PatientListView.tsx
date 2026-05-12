@@ -105,7 +105,7 @@ const getDateLabel = (patient: Patient) => {
   if (patient.appointment?.scheduledStartTime) {
     return 'Scheduled';
   }
-  return 'Referred';
+  return null;
 };
 
 const pipelineStages = [

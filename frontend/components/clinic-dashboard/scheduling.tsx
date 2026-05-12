@@ -10,10 +10,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import PatientDetailModal from '@/components/PatientDetailModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
+import { format } from 'date-fns';
 
 
 interface Patient {
@@ -35,6 +36,17 @@ interface Patient {
   pipelineStage?: string;
   createdAt?: string;
   [key: string]: any;
+}
+
+interface Appointment {
+  id: string;
+  scheduledDate: string;
+  scheduledStartTime: string;
+  scheduledEndTime?: string;
+  appointmentType: string;
+  treatmentType: string;
+  status: string;
+  assignedChair?: string;
 }
 
 interface PatientListViewProps {
@@ -98,8 +110,47 @@ export default function Scheduling({
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showInsurance, setShowInsurance] = useState(false);
   const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
+  const [appointmentsByPatientId, setAppointmentsByPatientId] = useState<Record<string, Appointment>>({});
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
+
+  // Fetch appointments for all patients
+  useEffect(() => {
+    const fetchAllAppointments = async () => {
+      if (!patients || patients.length === 0) return;
+
+      setLoadingAppointments(true);
+      const appointmentsMap: Record<string, Appointment> = {};
+
+      try {
+        for (const patient of patients) {
+          if (patient.id) {
+            try {
+              const response = await fetchWithAuth(
+                `https://scriptishrxnewmark.onrender.com/v1/appointments/patient/${patient.id}`
+              );
+
+              if (response.ok) {
+                const data = await response.json();
+                const appointments = Array.isArray(data.data) ? data.data : [];
+                if (appointments.length > 0) {
+                  appointmentsMap[patient.id] = appointments[0]; // Store most recent appointment
+                }
+              }
+            } catch (err) {
+              console.error(`Error fetching appointment for patient ${patient.id}:`, err);
+            }
+          }
+        }
+        setAppointmentsByPatientId(appointmentsMap);
+      } finally {
+        setLoadingAppointments(false);
+      }
+    };
+
+    fetchAllAppointments();
+  }, [patients]);
 
   // Group patients by pipeline stage
   const schedulingPatients = patients.filter(
@@ -141,7 +192,34 @@ export default function Scheduling({
     }
   };
 
-  const[showInsur,setShowInssur]=useState(false)
+  const [showInsur, setShowInssur] = useState(false);
+
+  // Helper function to format appointment start time
+  const formatAppointmentStartTime = (appointment: Appointment | undefined) => {
+    if (!appointment || !appointment.scheduledStartTime) {
+      return 'Not Scheduled';
+    }
+
+    try {
+      // Parse ISO string without timezone conversion
+      const dateParts = appointment.scheduledStartTime.split('T')[0]?.split('-') || [];
+      const date = new Date(dateParts.join('-') + 'T00:00:00Z');
+      const dateStr = format(date, 'MMM d, yyyy');
+
+      // Parse time from ISO string
+      const startParts = appointment.scheduledStartTime.split('T')[1]?.split(':') || [];
+      const startHours = parseInt(startParts[0] || '0');
+      const startMinutes = parseInt(startParts[1] || '0');
+      const startAmpm = startHours >= 12 ? 'PM' : 'AM';
+      const startDisplay = startHours > 12 ? startHours - 12 : (startHours === 0 ? 12 : startHours);
+      const timeStr = `${startDisplay}:${String(startMinutes).padStart(2, '0')} ${startAmpm}`;
+
+      return `${dateStr} at ${timeStr}`;
+    } catch (err) {
+      console.error('Error formatting appointment time:', err);
+      return 'N/A';
+    }
+  };
 
   if (patientsLoading) {
     return (
@@ -226,8 +304,8 @@ export default function Scheduling({
                                 <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Urgency</th>
                                 
                                 {!insuranceOnly && <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Status</th>}
+                                <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Scheduled</th>
                                 <th className="px-6 py-3 text-right text-sm font-semibold ">Action</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Referred</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -317,6 +395,18 @@ export default function Scheduling({
                                       )}
                                     </td>
                                   )}
+                                  <td className="px-6 py-4 border-r border-primary/40">
+                                    <div className="flex items-center gap-2 text-sm text-foreground/70">
+                                      <Calendar className="w-4 h-4" />
+                                      {loadingAppointments ? (
+                                        <span className="text-foreground/50">Loading...</span>
+                                      ) : (
+                                        <span className="text-foreground">
+                                          {formatAppointmentStartTime(appointmentsByPatientId[patient.id])}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
                                   <td className="px-6 py-4 text-right">
                                     {insuranceOnly ? (
                                       <button
@@ -336,15 +426,6 @@ export default function Scheduling({
                                         View
                                       </button>
                                     )}
-                                  </td>
-
-                                   <td className="px-6 py-4 border-r border-primary/40">
-                                    <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                      <Calendar className="w-4 h-4" />
-                                      {patient.createdAt
-                                        ? new Date(patient.createdAt).toLocaleDateString()
-                                        : 'N/A'}
-                                    </div>
                                   </td>
                                 </tr>
                               ))}
@@ -381,7 +462,7 @@ export default function Scheduling({
                           <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Contact</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Diagnosis</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Urgency</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Referred</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Scheduled</th>
                           <th className="px-6 py-3 text-right text-sm font-semibold text-foreground/70">Action</th>
                         </tr>
                       </thead>
@@ -444,9 +525,13 @@ export default function Scheduling({
                             <td className="px-6 py-4 border-r border-primary/40">
                               <div className="flex items-center gap-2 text-sm text-foreground/70">
                                 <Calendar className="w-4 h-4" />
-                                {patient.createdAt
-                                  ? new Date(patient.createdAt).toLocaleDateString()
-                                  : 'N/A'}
+                                {loadingAppointments ? (
+                                  <span className="text-foreground/50">Loading...</span>
+                                ) : (
+                                  <span className="text-foreground">
+                                    {formatAppointmentStartTime(appointmentsByPatientId[patient.id])}
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right">
