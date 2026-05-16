@@ -368,7 +368,7 @@ export default function AnalyticsView({
                           ];
                         }}
                         labelFormatter={(label) => `${label}`}
-                        cursor={{ fill: 'rgba(171, 26, 207, 0.73)' }}
+                        cursor={{ fill: 'rgba(255, 255, 255, 0.73)' }}
                       />
                       <Bar dataKey="count" name="Patients" radius={[12, 12, 0, 0]}>
                         {PIPELINE_STAGES.map((_, index) => (

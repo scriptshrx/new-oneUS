@@ -139,7 +139,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
             },
             {
               id: 'patientsList' as ViewType,
-              label: 'Patient CRM',
+              label: 'Clinic CRM',
               icon: Users,
               allowedRoles: ['CLINIC_ADMIN'],
             },

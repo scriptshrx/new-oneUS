@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import PatientDetailModal from '@/components/PatientDetailModal';
+import EditPatientModal from '@/components/EditPatientModal';
 import { useState } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
@@ -128,6 +129,7 @@ export default function PatientListView({
   clinicId,
 }: PatientListViewProps) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [showInsurance, setShowInsurance] = useState(false);
   const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
   const { setCurrentView, clinic } = useClinicDashboardView();
@@ -200,12 +202,12 @@ export default function PatientListView({
                 className="flex items-center gap-2 mb-3 text-primary hover:text-primary/80 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm">Back</span>
+                <span className="text-sm">Back to Dasboard</span>
               </button>
             )}
-            <h1 className="text-3xl font-bold text-foreground">Patients CRM</h1>
+            <h1 className="text-3xl font-bold text-foreground">Clinic CRM</h1>
             <p className="text-sm text-foreground/70 mt-1">
-              {patients.length} patient{patients.length !== 1 ? 's' : ''} referred
+              Manage each patient CRM
             </p>
           </div>
         </div>
@@ -363,12 +365,20 @@ export default function PatientListView({
                                         Verify
                                       </button>
                                     ) : (
-                                      <button
-                                        onClick={() => setSelectedPatient(patient)}
-                                        className="px-3 py-2 text-sm text-white bg-primary font-medium text-primary hover:bg-primary/60 rounded-lg transition-colors"
-                                      >
-                                        View
-                                      </button>
+                                      <div className="flex gap-2 justify-end">
+                                        <button
+                                          onClick={() => setSelectedPatient(patient)}
+                                          className="px-3 py-2 text-sm text-white bg-primary font-medium hover:bg-primary/60 rounded-lg transition-colors"
+                                        >
+                                          View
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingPatient(patient)}
+                                          className="px-3 py-2 text-sm text-white bg-accent font-medium hover:bg-accent/80 rounded-lg transition-colors"
+                                        >
+                                          Edit
+                                        </button>
+                                      </div>
                                     )}
                                   </td>
 
@@ -519,6 +529,18 @@ export default function PatientListView({
           onUpdateStatus={handleUpdateStatus}
           clinicId={effectiveClinicId || ''}
           clinicName={clinic?.name || ''}
+        />
+      )}
+
+      {/* Edit Patient Modal */}
+      {editingPatient && (
+        <EditPatientModal
+          patient={editingPatient as any}
+          onClose={() => setEditingPatient(null)}
+          onSave={() => {
+            setEditingPatient(null);
+            window.location.reload();
+          }}
         />
       )}
 
