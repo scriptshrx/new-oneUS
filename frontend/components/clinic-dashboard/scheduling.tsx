@@ -643,7 +643,7 @@ export default function Scheduling({
                   </div>
                 )}
 
-                {/* Step: Confirmation */}
+                {/* Step: Confirmations */}
                 {bookingStep === 'confirm' && bookingSelectedPatient && bookingSelectedDate && bookingSelectedTimeDisplay && bookingSelectedChair && (
                   <div className="space-y-6">
                     <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 space-y-4">
