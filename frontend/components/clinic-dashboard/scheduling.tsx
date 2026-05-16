@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -115,6 +115,20 @@ export default function Scheduling({
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
 
+  // Booking flow state
+  const [bookingStep, setBookingStep] = useState<'patient' | 'date' | 'time' | 'chair' | 'confirm'>('patient');
+  const [bookingSelectedPatient, setBookingSelectedPatient] = useState<Patient | null>(null);
+  const [bookingSelectedDate, setBookingSelectedDate] = useState<Date | undefined>(undefined);
+  const [bookingSelectedTime, setBookingSelectedTime] = useState<string | null>(null);
+  const [bookingSelectedTimeDisplay, setBookingSelectedTimeDisplay] = useState<string | null>(null);
+  const [bookingSelectedChair, setBookingSelectedChair] = useState<string | null>(null);
+  const [chairs, setChairs] = useState<any[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Fetch appointments for all patients
   useEffect(() => {
     const fetchAllAppointments = async () => {
@@ -151,6 +165,181 @@ export default function Scheduling({
 
     fetchAllAppointments();
   }, [patients]);
+
+  // Fetch chairs on component mount
+  useEffect(() => {
+    fetchChairs();
+  }, []);
+
+  const fetchChairs = async () => {
+    try {
+      setBookingLoading(true);
+      setBookingError(null);
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/chairs/${effectiveClinicId}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch chairs');
+      }
+
+      const data = await response.json();
+      setChairs(data.data || []);
+    } catch (err) {
+      console.error('Error fetching chairs:', err);
+      setBookingError(err instanceof Error ? err.message : 'Failed to fetch chairs');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const fetchAvailableSlots = async (date: Date) => {
+    try {
+      setSlotsLoading(true);
+      setBookingError(null);
+      const dateStr = date.toISOString().split('T')[0];
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/appointments/availability/${effectiveClinicId}/${dateStr}?durationMinutes=60`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch available time slots');
+      }
+
+      const data = await response.json();
+      setAvailableSlots(data.data || []);
+    } catch (err) {
+      console.error('Error fetching slots:', err);
+      setBookingError(err instanceof Error ? err.message : 'Failed to fetch available time slots');
+      setAvailableSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const handleBookingSelectPatient = (patient: Patient) => {
+    setBookingSelectedPatient(patient);
+    setBookingStep('date');
+  };
+
+  const handleBookingSelectDate = (date: Date | undefined) => {
+    if (date) {
+      setBookingSelectedDate(date);
+      fetchAvailableSlots(date);
+      setBookingStep('time');
+    }
+  };
+
+  const handleBookingSelectTime = (slot: any) => {
+    setBookingSelectedTime(slot.startTime);
+    setBookingSelectedTimeDisplay(slot.clinicLocalTime || slot.startTime);
+    setBookingStep('chair');
+  };
+
+  const handleBookingSelectChair = (chairId: string) => {
+    setBookingSelectedChair(chairId);
+    setBookingStep('confirm');
+  };
+
+  const fetchAllAppointmentsForRefresh = async () => {
+    if (!patients || patients.length === 0) return;
+
+    setLoadingAppointments(true);
+    const appointmentsMap: Record<string, Appointment> = {};
+
+    try {
+      for (const patient of patients) {
+        if (patient.id) {
+          try {
+            const response = await fetchWithAuth(
+              `https://scriptishrxnewmark.onrender.com/v1/appointments/patient/${patient.id}`
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              const appointments = Array.isArray(data.data) ? data.data : [];
+              if (appointments.length > 0) {
+                appointmentsMap[patient.id] = appointments[0];
+              }
+            }
+          } catch (err) {
+            console.error(`Error fetching appointment for patient ${patient.id}:`, err);
+          }
+        }
+      }
+      setAppointmentsByPatientId(appointmentsMap);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  const handleCreateAppointment = async () => {
+    if (!bookingSelectedPatient || !bookingSelectedDate || !bookingSelectedTime || !bookingSelectedChair) return;
+
+    try {
+      setIsSubmitting(true);
+      setBookingError(null);
+
+      const response = await fetchWithAuth(
+        'https://scriptishrxnewmark.onrender.com/v1/appointments',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            patientId: bookingSelectedPatient.id,
+            clinicId: effectiveClinicId,
+            chairId: bookingSelectedChair,
+            appointmentType: 'IN_CLINIC',
+            scheduledDate: bookingSelectedDate.toISOString(),
+            scheduledStartTime: bookingSelectedTimeDisplay,
+            scheduledEndTime: (() => {
+              const [datePart, timePart] = (bookingSelectedTimeDisplay || '').split('T');
+              const [hours, minutes, seconds = '00'] = timePart.split(':');
+              const newHours = (parseInt(hours) + 1).toString().padStart(2, '0');
+              return `${datePart}T${newHours}:${minutes}:${seconds}`;
+            })(),
+            treatmentType: 'IV_THERAPY',
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create appointment');
+      }
+
+      setIsSubmitting(false);
+      setBookingStep('patient');
+      setBookingSelectedPatient(null);
+      setBookingSelectedDate(undefined);
+      setBookingSelectedTime(null);
+      setBookingSelectedTimeDisplay(null);
+      setBookingSelectedChair(null);
+      
+      // Refresh appointments
+      await fetchAllAppointmentsForRefresh();
+    } catch (err) {
+      setIsSubmitting(false);
+      console.error('Error creating appointment:', err);
+      setBookingError(err instanceof Error ? err.message : 'Failed to create appointment');
+    }
+  };
+
+  const handleBookingBack = () => {
+    if (bookingStep === 'date') {
+      setBookingStep('patient');
+      setBookingSelectedPatient(null);
+    } else if (bookingStep === 'time') {
+      setBookingStep('date');
+      setBookingSelectedTime(null);
+      setBookingSelectedTimeDisplay(null);
+      setAvailableSlots([]);
+    } else if (bookingStep === 'chair') {
+      setBookingStep('time');
+      setBookingSelectedChair(null);
+    } else if (bookingStep === 'confirm') {
+      setBookingStep('chair');
+    }
+  };
 
   // Group patients by pipeline stage
   const schedulingPatients = patients.filter(
@@ -278,11 +467,275 @@ export default function Scheduling({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8">
-            {/* Tables for each pipeline stage */}
+            {/* Booking Section */}
+            <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
+              <div className="p-6">
+                <h2 className="text-lg font-bold text-primary mb-6">Book New Appointment</h2>
+
+                {bookingError && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-red-900">Error</p>
+                      <p className="text-sm text-red-700">{bookingError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step: Patient Selection */}
+                {bookingStep === 'patient' && (
+                  <div className="space-y-4">
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Select Patient
+                    </label>
+                    {(() => {
+                      const schedulingPatientsForBooking = patients.filter(
+                        (p) => (p.pipelineStage || '').toLowerCase() === 'scheduling'
+                      );
+                      return schedulingPatientsForBooking.length === 0 ? (
+                        <p className="text-foreground/70 text-center py-4">No patients in scheduling stage</p>
+                      ) : (
+                        <Select
+                          value={bookingSelectedPatient?.id || ''}
+                          onValueChange={(patientId) => {
+                            const patient = schedulingPatientsForBooking.find((p) => p.id === patientId);
+                            if (patient) handleBookingSelectPatient(patient);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Choose a patient..." />
+                          </SelectTrigger>
+                          <SelectContent className="w-full">
+                            {schedulingPatientsForBooking.map((patient) => (
+                              <SelectItem key={patient.id} value={patient.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">
+                                    {patient.firstName} {patient.lastName}
+                                  </span>
+                                  <span className="text-xs text-foreground/60">
+                                    {patient.email || 'N/A'}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Step: Date Selection */}
+                {bookingStep === 'date' && bookingSelectedPatient && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/5 rounded-lg mb-4">
+                      <p className="text-sm text-foreground/70">Selected Patient:</p>
+                      <p className="font-semibold text-foreground">
+                        {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
+                      </p>
+                    </div>
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Select Date
+                    </label>
+                    <div className="flex justify-center">
+                      <div className="border border-border/30 rounded-lg">
+                        <input
+                          type="date"
+                          onChange={(e) => handleBookingSelectDate(e.target.value ? new Date(e.target.value) : undefined)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="p-4"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step: Time Selection */}
+                {bookingStep === 'time' && bookingSelectedDate && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/5 rounded-lg mb-4">
+                      <p className="text-sm text-foreground/70">Selected Date:</p>
+                      <p className="font-semibold text-foreground">{bookingSelectedDate.toLocaleDateString()}</p>
+                    </div>
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Select Time Slot
+                    </label>
+                    {slotsLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader className="w-6 h-6 animate-spin text-primary mr-2" />
+                        <p className="text-foreground/70">Loading available slots...</p>
+                      </div>
+                    ) : availableSlots.length === 0 ? (
+                      <div className="text-center py-8">
+                        <AlertCircle className="w-12 h-12 text-primary/50 mx-auto mb-4" />
+                        <p className="text-foreground/70">No available time slots for this date</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+                        {availableSlots.map((slot, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleBookingSelectTime(slot)}
+                            className={`p-3 rounded-lg border transition-colors text-sm font-medium ${
+                              bookingSelectedTime === slot.startTime
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border/30 text-foreground hover:bg-primary/5'
+                            }`}
+                          >
+                            <Clock className="w-4 h-4 mx-auto mb-1" />
+                            {slot.display}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step: Chair Selection */}
+                {bookingStep === 'chair' && bookingSelectedTime && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/5 rounded-lg mb-4">
+                      <p className="text-sm text-foreground/70">Selected Time:</p>
+                      <p className="font-semibold text-foreground">{bookingSelectedTimeDisplay}</p>
+                    </div>
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Select Infusion Chair
+                    </label>
+                    {bookingLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader className="w-6 h-6 animate-spin text-primary mr-2" />
+                        <p className="text-foreground/70">Loading chairs...</p>
+                      </div>
+                    ) : chairs.length === 0 ? (
+                      <div className="text-center py-8">
+                        <AlertCircle className="w-12 h-12 text-primary/50 mx-auto mb-4" />
+                        <p className="text-foreground/70">No chairs available</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {chairs.map((chair) => (
+                          <label
+                            key={chair.id}
+                            className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
+                              bookingSelectedChair === chair.id
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border/30 hover:bg-primary/5'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="chair"
+                              value={chair.id}
+                              checked={bookingSelectedChair === chair.id}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBookingSelectChair(e.target.value)}
+                              className="mt-1 mr-4"
+                            />
+                            <div className="flex-1">
+                              <div className="font-semibold text-foreground">{chair.chairNumber}</div>
+                              <div className="text-sm text-foreground/70 mt-1">
+                                Status: {chair.status}
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step: Confirmation */}
+                {bookingStep === 'confirm' && bookingSelectedPatient && bookingSelectedDate && bookingSelectedTimeDisplay && bookingSelectedChair && (
+                  <div className="space-y-6">
+                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 space-y-4">
+                      <div>
+                        <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Patient</p>
+                        <p className="text-foreground font-semibold">
+                          {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Date</p>
+                        <p className="text-foreground font-semibold">{bookingSelectedDate.toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Time</p>
+                        <p className="text-foreground font-semibold">{bookingSelectedTimeDisplay}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Chair</p>
+                        <p className="text-foreground font-semibold">
+                          {chairs.find((c) => c.id === bookingSelectedChair)?.chairNumber}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground/70">
+                      Click <span className="font-semibold">Create Appointment</span> to book this appointment.
+                    </p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 mt-8">
+                  {bookingStep !== 'patient' && (
+                    <button
+                      onClick={handleBookingBack}
+                      className="px-4 py-2 rounded-lg border border-border/30 text-foreground hover:bg-primary/10 transition-colors"
+                    >
+                      Back
+                    </button>
+                  )}
+                  {bookingStep === 'patient' && (
+                    <button
+                      onClick={() => {}}
+                      disabled
+                      className="px-4 py-2 rounded-lg bg-primary/50 text-white cursor-not-allowed"
+                    >
+                      Select Patient to Continue
+                    </button>
+                  )}
+                  {bookingStep === 'date' && (
+                    <button
+                      onClick={() => handleBookingSelectDate(bookingSelectedDate)}
+                      disabled={!bookingSelectedDate}
+                      className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Continue to Time
+                    </button>
+                  )}
+                  {bookingStep === 'time' && (
+                    <button
+                      onClick={() => bookingSelectedTime && setBookingStep('chair')}
+                      disabled={!bookingSelectedTime}
+                      className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Continue to Chair
+                    </button>
+                  )}
+                  {bookingStep === 'chair' && (
+                    <button
+                      onClick={() => bookingSelectedChair && setBookingStep('confirm')}
+                      disabled={!bookingSelectedChair}
+                      className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Confirm Selection
+                    </button>
+                  )}
+                  {bookingStep === 'confirm' && (
+                    <button
+                      onClick={handleCreateAppointment}
+                      disabled={isSubmitting}
+                      className="ml-auto px-4 py-2 rounded-lg bg-accent text-white hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isSubmitting ? 'Creating...' : 'Create Appointment'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>\n\n            {/* Tables for each pipeline stage */}
             {pipelineStages
               .filter((stage) => stage.id !== 'inactive_archived')
               .map((stage) => {
-                const stagePatients = patientsByStage[stage.id] || [];
+                const stagePatients = patientsByStage[stage.id as keyof typeof patientsByStage] || [];
                 return (stagePatients.length>0&&
                   <div key={stage.id} className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
                     <div className="p-6">
@@ -309,7 +762,7 @@ export default function Scheduling({
                               </tr>
                             </thead>
                             <tbody>
-                              {stagePatients.map((patient,i) => (
+                              {stagePatients.map((patient: Patient, i: number) => (
                                 <tr
                                   key={i}
                                   className={`${(i%2)===0?'bg-primary/5':'bg-transparent'} border-b border-gray-400/50 hover:bg-white/10 transition-colors`}
@@ -467,7 +920,7 @@ export default function Scheduling({
                         </tr>
                       </thead>
                       <tbody>
-                        {patientsByStage['inactive_archived'].map((patient) => (
+                        {patientsByStage['inactive_archived']?.map((patient: Patient) => (
                           <tr
                             key={patient.id}
                             className="border-b border-border/20 hover:bg-primary/5 transition-colors"

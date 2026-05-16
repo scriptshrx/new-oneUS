@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Users } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Users, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
+import dayjs from 'dayjs';
 
 interface Patient {
   id: string;
@@ -603,7 +604,7 @@ function StaffTab({
                       <td className="px-6 py-4 border-r border-primary/40">
                         <span className="text-sm text-foreground/70">
                           {member.lastLogin
-                            ? new Date(member.lastlogin).toLocaleDateString()
+                            ? dayjs(member.lastLogin).format('hh:mm A MMM DD, YYYY')
                             : 'N/A'}
                         </span>
                       </td>
@@ -622,16 +623,144 @@ function StaffTab({
 // ============================================================================
 // APPOINTMENTS TAB COMPONENT
 // ============================================================================
-function AppointmentsTab() {
+function AppointmentsTab({
+  patients,
+  effectiveClinicId,
+  clinic,
+}: {
+  patients: Patient[];
+  effectiveClinicId: string;
+  clinic: any;
+}) {
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch appointments on component mount
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    try {
+      setAppointmentsLoading(true);
+      setError(null);
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/appointments/clinic/${effectiveClinicId}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch appointments');
+      }
+
+      const data = await response.json();
+      setAppointments(data.data || []);
+    } catch (err) {
+      console.error('Error fetching appointments:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch appointments');
+    } finally {
+      setAppointmentsLoading(false);
+    }
+  };
+
   return (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Calendar className="w-8 h-8 text-primary/50" />
+    <div className="space-y-8">
+      {/* Appointments Table */}
+      <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
+        <div className="p-6">
+          <h2 className="text-lg font-bold text-primary mb-6">Clinic Appointments</h2>
+
+          {appointmentsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader className="w-6 h-6 animate-spin text-primary mr-2" />
+              <p className="text-foreground/70">Loading appointments...</p>
+            </div>
+          ) : appointments.length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className="w-12 h-12 text-primary/50 mx-auto mb-4" />
+              <p className="text-foreground/70">No appointments scheduled</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-primary/80 text-white border-border/30">
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Patient
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Time
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Chair
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Type
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {appointments.map((appointment, i) => (
+                    <tr
+                      key={appointment.id}
+                      className={`${
+                        i % 2 === 0 ? 'bg-primary/5' : 'bg-transparent'
+                      } border-b border-gray-400/50 hover:bg-white/10 transition-colors`}
+                    >
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span className="font-medium text-foreground">
+                          {appointment.patient?.firstName} {appointment.patient?.lastName}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span className="text-sm text-foreground/70">
+                          {appointment.scheduledDate
+                            ? new Date(appointment.scheduledDate).toLocaleDateString()
+                            : 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span className="text-sm text-foreground/70">
+                          {appointment.scheduledStartTime || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span className="text-sm text-foreground/70">
+                          {appointment.assignedChair || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                            appointment.status === 'SCHEDULED'
+                              ? 'bg-green-100 text-green-800'
+                              : appointment.status === 'COMPLETED'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {appointment.status || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span className="text-sm text-foreground/70">
+                          {appointment.appointmentType || 'N/A'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
-      <p className="text-foreground/70 mb-4">Appointments feature coming soon</p>
-      <p className="text-sm text-foreground/50">
-        You'll be able to view and manage all clinic appointments here
-      </p>
     </div>
   );
 }
@@ -806,7 +935,13 @@ export default function PatientListView({
           />
         )}
 
-        {activeTab === 'appointments' && <AppointmentsTab />}
+        {activeTab === 'appointments' && (
+          <AppointmentsTab
+            patients={patients}
+            effectiveClinicId={effectiveClinicId || ''}
+            clinic={clinic}
+          />
+        )}
       </div>
 
       {/* Patient Detail Modal */}
