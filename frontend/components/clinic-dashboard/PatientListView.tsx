@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -11,11 +11,10 @@ import {
 } from '@/components/ui/select';
 import PatientDetailModal from '@/components/PatientDetailModal';
 import EditPatientModal from '@/components/EditPatientModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
-
 
 interface Patient {
   id: string;
@@ -38,9 +37,20 @@ interface Patient {
   [key: string]: any;
 }
 
+interface StaffMember {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  role: string;
+  status: string;
+  lastLogin:string;
+  createdAt?: string;
+}
+
 interface PatientListViewProps {
   patients: Patient[];
-  insuranceOnly:boolean;
+  insuranceOnly: boolean;
   patientsError: string | null;
   patientsLoading: boolean;
   onBack?: () => void;
@@ -62,34 +72,16 @@ const getUrgencyColor = (urgency: string | undefined) => {
   }
 };
 
-const getStatusColor = (status: string | undefined) => {
-  switch (status?.toUpperCase()) {
-    case 'ACTIVE':
-      return 'bg-green-100 text-green-800';
-    case 'PENDING':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'COMPLETED':
-      return 'bg-blue-100 text-blue-800';
-    case 'ARCHIVED':
-      return 'bg-gray-100 text-gray-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
 const getDisplayDate = (patient: Patient) => {
-  // Check if patient has a scheduled appointment
   if (patient.appointment?.scheduledStartTime) {
     const dateParts = patient.appointment.scheduledStartTime.split('T')[0]?.split('-') || [];
     const date = new Date(dateParts.join('-') + 'T00:00:00Z');
     return date.toLocaleDateString();
   }
-  // Fall back to referred date
   return patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'N/A';
 };
 
 const getDateTimeDisplay = (patient: Patient) => {
-  // Check if patient has a scheduled appointment - return time display
   if (patient.appointment?.scheduledStartTime) {
     const startParts = patient.appointment.scheduledStartTime.split('T')[1]?.split(':') || [];
     const startHours = parseInt(startParts[0] || '0');
@@ -102,7 +94,6 @@ const getDateTimeDisplay = (patient: Patient) => {
 };
 
 const getDateLabel = (patient: Patient) => {
-  // Check if patient has a scheduled appointment
   if (patient.appointment?.scheduledStartTime) {
     return 'Scheduled';
   }
@@ -120,6 +111,534 @@ const pipelineStages = [
   { id: 'inactive_archived', label: 'Patient Archived', detail: 'INACTIVE_ARCHIVED' }
 ];
 
+// ============================================================================
+// PATIENTS TAB COMPONENT
+// ============================================================================
+function PatientsTab({
+  patients,
+  patientsError,
+  patientsLoading,
+  insuranceOnly,
+  updatingPatientId,
+  setUpdatingPatientId,
+  setSelectedPatient,
+  setEditingPatient,
+  setShowInsurance,
+  handleUpdateStatus,
+  effectiveClinicId,
+}: {
+  patients: Patient[];
+  patientsError: string | null;
+  patientsLoading: boolean;
+  insuranceOnly: boolean;
+  updatingPatientId: string | null;
+  setUpdatingPatientId: (id: string | null) => void;
+  setSelectedPatient: (patient: Patient | null) => void;
+  setEditingPatient: (patient: Patient | null) => void;
+  setShowInsurance: (show: boolean) => void;
+  handleUpdateStatus: (patientId: string, newStage: string) => Promise<void>;
+  effectiveClinicId: string;
+}) {
+  const [showInssur, setShowInssur] = useState(false);
+
+  const patientsByStage = pipelineStages.reduce((acc, stage) => {
+    const stagePatients = patients.filter(
+      (p) => (p.pipelineStage || '').toLowerCase() === stage.id
+    );
+    if (stagePatients.length > 0) {
+      acc[stage.id] = stagePatients;
+    }
+    return acc;
+  }, {} as Record<string, Patient[]>);
+
+  if (patientsLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-foreground/70">Loading patients...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {patientsError && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-red-900">Error loading patients</p>
+            <p className="text-sm text-red-700">{patientsError}</p>
+          </div>
+        </div>
+      )}
+
+      {patients.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-primary/50" />
+          </div>
+          {insuranceOnly && (
+            <button
+              className="rounded-lg bg-blue-500 text-white p-2 px-4"
+              onClick={() => setShowInssur(true)}
+            >
+              Verify Insurance
+            </button>
+          )}
+          <p className="text-foreground/70">No patients to display</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-8">
+          {pipelineStages
+            .filter((stage) => stage.id !== 'inactive_archived')
+            .map((stage) => {
+              const stagePatients = patientsByStage[stage.id] || [];
+              return (
+                stagePatients.length > 0 && (
+                  <div
+                    key={stage.id}
+                    className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden"
+                  >
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-6">
+                        <h2 className="text-lg font-bold text-primary">{stage.label}</h2>
+                        <span className="ml-auto text-sm text-foreground/60 font-semibold">
+                          {stagePatients.length} patient{stagePatients.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b bg-primary/80 text-white border-border/30">
+                              <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                                Name
+                              </th>
+                              <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                                Contact
+                              </th>
+                              <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                                Diagnosis
+                              </th>
+                              {!insuranceOnly && (
+                                <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                                  Status
+                                </th>
+                              )}
+                              <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                                Action
+                              </th>
+                              <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                                Referred
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {stagePatients.map((patient, i) => (
+                              <tr
+                                key={i}
+                                className={`${
+                                  i % 2 === 0 ? 'bg-primary/5' : 'bg-transparent'
+                                } border-b border-gray-400/50 hover:bg-white/10 transition-colors`}
+                              >
+                                <td className="px-6 py-4 border-r border-primary/40">
+                                  <div className="flex flex-col gap-1">
+                                    <span className="font-medium text-foreground">
+                                      {patient.firstName} {patient.lastName}
+                                    </span>
+                                    <span className="text-xs text-foreground/50">
+                                      DOB: {patient.dateOfBirth || 'N/A'}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 border-r border-primary/40">
+                                  <div className="flex flex-col gap-2">
+                                    {patient.email && (
+                                      <div className="flex items-center gap-2 text-sm text-foreground/70">
+                                        <Mail className="w-4 h-4" />
+                                        <a
+                                          href={`mailto:${patient.email}`}
+                                          className="hover:text-primary transition-colors truncate"
+                                        >
+                                          {patient.email}
+                                        </a>
+                                      </div>
+                                    )}
+                                    {patient.phone && (
+                                      <div className="flex items-center gap-2 text-sm text-foreground/70">
+                                        <Phone className="w-4 h-4" />
+                                        <a
+                                          href={`tel:${patient.phone}`}
+                                          className="hover:text-primary transition-colors"
+                                        >
+                                          {patient.phone}
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 border-r border-primary/40">
+                                  <span className="text-sm text-foreground">
+                                    {patient.primaryDiagnosis || 'N/A'}
+                                  </span>
+                                </td>
+                                {!insuranceOnly && (
+                                  <td
+                                    className="px-6 py-4 text-sm border-r border-primary/40"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {updatingPatientId === patient.id ? (
+                                      <div className="flex items-center gap-2">
+                                        <Loader className="w-4 h-4 animate-spin text-primary" />
+                                        <span className="text-foreground/70">Updating...</span>
+                                      </div>
+                                    ) : (
+                                      <Select
+                                        value={(patient.pipelineStage || '').toLowerCase()}
+                                        onValueChange={(newStage) => {
+                                          handleUpdateStatus(patient.id, newStage);
+                                        }}
+                                      >
+                                        <SelectTrigger className="w-40 text-accent shadow-md font-bold">
+                                          <SelectValue placeholder={patient.pipelineStage} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {pipelineStages.map((s) => (
+                                            <SelectItem key={s.id} value={s.id}>
+                                              {s.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    )}
+                                  </td>
+                                )}
+                                <td className="px-6 py-4 text-right border border-r-primary/40">
+                                  {insuranceOnly ? (
+                                    <button
+                                      onClick={() => {
+                                        setSelectedPatient(patient);
+                                        setShowInsurance(true);
+                                      }}
+                                      className="px-3 py-2 text-sm text-white font-medium bg-blue-500 hover:bg-blue-500/70 rounded-lg transition-colors"
+                                    >
+                                      Verify
+                                    </button>
+                                  ) : (
+                                    <div className="flex gap-2 justify-end">
+                                      <button
+                                        onClick={() => setSelectedPatient(patient)}
+                                        className="px-3 py-2 text-sm text-white bg-primary font-medium hover:bg-primary/60 rounded-lg transition-colors"
+                                      >
+                                        View
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingPatient(patient)}
+                                        className="px-3 py-2 text-sm text-white bg-accent font-medium hover:bg-accent/80 rounded-lg transition-colors"
+                                      >
+                                        Edit
+                                      </button>
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 border-r border-primary/40">
+                                  <div className="flex flex-col gap-1 text-sm text-foreground/70">
+                                    <div className="flex items-center gap-2">
+                                      <Calendar className="w-4 h-4" />
+                                      {getDisplayDate(patient)}
+                                    </div>
+                                    {getDateTimeDisplay(patient) && (
+                                      <span className="text-xs font-semibold text-accent">
+                                        {getDateTimeDisplay(patient)}
+                                      </span>
+                                    )}
+                                    <span className="text-xs text-foreground/50">{getDateLabel(patient)}</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )
+              );
+            })}
+
+          {patientsByStage['inactive_archived'] && patientsByStage['inactive_archived'].length > 0 && (
+            <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <h2 className="text-lg font-bold text-primary">Archived Patients</h2>
+                  <span className="ml-auto text-sm text-foreground/60 font-semibold">
+                    {patientsByStage['inactive_archived'].length} patient
+                    {patientsByStage['inactive_archived'].length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border/30">
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">
+                          Contact
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">
+                          Diagnosis
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">
+                          Action
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">
+                          Referred
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {patientsByStage['inactive_archived'].map((patient) => (
+                        <tr
+                          key={patient.id}
+                          className="border-b border-border/20 hover:bg-primary/5 transition-colors"
+                        >
+                          <td className="px-6 py-4 border-r border-primary/40">
+                            <div className="flex flex-col gap-1">
+                              <span className="font-medium text-foreground">
+                                {patient.firstName} {patient.lastName}
+                              </span>
+                              <span className="text-xs text-foreground/50">
+                                DOB: {patient.dateOfBirth || 'N/A'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 border-r border-primary/40">
+                            <div className="flex flex-col gap-2">
+                              {patient.email && (
+                                <div className="flex items-center gap-2 text-sm text-foreground/70">
+                                  <Mail className="w-4 h-4" />
+                                  <a
+                                    href={`mailto:${patient.email}`}
+                                    className="hover:text-primary transition-colors truncate"
+                                  >
+                                    {patient.email}
+                                  </a>
+                                </div>
+                              )}
+                              {patient.phone && (
+                                <div className="flex items-center gap-2 text-sm text-foreground/70">
+                                  <Phone className="w-4 h-4" />
+                                  <a
+                                    href={`tel:${patient.phone}`}
+                                    className="hover:text-primary transition-colors"
+                                  >
+                                    {patient.phone}
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 border-r border-primary/40">
+                            <span className="text-sm text-foreground">
+                              {patient.primaryDiagnosis || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => setSelectedPatient(patient)}
+                              className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 border-r border-primary/40">
+                            <div className="flex flex-col gap-1 text-sm text-foreground/70">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                {getDisplayDate(patient)}
+                              </div>
+                              {getDateTimeDisplay(patient) && (
+                                <span className="text-xs font-semibold text-accent">
+                                  {getDateTimeDisplay(patient)}
+                                </span>
+                              )}
+                              <span className="text-xs text-foreground/50">{getDateLabel(patient)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ============================================================================
+// STAFF TAB COMPONENT
+// ============================================================================
+function StaffTab({
+  staff,
+  staffLoading,
+  staffError,
+}: {
+  staff: StaffMember[];
+  staffLoading: boolean;
+  staffError: string | null;
+}) {
+  if (staffLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-foreground/70">Loading staff...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {staffError && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-red-900">Error loading staff</p>
+            <p className="text-sm text-red-700">{staffError}</p>
+          </div>
+        </div>
+      )}
+
+      {staff.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-primary/50" />
+          </div>
+          <p className="text-foreground/70">No staff members</p>
+        </div>
+      ) : (
+        <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <h2 className="text-lg font-bold text-primary">Clinic Staff</h2>
+              <span className="ml-auto text-sm text-foreground/60 font-semibold">
+                {staff.length} staff member{staff.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-primary/80 text-white border-border/30">
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Role
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
+                      Last Login
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staff.map((member, i) => (
+                    <tr
+                      key={member.id}
+                      className={`${
+                        i % 2 === 0 ? 'bg-primary/5' : 'bg-transparent'
+                      } border-b border-gray-400/50 hover:bg-white/10 transition-colors`}
+                    >
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium text-foreground">
+                            {member.firstName || member.lastName
+                              ? `${member.firstName || ''} ${member.lastName || ''}`.trim()
+                              : 'N/A'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <div className="flex items-center gap-2 text-sm text-foreground/70">
+                          <Mail className="w-4 h-4" />
+                          <a
+                            href={`mailto:${member.email}`}
+                            className="hover:text-primary transition-colors"
+                          >
+                            {member.email}
+                          </a>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {member.role || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                            member.status === 'ACTIVE'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {member.status || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 border-r border-primary/40">
+                        <span className="text-sm text-foreground/70">
+                          {member.lastLogin
+                            ? new Date(member.lastlogin).toLocaleDateString()
+                            : 'N/A'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ============================================================================
+// APPOINTMENTS TAB COMPONENT
+// ============================================================================
+function AppointmentsTab() {
+  return (
+    <div className="text-center py-12">
+      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Calendar className="w-8 h-8 text-primary/50" />
+      </div>
+      <p className="text-foreground/70 mb-4">Appointments feature coming soon</p>
+      <p className="text-sm text-foreground/50">
+        You'll be able to view and manage all clinic appointments here
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 export default function PatientListView({
   patients,
   patientsError,
@@ -132,19 +651,43 @@ export default function PatientListView({
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [showInsurance, setShowInsurance] = useState(false);
   const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'patients' | 'staff' | 'appointments'>('patients');
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState<string | null>(null);
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
 
-  // Group patients by pipeline stage
-  const patientsByStage = pipelineStages.reduce((acc, stage) => {
-    const stagePatients = patients.filter(
-      (p) => (p.pipelineStage || '').toLowerCase() === stage.id
-    );
-    if (stagePatients.length > 0) {
-      acc[stage.id] = stagePatients;
+  // Fetch staff when Staff tab is clicked
+  useEffect(() => {
+    if (activeTab === 'staff' && effectiveClinicId && staff.length === 0) {
+      fetchStaff();
     }
-    return acc;
-  }, {} as Record<string, Patient[]>);
+  }, [activeTab, effectiveClinicId]);
+
+  const fetchStaff = async () => {
+    if (!effectiveClinicId) return;
+
+    setStaffLoading(true);
+    setStaffError(null);
+    try {
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/clinics/${effectiveClinicId}/staff`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch staff: ${response.statusText}`);
+      }
+
+      const staffData = await response.json();
+      setStaff(staffData);
+    } catch (error) {
+      console.error('Error fetching staff:', error);
+      setStaffError(error instanceof Error ? error.message : 'Failed to load staff');
+    } finally {
+      setStaffLoading(false);
+    }
+  };
 
   const handleUpdateStatus = async (patientId: string, newStage: string) => {
     const patient = patients.find((p) => p.id === patientId);
@@ -154,10 +697,13 @@ export default function PatientListView({
     const referralId = patient._referral?.id;
     console.log('Starting to update status for patient referral is:', referralId);
     try {
-      const response = await fetchWithAuth(`https://scriptishrxnewmark.onrender.com/v1/referrals/${referralId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ nextStage: newStage.toLocaleUpperCase() }),
-      });
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/referrals/${referralId}/status`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ nextStage: newStage.toUpperCase() }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to update status: ${response.statusText}`);
@@ -165,7 +711,7 @@ export default function PatientListView({
 
       const updatedPatient = await response.json();
       setUpdatingPatientId(null);
-      localStorage.setItem('dashboardView','patientsList')
+      localStorage.setItem('dashboardView', 'patientsList');
 
       window.location.reload();
 
@@ -176,19 +722,6 @@ export default function PatientListView({
       throw error;
     }
   };
-
-  const[showInsur,setShowInssur]=useState(false)
-
-  if (patientsLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-foreground/70">Loading patients...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -207,318 +740,73 @@ export default function PatientListView({
             )}
             <h1 className="text-3xl font-bold text-foreground">Clinic CRM</h1>
             <p className="text-sm text-foreground/70 mt-1">
-              Manage each patient CRM
+              Manage clinic patients, staff, and appointments
             </p>
           </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mt-6">
+          <button
+            onClick={() => setActiveTab('patients')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'patients'
+                ? 'bg-primary text-white'
+                : 'bg-primary/10 text-foreground hover:bg-primary/20'
+            }`}
+          >
+            Patients
+          </button>
+          <button
+            onClick={() => setActiveTab('staff')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'staff'
+                ? 'bg-primary text-white'
+                : 'bg-primary/10 text-foreground hover:bg-primary/20'
+            }`}
+          >
+            Staff
+          </button>
+          <button
+            onClick={() => setActiveTab('appointments')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'appointments'
+                ? 'bg-primary text-white'
+                : 'bg-primary/10 text-foreground hover:bg-primary/20'
+            }`}
+          >
+            Appointments
+          </button>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
-        {patientsError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-red-900">Error loading patients</p>
-              <p className="text-sm text-red-700">{patientsError}</p>
-            </div>
-          </div>
+        {activeTab === 'patients' && (
+          <PatientsTab
+            patients={patients}
+            patientsError={patientsError}
+            patientsLoading={patientsLoading}
+            insuranceOnly={insuranceOnly}
+            updatingPatientId={updatingPatientId}
+            setUpdatingPatientId={setUpdatingPatientId}
+            setSelectedPatient={setSelectedPatient}
+            setEditingPatient={setEditingPatient}
+            setShowInsurance={setShowInsurance}
+            handleUpdateStatus={handleUpdateStatus}
+            effectiveClinicId={effectiveClinicId || ''}
+          />
         )}
 
-        {patients.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-primary/50" />
-            </div>
-            {insuranceOnly && <button className='rounded-lg bg-blue-500 text-white p-2 px-4' onClick={()=>setShowInssur(true)}>Verify Insurance</button>}
-
-            <p className="text-foreground/70">No patients to display</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-8">
-            {/* Tables for each pipeline stage */}
-            {pipelineStages
-              .filter((stage) => stage.id !== 'inactive_archived')
-              .map((stage) => {
-                const stagePatients = patientsByStage[stage.id] || [];
-                return (stagePatients.length>0&&
-                  <div key={stage.id} className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-6">
-                        <h2 className="text-lg font-bold text-primary">{stage.label}</h2>
-                        <span className="ml-auto text-sm text-foreground/60 font-semibold">
-                          {stagePatients.length} patient{stagePatients.length !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-
-                      {stagePatients.length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b bg-primary/80 rounded-tl-lg rounded-tr-lg rounded-full text-white border-border/30">
-                                <th className="px-6 py-3 text-left text-sm font-semibold text-white border-r border-border/40">Name</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Contact</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Diagnosis</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Urgency</th>
-                                
-                                {!insuranceOnly && <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Status</th>}
-                                <th className="px-6 py-3 text-right text-sm font-semibold ">Action</th>
-                                <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Referred</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {stagePatients.map((patient,i) => (
-                                <tr
-                                  key={i}
-                                  className={`${(i%2)===0?'bg-primary/5':'bg-transparent'} border-b border-gray-400/50 hover:bg-white/10 transition-colors`}
-                                >
-                                  <td className="px-6 py-4 border-r border-primary/40">
-                                    <div className="flex flex-col gap-1">
-                                      <span className="font-medium text-foreground">
-                                        {patient.firstName} {patient.lastName}
-                                      </span>
-                                      <span className="text-xs text-foreground/50">
-                                        DOB: {patient.dateOfBirth || 'N/A'}
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 border-r border-primary/40">
-                                    <div className="flex flex-col gap-2">
-                                      {patient.email && (
-                                        <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                          <Mail className="w-4 h-4" />
-                                          <a
-                                            href={`mailto:${patient.email}`}
-                                            className="hover:text-primary transition-colors truncate"
-                                          >
-                                            {patient.email}
-                                          </a>
-                                        </div>
-                                      )}
-                                      {patient.phone && (
-                                        <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                          <Phone className="w-4 h-4" />
-                                          <a
-                                            href={`tel:${patient.phone}`}
-                                            className="hover:text-primary transition-colors"
-                                          >
-                                            {patient.phone}
-                                          </a>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 border-r border-primary/40">
-                                    <span className="text-sm text-foreground">
-                                      {patient.primaryDiagnosis || 'N/A'}
-                                    </span>
-                                  </td>
-                                  <td className="px-6 py-4 border-r border-primary/40">
-                                    <span
-                                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(
-                                        patient.urgencyLevel
-                                      )}`}
-                                    >
-                                      {patient.urgencyLevel || 'N/A'}
-                                    </span>
-                                  </td>
-                                 
-                                  {!insuranceOnly && (
-                                    <td className="px-6 py-4 text-sm border-r border-primary/40" 
-                                    onClick={(e) => e.stopPropagation()}>
-                                      {updatingPatientId === patient.id ? (
-                                        <div className="flex items-center gap-2">
-                                          <Loader className="w-4 h-4 animate-spin text-primary" />
-                                          <span className="text-foreground/70">Updating...</span>
-                                        </div>
-                                      ) : (
-                                        <Select
-                                          value={(patient.pipelineStage || '').toLowerCase()}
-                                          
-                                          onValueChange={(newStage) => {console.log('selected patient is:',patient);handleUpdateStatus(patient.id, newStage)}}
-                                        >
-                                          <SelectTrigger className="w-40 text-accent shadow-md font-bold">
-                                            <SelectValue placeholder={patient.pipelineStage} className='text-gray-600'/>
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {pipelineStages
-                                              // .filter((s) => s.id !== 'inactive_archived')
-                                              .map((s) => (
-                                                <SelectItem key={s.id} value={s.id}>
-                                                  {s.label}
-                                                </SelectItem>
-                                              ))}
-                                          </SelectContent>
-                                        </Select>
-                                      )}
-                                    </td>
-                                  )}
-                                  <td className="px-6 py-4 text-right">
-                                    {insuranceOnly ? (
-                                      <button
-                                        onClick={() => {
-                                          setSelectedPatient(patient);
-                                          setShowInsurance(true);
-                                        }}
-                                        className="px-3 py-2 text-sm text-white font-medium bg-blue-500 hover:bg-blue-500/70 rounded-lg transition-colors"
-                                      >
-                                        Verify
-                                      </button>
-                                    ) : (
-                                      <div className="flex gap-2 justify-end">
-                                        <button
-                                          onClick={() => setSelectedPatient(patient)}
-                                          className="px-3 py-2 text-sm text-white bg-primary font-medium hover:bg-primary/60 rounded-lg transition-colors"
-                                        >
-                                          View
-                                        </button>
-                                        <button
-                                          onClick={() => setEditingPatient(patient)}
-                                          className="px-3 py-2 text-sm text-white bg-accent font-medium hover:bg-accent/80 rounded-lg transition-colors"
-                                        >
-                                          Edit
-                                        </button>
-                                      </div>
-                                    )}
-                                  </td>
-
-                                   <td className="px-6 py-4 border-r border-primary/40">
-                                    <div className="flex flex-col gap-1 text-sm text-foreground/70">
-                                      <div className="flex items-center gap-2">
-                                        <Calendar className="w-4 h-4" />
-                                        {getDisplayDate(patient)}
-                                      </div>
-                                      {getDateTimeDisplay(patient) && (
-                                        <span className="text-xs font-semibold text-accent">{getDateTimeDisplay(patient)}</span>
-                                      )}
-                                      <span className="text-xs text-foreground/50">{getDateLabel(patient)}</span>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-border/20 bg-primary/5 p-6 text-center text-foreground/70">
-                          No patients in this stage yet.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-            {/* Archived Patients Section */}
-            {patientsByStage['inactive_archived'] && patientsByStage['inactive_archived'].length > 0 && (
-              <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-6">
-                    <h2 className="text-lg font-bold text-primary">Archived Patients</h2>
-                    <span className="ml-auto text-sm text-foreground/60 font-semibold">
-                      {patientsByStage['inactive_archived'].length} patient
-                      {patientsByStage['inactive_archived'].length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-border/30">
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Name</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Contact</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Diagnosis</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Urgency</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground/70 border-r">Referred</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-foreground/70">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {patientsByStage['inactive_archived'].map((patient) => (
-                          <tr
-                            key={patient.id}
-                            className="border-b border-border/20 hover:bg-primary/5 transition-colors"
-                          >
-                            <td className="px-6 py-4 border-r border-primary/40">
-                              <div className="flex flex-col gap-1">
-                                <span className="font-medium text-foreground">
-                                  {patient.firstName} {patient.lastName}
-                                </span>
-                                <span className="text-xs text-foreground/50">
-                                  DOB: {patient.dateOfBirth || 'N/A'}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 border-r border-primary/40">
-                              <div className="flex flex-col gap-2">
-                                {patient.email && (
-                                  <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                    <Mail className="w-4 h-4" />
-                                    <a
-                                      href={`mailto:${patient.email}`}
-                                      className="hover:text-primary transition-colors truncate"
-                                    >
-                                      {patient.email}
-                                    </a>
-                                  </div>
-                                )}
-                                {patient.phone && (
-                                  <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                    <Phone className="w-4 h-4" />
-                                    <a
-                                      href={`tel:${patient.phone}`}
-                                      className="hover:text-primary transition-colors"
-                                    >
-                                      {patient.phone}
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 border-r border-primary/40">
-                              <span className="text-sm text-foreground">
-                                {patient.primaryDiagnosis || 'N/A'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 border-r border-primary/40">
-                              <span
-                                className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(
-                                  patient.urgencyLevel
-                                )}`}
-                              >
-                                {patient.urgencyLevel || 'N/A'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 border-r border-primary/40">
-                              <div className="flex flex-col gap-1 text-sm text-foreground/70">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4" />
-                                  {getDisplayDate(patient)}
-                                </div>
-                                {getDateTimeDisplay(patient) && (
-                                  <span className="text-xs font-semibold text-accent">{getDateTimeDisplay(patient)}</span>
-                                )}
-                                <span className="text-xs text-foreground/50">{getDateLabel(patient)}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => setSelectedPatient(patient)}
-                                className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                              >
-                                View Details
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+        {activeTab === 'staff' && (
+          <StaffTab
+            staff={staff}
+            staffLoading={staffLoading}
+            staffError={staffError}
+          />
         )}
+
+        {activeTab === 'appointments' && <AppointmentsTab />}
       </div>
 
       {/* Patient Detail Modal */}
@@ -544,21 +832,13 @@ export default function PatientListView({
         />
       )}
 
+      {/* Insurance Modal */}
       {showInsurance && selectedPatient && (
         <InsuranceOnlyModal
           patientName={`${selectedPatient.firstName || ''} ${selectedPatient.lastName || ''}`.trim()}
           onClose={() => {
             setShowInsurance(false);
             setSelectedPatient(null);
-          }}
-        />
-      )}
-      {showInsur && (
-        <InsuranceOnlyModal
-          patientName={''}
-          onClose={() => {
-            setShowInssur(false);
-            
           }}
         />
       )}

@@ -126,6 +126,7 @@ router.get('/:clinicId/staff', authMiddleware, async (req, res, next) => {
         role: true,
         status: true,
         createdAt: true,
+        lastLogin:true
       },
     });
 

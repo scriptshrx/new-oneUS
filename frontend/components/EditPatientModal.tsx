@@ -51,8 +51,8 @@ export default function EditPatientModal({
     firstName: patient.firstName || '',
     lastName: patient.lastName || '',
     dateOfBirth: patient.dateOfBirth ? patient.dateOfBirth.split('T')[0] : '',
-    phone: patient.phone || '',
-    email: patient.email || '',
+    phoneNumber: patient.phone || '',
+    emailAddress: patient.email || '',
     address: patient.address || '',
     city: patient.city || '',
     state: patient.state || '',
@@ -81,11 +81,11 @@ useEffect(()=>{
       setError('Last name is required');
       return false;
     }
-    if (!formData.phone.trim()) {
+    if (!formData.phoneNumber.trim()) {
       setError('Phone number is required');
       return false;
     }
-    if (!formData.email.trim()) {
+    if (!formData.emailAddress.trim()) {
       setError('Email is required');
       return false;
     }
@@ -136,6 +136,7 @@ useEffect(()=>{
       }
 
       const updatedPatient = await response.json();
+      console.log('Patient updated successfully:',updatedPatient)
       setSuccess(true);
       
       if (onSave) {
@@ -251,8 +252,8 @@ useEffect(()=>{
                 <Input
                   type="email"
                   placeholder="john@example.com"
-                  value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
+                  value={formData.emailAddress}
+                  onChange={(e) => handleChange('emailAddress', e.target.value)}
                   className="bg-background/50 border-border/30"
                   disabled={isLoading}
                 />
@@ -264,8 +265,8 @@ useEffect(()=>{
                 <Input
                   type="tel"
                   placeholder="(555) 123-4567"
-                  value={formData.phone}
-                  onChange={(e) => handleChange('phone', e.target.value)}
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleChange('phoneNumber', e.target.value)}
                   className="bg-background/50 border-border/30"
                   disabled={isLoading}
                 />
