@@ -76,7 +76,7 @@ const getUrgencyColor = (urgency: string | undefined) => {
 const getDisplayDate = (patient: Patient) => {
   if (patient.appointment?.scheduledStartTime) {
     const dateParts = patient.appointment.scheduledStartTime.split('T')[0]?.split('-') || [];
-    const date = new Date(dateParts.join('-') + 'T00:00:00Z');
+    const date = new Date(dateParts.join('-'));
     return date.toLocaleDateString();
   }
   return patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'N/A';
@@ -655,6 +655,7 @@ function AppointmentsTab({
 
       const data = await response.json();
       setAppointments(data.data || []);
+      console.log('Appointments fetched:',data.data);
     } catch (err) {
       console.error('Error fetching appointments:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch appointments');
@@ -727,7 +728,7 @@ function AppointmentsTab({
                       </td>
                       <td className="px-6 py-4 border-r border-primary/40">
                         <span className="text-sm text-foreground/70">
-                          {appointment.scheduledStartTime || 'N/A'}
+                          {dayjs(appointment.scheduledStartTime).format('hh:mm A') || 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4 border-r border-primary/40">

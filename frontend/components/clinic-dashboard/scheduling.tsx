@@ -304,9 +304,11 @@ export default function Scheduling({
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('Error creating appointment',errorData)
         throw new Error(errorData.error || 'Failed to create appointment');
       }
-
+const res = await response.json()
+      console.log('Appointment created successfully:',res)
       setIsSubmitting(false);
       setBookingStep('patient');
       setBookingSelectedPatient(null);
@@ -346,8 +348,13 @@ export default function Scheduling({
     (p) => (p.pipelineStage || '').toLowerCase() === 'scheduling'
   );
 
+  const archivedPatients = patients.filter(
+    (p) => (p.pipelineStage || '').toLowerCase() === 'inactive_archived'
+  );
+
   const patientsByStage = {
-    'scheduling': schedulingPatients
+    'scheduling': schedulingPatients,
+    'inactive_archived': archivedPatients
   };
 
   const handleUpdateStatus = async (patientId: string, newStage: string) => {
@@ -436,9 +443,10 @@ export default function Scheduling({
                 <span className="text-sm">Back</span>
               </button>
             )}
-            <h1 className="text-3xl font-bold text-foreground">Patients CRM</h1>
+            <h1 className="text-3xl font-bold text-foreground">Scheduling</h1>
             <p className="text-sm text-foreground/70 mt-1">
-              {patients.length} patient{patients.length !== 1 ? 's' : ''} referred
+              {/* {patients.length} patient{patients.length !== 1 ? 's' : ''} referred */}
+              Schedule Patient Appointment
             </p>
           </div>
         </div>
@@ -625,8 +633,8 @@ export default function Scheduling({
                             <input
                               type="radio"
                               name="chair"
-                              value={chair.id}
-                              checked={bookingSelectedChair === chair.id}
+                              value={chair.chairNumber}
+                              checked={bookingSelectedChair === chair.chairNumber}
                               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBookingSelectChair(e.target.value)}
                               className="mt-1 mr-4"
                             />
@@ -731,7 +739,8 @@ export default function Scheduling({
                   )}
                 </div>
               </div>
-            </div>\n\n            {/* Tables for each pipeline stage */}
+            </div>
+                      {/* Tables for each pipeline stage */}
             {pipelineStages
               .filter((stage) => stage.id !== 'inactive_archived')
               .map((stage) => {

@@ -66,7 +66,7 @@ const createAppointment = async (appointmentData) => {
   // Validate chair belongs to clinic (if provided)
   if (chairId) {
     const chair = await prisma.infusionChair.findUnique({
-      where: { id: chairId },
+      where: { chairNumber: chairId },
     });
 
     if (!chair || chair.clinicId !== clinicId) {
