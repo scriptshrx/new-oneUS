@@ -633,8 +633,8 @@ const res = await response.json()
                             <input
                               type="radio"
                               name="chair"
-                              value={chair.chairNumber}
-                              checked={bookingSelectedChair === chair.chairNumber}
+                              value={chair.id}
+                              checked={bookingSelectedChair === chair.id}
                               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBookingSelectChair(e.target.value)}
                               className="mt-1 mr-4"
                             />
