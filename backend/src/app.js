@@ -10,6 +10,7 @@ const waitlistRoutes = require('./routes/waitlist');
 const chairRoutes = require('./routes/chairs');
 const appointmentRoutes = require('./routes/appointments');
 const { errorHandler } = require('./middleware/errorHandler');
+const {sendSMS} = require('./utils/sms')
 
 const app = express();
 
@@ -46,6 +47,22 @@ app.head('/health', (req, res) => {
 console.log('Wake-up call from UptimeRobot')
   return res.json({ status: 'ok' });
 });
+
+app.post('/notify-staff', async(req,res)=>{
+  const {phone, link, clinicName}=req.body;
+
+ 
+  const message = `Hello staff of ${clinicName}, here is your registration link to join the team on our Clinic Software System. Click: ${link}`
+  try{
+    const res = await sendSMS(phone,message)
+    console.log('SMS notification sent to staff successfully:',res)
+  }
+  catch(e){
+    console.log('Error notifying staff',e)
+  }
+
+
+})
 
 // Routes
 app.use('/v1/auth', authRoutes);

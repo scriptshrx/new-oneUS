@@ -18,6 +18,7 @@ import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 import dayjs from 'dayjs';
 import { Input } from '../ui/input';
 import { set } from 'date-fns';
+import axios from 'axios';
 
 interface Patient {
   id: string;
@@ -790,6 +791,7 @@ export default function PatientListView({
   const [staffError, setStaffError] = useState<string | null>(null);
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
+  const[notice,setNotice]=useState('')
 
   // Fetch staff when Staff tab is clicked
   useEffect(() => {
@@ -841,8 +843,23 @@ const handleGenerateLink=()=>{
   const linkUrl = `https://scriptishrx.net/register/staff?clinicId=${clinic.id}&&role=${selectedRole}&&clinicName=${clinic.name}`;
 setLink(linkUrl)
 }
-const handleNotifyStaff=()=>{
+const handleNotifyStaff=async()=>{
   setSelectTrigger(false)
+  try{
+    const res = await axios.post('https://scriptishrenewmark.onrender.com/notify-staff',
+    {phone,link,clinicName:clinic.name}
+  );
+  setNotice('Staff notified successfully')
+
+
+  console.log('Staff notified successfully',res.data);
+  setTimeout(()=>setNotice(''),2000)
+}
+catch(e){
+  console.log('Error notifying staff',e)
+  setNotice(e.message)
+}
+
 }
 const handleCopy=()=>{
  navigator.clipboard.writeText(link)
@@ -886,6 +903,7 @@ const handleCopy=()=>{
 
   return (
     <div className="flex flex-col h-full bg-background">
+      {notice&&<div className='fixed p-4 px-6 rounded-lg shadow-lg bg-accent'>{notice}</div>}
       {/* Header */}
       <div className="p-6 border-b border-border/30 bg-primary/5">
         <div className="flex items-center justify-between">
@@ -958,7 +976,7 @@ const handleCopy=()=>{
           }}>
                                         
                                       <SelectTrigger className="w-40 text-accent shadow-md font-bold">
-                                          <SelectValue placeholder={'CLINIC_ADMIN'} />
+                                          <SelectValue placeholder={'Select Role'} />
                                         </SelectTrigger>
                                         <SelectContent>
                                           {roles.map((r,i) => (
