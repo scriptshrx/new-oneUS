@@ -842,17 +842,20 @@ const handleGenerateLink=()=>{
 
   const linkUrl = `https://scriptishrx.net/register/staff?clinicId=${clinic.id}&&role=${selectedRole}&&clinicName=${clinic.name}`;
 setLink(linkUrl)
+setNotice('Link copied!')
+setTimeout(()=>setNotice(''),2000)
 }
 const handleNotifyStaff=async()=>{
-  setSelectTrigger(false)
+ 
   try{
-    const res = await axios.post('https://scriptishrxenewmark.onrender.com/notify-staff',
+    const res = await axios.post('https://scriptishrxnewmark.onrender.com/notify-staff',
     {phone,link,clinicName:clinic.name}
   );
-  setNotice('Staff notified successfully')
+  setNotice('Staff notified successfully');
 
 
   console.log('Staff notified successfully',res.data);
+   setSelectTrigger(false)
   setTimeout(()=>setNotice(''),2000)
 }
 catch(e){
@@ -903,7 +906,7 @@ const handleCopy=()=>{
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {notice&&<div className='fixed p-4 px-6 rounded-lg shadow-lg bg-accent'>{notice}</div>}
+      {notice&&<div className='fixed p-4 mt-16 ml-16 px-6 rounded-lg shadow-lg bg-accent text-white font-semibold'>{notice}</div>}
       {/* Header */}
       <div className="p-6 border-b border-border/30 bg-primary/5">
         <div className="flex items-center justify-between">
@@ -986,10 +989,10 @@ const handleCopy=()=>{
                                           ))}
                                         </SelectContent>
                                       </Select>
-                                      {link &&<div className='flex gap-2 items-center w-20 justify-center'>
-                                        <div className='text-black text-xs '>{link}</div>
+                                      {link &&<div className='flex gap-2 items-center w-20 justify-between'>
+                                        <div className='text-black text-xs'>{link.slice(0,25)}</div>
                                         <button onClick={()=>handleCopy(link)}
-                                        className='rounded-lg p-1 px-2 text-center items-center flex justify-center bg-gray-200 shadow-sm'>{copied?'Copied':'Copy'}</button>
+                                        className='rounded-lg p-1 px-2 text-center items-center flex justify-center bg-gray-800 text-white cursor-pointer shadow-sm'>{copied?'Copied':'Copy'}</button>
                                         </div>}
                                       <Input
                                       placeholder='phone, e.g: +123423223'

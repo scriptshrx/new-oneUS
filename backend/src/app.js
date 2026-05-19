@@ -50,6 +50,7 @@ console.log('Wake-up call from UptimeRobot')
 
 app.post('/notify-staff', async(req,res)=>{
   const {phone, link, clinicName}=req.body;
+  console.log('Notifying staff with:',req.body)
 
  
   const message = `Hello staff of ${clinicName}, here is your registration link to join the team on our Clinic Software System. Click: ${link}`
