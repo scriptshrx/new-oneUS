@@ -12,10 +12,12 @@ import {
 import PatientDetailModal from '@/components/PatientDetailModal';
 import EditPatientModal from '@/components/EditPatientModal';
 import { useState, useEffect } from 'react';
-import { useClinicDashboardView } from '../ClinicDashboardLayout';
+import ClinicDashboardLayout, { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 import dayjs from 'dayjs';
+import { Input } from '../ui/input';
+import { set } from 'date-fns';
 
 interface Patient {
   id: string;
@@ -111,6 +113,7 @@ const pipelineStages = [
   { id: 'follow_up', detail: 'Treatment Follow-ups', label: 'Follow-up' },
   { id: 'inactive_archived', label: 'Patient Archived', detail: 'INACTIVE_ARCHIVED' }
 ];
+
 
 // ============================================================================
 // PATIENTS TAB COMPONENT
@@ -819,6 +822,34 @@ export default function PatientListView({
     }
   };
 
+  const roles =[
+  'CLINIC_ADMIN',
+  'AUXILIARY_STAFF',
+  'NURSE',
+  'PHYSICIAN'
+]
+
+const[selectedRole,setSelectedRole]=useState('');
+const[selecTrigger,setSelectTrigger]=useState(false);
+const [link,setLink]=useState('')
+const[copied,setCopied]=useState(false)
+const[phone,setPhone]=useState('')
+
+const handleGenerateLink=()=>{
+  if(!selectedRole)return;
+
+  const linkUrl = `https://scriptishrx.net/register/staff?clinicId=${clinic.id}&&role=${selectedRole}&&clinicName=${clinic.name}`;
+setLink(linkUrl)
+}
+const handleNotifyStaff=()=>{
+  setSelectTrigger(false)
+}
+const handleCopy=()=>{
+ navigator.clipboard.writeText(link)
+  setCopied(true);
+  setTimeout(()=>setCopied(false),2000)
+}
+
   const handleUpdateStatus = async (patientId: string, newStage: string) => {
     const patient = patients.find((p) => p.id === patientId);
     if (!patient) return;
@@ -876,6 +907,7 @@ export default function PatientListView({
         </div>
 
         {/* Tabs */}
+        <div className=' flex flex-col justify-between md:flex-row gap-4 items-center'>
         <div className="flex gap-2 mt-6">
           <button
             onClick={() => setActiveTab('patients')}
@@ -908,6 +940,50 @@ export default function PatientListView({
             Appointments
           </button>
         </div>
+        {/**Link generation buttton */}
+        {
+       <div className='flex flex-col space-y-4'>
+          {!selecTrigger&&<button onClick={()=>{setSelectTrigger(true);if(selectedRole)return}}
+          className='rounded-md shadow-lg cursor-pointer p-2 hover:shadow-md text-center bg-blue-900 text-white'>Register Staff</button>}
+             {selecTrigger &&
+           <div className='flex flex-col space-y-4'>
+           <Select
+                                        
+           value={selectedRole}
+                                        
+           onValueChange={(value) => {
+                                          
+            setSelectedRole(value);handleGenerateLink()
+                                        
+          }}>
+                                        
+                                      <SelectTrigger className="w-40 text-accent shadow-md font-bold">
+                                          <SelectValue placeholder={'CLINIC_ADMIN'} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {roles.map((r,i) => (
+                                            <SelectItem key={i} value={r}>
+                                              {r}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      {link &&<div className='flex gap-2 items-center w-20 justify-center'>
+                                        <div className='text-black text-xs '>{link}</div>
+                                        <button onClick={()=>handleCopy(link)}
+                                        className='rounded-lg p-1 px-2 text-center items-center flex justify-center bg-gray-200 shadow-sm'>{copied?'Copied':'Copy'}</button>
+                                        </div>}
+                                      <Input
+                                      placeholder='phone, e.g: +123423223'
+                                      className='border border-primary/20'
+                                      onChange={(e)=>setPhone(e.target.value)}/>
+                                      <button onClick={()=>{handleNotifyStaff()}}
+          className='rounded-md shadow-lg cursor-pointer p-2 hover:shadow-md text-center bg-blue-900 text-white'>Notify Staff</button>
+                                      </div>
+                                      }
+                                      </div>
+        
+        }</div>
       </div>
 
       {/* Content */}

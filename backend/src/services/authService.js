@@ -153,6 +153,36 @@ const registerClinic = async (input) => {
   };
 };
 
+//Register Staff users
+
+function registerStaff(input){
+ const passwordHash = await hashPassword(input.password);
+ try{
+  
+
+    user = await prisma.user.create({
+      data: {
+        email: input.email,
+        passwordHash,
+        phoneNumber:input.phoneNumber,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        role: input.role,
+        status: 'ACTIVE',
+        clinicId: input.clinicId,
+
+      },
+    });
+
+    console.log('Staff account created successfully for:',input.email)
+
+    return user
+  }
+    catch(e){
+      console.log('Error registring staff',e)
+    }
+}
+
 //handle resending of OTP
 const resendVerification = async(input)=>{
 const OTP = generateVerificationCode(input.email);
@@ -718,6 +748,7 @@ const refreshAccessToken = async (userPayload) => {
 module.exports = {
   registerClinic,
   registerHospital,
+  registerStaff,
   verifyEmail,
   signBAA,
   login,
