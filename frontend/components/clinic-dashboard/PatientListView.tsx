@@ -846,7 +846,7 @@ setLink(linkUrl)
 const handleNotifyStaff=async()=>{
   setSelectTrigger(false)
   try{
-    const res = await axios.post('https://scriptishrenewmark.onrender.com/notify-staff',
+    const res = await axios.post('https://scriptishrxenewmark.onrender.com/notify-staff',
     {phone,link,clinicName:clinic.name}
   );
   setNotice('Staff notified successfully')

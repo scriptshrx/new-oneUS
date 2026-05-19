@@ -36,6 +36,8 @@ router.post('/register/clini-staff', async(req,res)=>{
   res.status(201).json(response)
 })
 
+
+
 router.post('/register/resend-verification',async(req,res)=>{
   console.log('starting to resend verification',req.body);
   try{

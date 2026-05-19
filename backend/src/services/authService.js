@@ -155,7 +155,7 @@ const registerClinic = async (input) => {
 
 //Register Staff users
 
-function registerStaff(input){
+async function registerStaff(input){
  const passwordHash = await hashPassword(input.password);
  try{
   
