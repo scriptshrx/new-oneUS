@@ -25,6 +25,14 @@ const fetchPatientsByChairId = async(chairId) => {
     where: { infusionChairId: chairId },
     include: { 
       infusionChair: true,
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
       referrals: {
         include: {
           referringPhysician: true,

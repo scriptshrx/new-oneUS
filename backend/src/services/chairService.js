@@ -5,6 +5,30 @@ const { sendSMS } = require('../utils/sms');
 const dayjs = require('dayjs');
 const { getTimezoneForState, convertUTCToClinicTime } = require('../utils/timezone');
 
+const chairWithRelationsInclude = {
+  patient: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+    },
+  },
+  user: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+    },
+  },
+};
+
 class ChairService {
   /**
    * Get all infusion chairs for a clinic
@@ -17,6 +41,7 @@ class ChairService {
         where: {
           clinicId: clinicId,
         },
+        include: chairWithRelationsInclude,
         orderBy: {
           createdAt: 'desc',
         },
@@ -38,6 +63,7 @@ class ChairService {
         where: {
           id: chairId,
         },
+        include: chairWithRelationsInclude,
       });
       if (!chair) {
         throw new Error('Infusion chair not found');
@@ -56,34 +82,57 @@ class ChairService {
    */
   static async createChair(clinicId, chairData) {
     try {
-      // Validate the required fields
-      const { chairNumber } = chairData;
+      const { chairNumber, patientId, userId } = chairData;
 
-    console.log('About to create chair for', chairData)
+      if (!chairNumber?.trim()) {
+        throw new Error('Chair number is required');
+      }
 
-      // Generate a random 8-character password (alphanumeric)
-      // const generateRandomPassword = (length = 8) => {
-      //   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      //   let pw = '';
-      //   const bytes = crypto.randomBytes(length);
-      //   for (let i = 0; i < length; i++) {
-      //     pw += chars[bytes[i] % chars.length];
-      //   }
-      //   return pw;
-      // };
+      if (patientId) {
+        const patient = await prisma.patient.findUnique({ where: { id: patientId } });
+        if (!patient) {
+          throw new Error('Patient not found');
+        }
+        if (patient.clinicId !== clinicId) {
+          throw new Error('Patient does not belong to this clinic');
+        }
+        if (patient.infusionChairId) {
+          throw new Error('Patient is already assigned to another chair');
+        }
+      }
 
-      // const plainPassword = generateRandomPassword(8);
-      // console.log('The chair password is',plainPassword)
+      if (userId) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+          throw new Error('User not found');
+        }
+        if (user.clinicId !== clinicId) {
+          throw new Error('User does not belong to this clinic');
+        }
+      }
 
-      const chair = await prisma.infusionChair.create({
-        data: {
-          clinicId,
-          chairNumber,
-          status: 'ACTIVE',
-        },
+      const chair = await prisma.$transaction(async (tx) => {
+        const created = await tx.infusionChair.create({
+          data: {
+            clinicId,
+            chairNumber: chairNumber.trim(),
+            status: 'ACTIVE',
+            ...(userId ? { userId } : {}),
+          },
+        });
+
+        if (patientId) {
+          await tx.patient.update({
+            where: { id: patientId },
+            data: { infusionChairId: created.id },
+          });
+        }
+
+        return tx.infusionChair.findUnique({
+          where: { id: created.id },
+          include: chairWithRelationsInclude,
+        });
       });
-
-      console.log('Chair is created successully')
 
       // Try to fetch clinic name for email context
       let clinic = null;
@@ -187,12 +236,11 @@ class ChairService {
           clinicId: clinicId,
           status: 'ACTIVE',
         },
+        include: chairWithRelationsInclude,
         orderBy: {
           createdAt: 'asc',
         },
       });
-
-      console.log('ALL chair:',chairs)
 
       return chairs;
     } catch (error) {

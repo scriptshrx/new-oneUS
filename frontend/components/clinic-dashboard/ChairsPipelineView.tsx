@@ -6,22 +6,40 @@ import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import PatientDetailModal from '@/components/PatientDetailModal';
 
-interface Chair {
-  chairNumber: string
+interface ChairUser {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
 }
 
-interface Patient {
+interface ChairPatient {
   id: string;
   firstName: string;
   lastName: string;
+  pipelineStage?: string;
   primaryDiagnosis?: string;
   urgencyLevel?: string;
   status?: string;
-  pipelineStage?: string;
+  user?: ChairUser | null;
+}
+
+interface Chair {
+  id: string;
+  chairNumber: string;
+  status?: string;
+  patient?: ChairPatient | null;
 }
 
 interface ChairWithPatients extends Chair {
-  patients?: Patient[];
+  patients?: ChairPatient[];
+}
+
+function patientDisplayName(patient: ChairPatient | null | undefined): string {
+  if (!patient) return 'No Patient';
+  const userName = [patient.user?.firstName, patient.user?.lastName].filter(Boolean).join(' ');
+  if (userName) return userName;
+  return `${patient.firstName} ${patient.lastName}`.trim();
 }
 
 export default function ChairsPipelineView() {
@@ -65,12 +83,16 @@ export default function ChairsPipelineView() {
 
       console.log('Chairs befor joining',chairsData)
       // Map patients to chairs (example mapping - you may need to adjust based on your data structure)
-      const chairsWithPatients = chairsData.map((chair: Chair) => ({
-        ...chair,
-        // In a real scenario, you'd have a relationship to fetch patients assigned to this chair
-        // For now, we'll show all patients as a demo
-        patients: patients.filter((patient)=>patient.infusionChairId===chair.id),
-      }));
+      const chairsWithPatients = chairsData.map((chair: Chair) => {
+        const assignedPatient =
+          chair.patient ??
+          patients.find((patient) => patient.infusionChairId === chair.id) ??
+          null;
+        return {
+          ...chair,
+          patients: assignedPatient ? [assignedPatient] : [],
+        };
+      });
 
       console.log("Chairs with patient:",chairsWithPatients)
 
@@ -195,7 +217,7 @@ export default function ChairsPipelineView() {
             const patientStageRaw = firstPatient?.pipelineStage?.toUpperCase().replace('_',' ') || '';
             const patientStage = patientStageRaw ? patientStageRaw : '';
             const isInfusing = patientStage === 'treatment' || chair.status === 'IN_USE';
-            const subtitle = firstPatient ? `${firstPatient.firstName} ${firstPatient.lastName}` : 'No Patient';
+            const subtitle = patientDisplayName(firstPatient);
 
             const cardBase = ` bg-purple-400/10 shadow-sm hover:shadow-lg rounded-lg p-4 hover:shadow-lg shadow-sm transition-colors relative overflow-hidden border`;
             const cardStyle = isInfusing
