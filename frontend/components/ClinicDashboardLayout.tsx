@@ -112,10 +112,12 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
     // Define role-based permissions
     // CLINIC_ADMIN: All access
     // AUXILIARY_STAFF: Chair View, Intake Form
+    // PHYSICIAN: Dashboard, Intake Form
     // NURSE: Chair View, Verifications (Insurance Verify, Prior Auth)
     const ROLE_PERMISSIONS: Record<string, ViewType[]> = {
       'CLINIC_ADMIN': ['dashboard', 'intakeForm', 'patientsList', 'patients', 'scheduling', 'archives', 'waitlist', 'allChairs', 'chairsPipeline', 'addChairs', 'insuranceVerify', 'priorAuth', 'accountSettings', 'analytics', 'logout'],
       'AUXILIARY_STAFF': ['dashboard', 'intakeForm', 'allChairs', 'logout'],
+      'PHYSICIAN': ['dashboard', 'intakeForm', 'logout'],
       'NURSE': ['dashboard', 'allChairs', 'insuranceVerify', 'priorAuth', 'logout'],
     };
 
@@ -129,13 +131,13 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               id: 'dashboard' as ViewType,
               label: 'Dashboard',
               icon: LayoutDashboard,
-              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'PHYSICIAN', 'NURSE'],
             },
             {
               id: 'intakeForm' as ViewType,
               label: 'Intake Form',
               icon: NotebookPen,
-              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF'],
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'PHYSICIAN'],
             },
             {
               id: 'patientsList' as ViewType,
@@ -233,7 +235,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               id: 'logout' as ViewType,
               label: 'Logout',
               icon: LogOut,
-              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'PHYSICIAN', 'NURSE'],
             },
           ].filter(item => item.allowedRoles.includes(role)),
         },
@@ -432,7 +434,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
           />
         );
       case 'intakeForm':
-        return <PatientIntakeForm />
+        return <PatientIntakeForm onBack={() => setCurrentView('dashboard')} />
       case 'waitlist':
         return <WaitlistView />;
       case 'insuranceVerify':
