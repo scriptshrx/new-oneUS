@@ -184,7 +184,7 @@ export default function StaffRegistrationForm() {
 
 
       // Example redirect
-      router.push('/clinic-dashboard');
+      router.push('/login');
     } catch (error: any) {
       const errorMessage =
         error?.message ||

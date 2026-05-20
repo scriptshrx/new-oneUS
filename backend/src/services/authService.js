@@ -192,14 +192,13 @@ async function registerStaff(input){
   return {
     clinicId: input.clinicId,
     accessToken,
-    name:input.clinicName,
-    staffName:input.name,
-    staffPhone:input.phone,
+    name:user.firstName + ' ' + user.lastName,
+    primaryPhone:user.phoneNumber,
     email:user.email,
     role:user.role,
 
     temporaryToken,
-    nextStep:'ACTIVE',
+    nextStep: 'ACTIVE',
     userId: user?.id,
   };
 

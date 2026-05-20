@@ -583,7 +583,8 @@ export default function Scheduling({
                     ) : filteredChairs.length === 0 ? (
                       <p className="text-foreground/70 text-center py-8">No chairs match your search</p>
                     ) : (
-                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                      <div className="space-y-3 max-h-80 overflow-y-auto"
+                      style={{scrollbarWidth: 'none'}}>
                         {filteredChairs.map((chair) => {
                           const hasPatient = Boolean(chair.patient);
                           return (

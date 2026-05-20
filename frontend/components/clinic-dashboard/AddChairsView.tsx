@@ -39,8 +39,23 @@ function staffDisplayName(member: StaffMember): string {
   return name || member.email;
 }
 
+/** True if patient record marks them seated on a chair (camelCase or snake_case). */
+function patientHasChairIdField(p: Record<string, unknown>): boolean {
+  const id =
+    p.infusionChairId ?? p.infusion_chair_id ?? (p as { infusionChair?: { id?: string } }).infusionChair?.id;
+  return id != null && String(id).trim() !== '';
+}
+
+/** Matches Patient List / Scheduling archived bucket */
+function isPatientArchived(pipelineStage?: string | null): boolean {
+  const normalized = (pipelineStage || '').toLowerCase().replace(/-/g, '_').trim();
+  return normalized === 'inactive_archived';
+}
+
 export default function AddChairsView() {
   const { clinic, setCurrentView, patients, patientsLoading } = useClinicDashboardView();
+  const [chairOccupiedPatientIds, setChairOccupiedPatientIds] = useState<Set<string>>(() => new Set());
+  const [chairsAssignabilityLoaded, setChairsAssignabilityLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,14 +93,61 @@ export default function AddChairsView() {
     fetchStaff();
   }, [clinic?.id]);
 
-  const assignablePatients = useMemo(
-    () => patients.filter((p) => !p.infusionChairId),
-    [patients]
-  );
+  useEffect(() => {
+    if (!clinic?.id) return;
+
+    let cancelled = false;
+
+    const fetchChairAssignments = async () => {
+      try {
+        const response = await fetchWithAuth(`${API_URL}/chairs/${clinic.id}`, {
+          method: 'GET',
+        });
+        if (!response.ok || cancelled) return;
+        const data = await response.json();
+        const chairs = (data?.data ?? []) as Array<{ patient?: { id?: string } | null }>;
+        const ids = new Set<string>();
+        for (const chair of chairs) {
+          const pid = chair.patient?.id;
+          if (pid) ids.add(pid);
+        }
+        if (!cancelled) setChairOccupiedPatientIds(ids);
+      } catch {
+        /* keep empty set; infusionChairId filter still applies */
+      } finally {
+        if (!cancelled) setChairsAssignabilityLoaded(true);
+      }
+    };
+
+    setChairsAssignabilityLoaded(false);
+    fetchChairAssignments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clinic?.id]);
+
+  const assignablePatients = useMemo(() => {
+    return patients.filter((p) => {
+      if (isPatientArchived(p.pipelineStage)) return false;
+      const raw = p as Record<string, unknown>;
+      if (patientHasChairIdField(raw)) return false;
+      if (chairOccupiedPatientIds.has(p.id)) return false;
+      return true;
+    });
+  }, [patients, chairOccupiedPatientIds]);
+
+  useEffect(() => {
+    setFormData((prev) => {
+      if (!prev.patientId) return prev;
+      const stillAssignable = assignablePatients.some((x) => x.id === prev.patientId);
+      return stillAssignable ? prev : { ...prev, patientId: '' };
+    });
+  }, [assignablePatients]);
 
   const selectedPatient = useMemo(
-    () => patients.find((p) => p.id === formData.patientId) ?? null,
-    [patients, formData.patientId]
+    () => assignablePatients.find((p) => p.id === formData.patientId) ?? null,
+    [assignablePatients, formData.patientId]
   );
 
   const selectedUser = useMemo(
@@ -227,7 +289,7 @@ export default function AddChairsView() {
         </section>
 
         <section>
-          <label className="block text-sm font-medium text-foreground mb-2">Patient (optional)</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Patient</label>
           <Select
             value={formData.patientId || NONE_VALUE}
             onValueChange={(value) =>
@@ -236,10 +298,16 @@ export default function AddChairsView() {
                 patientId: value === NONE_VALUE ? '' : value,
               }))
             }
-            disabled={patientsLoading}
+            disabled={patientsLoading || !chairsAssignabilityLoaded}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={patientsLoading ? 'Loading patients...' : 'Select a patient'} />
+              <SelectValue
+                placeholder={
+                  patientsLoading || !chairsAssignabilityLoaded
+                    ? 'Loading patients...'
+                    : 'Select a patient'
+                }
+              />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE_VALUE}>Select Patient</SelectItem>
@@ -257,7 +325,7 @@ export default function AddChairsView() {
                 {selectedPatient.firstName} {selectedPatient.lastName}
               </p>
               <p className="text-sm text-foreground/80">
-                <span className="text-foreground/60">Prescribed treatment: </span>
+                <span className="text-foreground/60">Medication: </span>
                 {selectedPatient.prescribedTreatment || 'Not specified'}
               </p>
               {selectedPatientAppointmentLabel && (
@@ -268,13 +336,13 @@ export default function AddChairsView() {
               )}
             </div>
           )}
-          {!patientsLoading && assignablePatients.length === 0 && (
+          {!patientsLoading && chairsAssignabilityLoaded && assignablePatients.length === 0 && (
             <p className="text-sm text-foreground/50 mt-2">No unassigned patients available.</p>
           )}
         </section>
 
         <section>
-          <label className="block text-sm font-medium text-foreground mb-2">Clinic user (optional)</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Infusion Nurse</label>
           <Select
             value={formData.userId || NONE_VALUE}
             onValueChange={(value) =>
@@ -300,7 +368,7 @@ export default function AddChairsView() {
           {staffError && <p className="text-red-600 text-sm mt-1">{staffError}</p>}
           {selectedUser && (
             <div className="mt-3 rounded-lg border border-border/30 bg-background/50 p-4 space-y-1">
-              <p className="text-sm text-foreground/60">Selected user</p>
+              <p className="text-sm text-foreground/60">Selected Infusion Nurse</p>
               <p className="font-medium text-foreground">{staffDisplayName(selectedUser)}</p>
               <p className="text-sm text-foreground/80">{selectedUser.email}</p>
             </div>
