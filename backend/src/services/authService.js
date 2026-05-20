@@ -175,9 +175,34 @@ async function registerStaff(input){
       },
     });
 
-    console.log('Staff account created successfully for:',input.email)
+    console.log('Staff account created successfully for:',input.email);
 
-    return user
+    const tokenPayload = {
+    userId: user?.id || '',
+    clinicId: input.clinicId,
+    
+    email: input.clinic.email,
+    role: input.role || 'CLINIC_ADMIN',
+  };
+
+  const temporaryToken = generateTemporaryToken(tokenPayload,'10m'); // 10 minutes
+  console.log('\x1b[1m🎟️ [REGISTER_STAFF] Temporary token generated\x1b[0m');
+  const accessToken = generateAccessToken(tokenPayload,'1hr')
+  console.log('\x1b[1m✅ [REGISTER_STAFF] Access token generated, registration complete\x1b[0m');
+  return {
+    clinicId: input.clinicId,
+    accessToken,
+    name:input.clinicName,
+    staffName:input.name,
+    staffPhone:input.phone,
+    email:user.email,
+    role:user.role,
+
+    temporaryToken,
+    nextStep: user ? 'ACTIVE',
+    userId: user?.id,
+  };
+
   }
     catch(e){
       console.log('Error registring staff',e)

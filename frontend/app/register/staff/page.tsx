@@ -63,7 +63,9 @@ export default function StaffRegistrationForm() {
     const clinicNam = params.get('clinicName')
     if(clinicNam){
         setClinicName(clinicNam);
+        setFormData((prev)=>({...prev, clinicName:clinicNam}))
         console.log('Clinic name is:',clinicNam)
+
     }
 
     if (clinicIdParam) {
@@ -180,17 +182,9 @@ export default function StaffRegistrationForm() {
         response
       );
 
-      localStorage.setItem(
-        'staff',
-        JSON.stringify(response)
-      );
-
-      localStorage.setItem('role', response.role);
-
-      console.log('Staff created', response);
 
       // Example redirect
-      // router.push('/verify-phone');
+      router.push('/clinic-dashboard');
     } catch (error: any) {
       const errorMessage =
         error?.message ||

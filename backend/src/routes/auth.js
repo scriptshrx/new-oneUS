@@ -30,7 +30,7 @@ router.post('/register/clinic', async (req, res, next) => {
 
 //Register clinic staff
 
-router.post('/register/clini-staff', async(req,res)=>{
+router.post('/register/staff', async(req,res)=>{
   const input = req.body;
   const response = await registerStaff(input);
   res.status(201).json(response)

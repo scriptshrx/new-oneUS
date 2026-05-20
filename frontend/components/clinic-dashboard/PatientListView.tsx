@@ -835,18 +835,21 @@ const[selectedRole,setSelectedRole]=useState('');
 const[selecTrigger,setSelectTrigger]=useState(false);
 const [link,setLink]=useState('')
 const[copied,setCopied]=useState(false)
-const[phone,setPhone]=useState('')
+const[phone,setPhone]=useState('');
+const[notifying,setNotifying]=useState(false)
 
-const handleGenerateLink=()=>{
-  if(!selectedRole)return;
+const handleGenerateLink=(value)=>{
+  if(!value)return;
 
-  const linkUrl = `https://scriptishrx.net/register/staff?clinicId=${clinic.id}&&role=${selectedRole}&&clinicName=${clinic.name}`;
+  const linkUrl = `https://scriptishrx.net/register/staff?clinicId=${clinic.id}&role=${value.replace(' ','_')}&clinicName=${clinic.name}`;
 setLink(linkUrl)
-setNotice('Link copied!')
+console.log('Link generated successfully')
+setNotice('Link Generated!')
 setTimeout(()=>setNotice(''),2000)
 }
 const handleNotifyStaff=async()=>{
- 
+ setNotifying(true)
+ setNotice('')
   try{
     const res = await axios.post('https://scriptishrxnewmark.onrender.com/notify-staff',
     {phone,link,clinicName:clinic.name}
@@ -856,11 +859,12 @@ const handleNotifyStaff=async()=>{
 
   console.log('Staff notified successfully',res.data);
    setSelectTrigger(false)
+   setNotifying(false)
   setTimeout(()=>setNotice(''),2000)
 }
 catch(e){
   console.log('Error notifying staff',e)
-  setNotice(e.message)
+  setNotice('Failed to notify via SMS')
 }
 
 }
@@ -974,7 +978,7 @@ const handleCopy=()=>{
                                         
            onValueChange={(value) => {
                                           
-            setSelectedRole(value);handleGenerateLink()
+            setSelectedRole(value);handleGenerateLink(value)
                                         
           }}>
                                         
