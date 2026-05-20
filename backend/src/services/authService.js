@@ -181,7 +181,7 @@ async function registerStaff(input){
     userId: user?.id || '',
     clinicId: input.clinicId,
     
-    email: input.clinic.email,
+    email: input.email,
     role: input.role || 'CLINIC_ADMIN',
   };
 
@@ -204,6 +204,7 @@ async function registerStaff(input){
   };
 
   }
+
     catch(e){
       console.log('Error registring staff',e)
     }
