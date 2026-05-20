@@ -16,6 +16,29 @@ const chairWithRelationsInclude = {
           email: true,
         },
       },
+      referrals: {
+        where: { status: { in: ['SUBMITTED', 'REVIEWED', 'APPROVED'] } },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: {
+          id: true,
+          prescribedTreatment: true,
+          primaryDiagnosis: true,
+        },
+      },
+      appointments: {
+        orderBy: { scheduledStartTime: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          appointmentType: true,
+          scheduledDate: true,
+          scheduledStartTime: true,
+          scheduledEndTime: true,
+          status: true,
+          treatmentType: true,
+        },
+      },
     },
   },
   user: {
@@ -28,6 +51,61 @@ const chairWithRelationsInclude = {
     },
   },
 };
+
+const ACTIVE_APPOINTMENT_STATUSES = ['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'];
+
+function displayName(firstName, lastName, fallback = '') {
+  const name = [firstName, lastName].filter(Boolean).join(' ').trim();
+  return name || fallback;
+}
+
+function pickPatientAppointment(appointments) {
+  if (!appointments?.length) return null;
+
+  const now = new Date();
+  const upcoming = appointments
+    .filter(
+      (apt) =>
+        ACTIVE_APPOINTMENT_STATUSES.includes(apt.status) &&
+        new Date(apt.scheduledStartTime) >= now
+    )
+    .sort((a, b) => new Date(a.scheduledStartTime) - new Date(b.scheduledStartTime));
+
+  if (upcoming.length > 0) return upcoming[0];
+  return appointments[0];
+}
+
+function formatChairForResponse(chair) {
+  if (!chair) return chair;
+
+  const referral = chair.patient?.referrals?.[0];
+  const appointment = pickPatientAppointment(chair.patient?.appointments);
+
+  const patient = chair.patient
+    ? {
+        id: chair.patient.id,
+        firstName: chair.patient.firstName,
+        lastName: chair.patient.lastName,
+        pipelineStage: chair.patient.pipelineStage,
+        prescribedTreatment: referral?.prescribedTreatment ?? null,
+        primaryDiagnosis: referral?.primaryDiagnosis ?? null,
+        user: chair.patient.user ?? null,
+        appointment,
+      }
+    : null;
+
+  return {
+    id: chair.id,
+    clinicId: chair.clinicId,
+    chairNumber: chair.chairNumber,
+    status: chair.status,
+    createdAt: chair.createdAt,
+    updatedAt: chair.updatedAt,
+    user: chair.user ?? null,
+    staffName: chair.user ? displayName(chair.user.firstName, chair.user.lastName) : null,
+    patient,
+  };
+}
 
 class ChairService {
   /**
@@ -46,7 +124,7 @@ class ChairService {
           createdAt: 'desc',
         },
       });
-      return chairs;
+      return chairs.map(formatChairForResponse);
     } catch (error) {
       throw new Error(`Failed to fetch infusion chairs: ${error.message}`);
     }
@@ -68,7 +146,7 @@ class ChairService {
       if (!chair) {
         throw new Error('Infusion chair not found');
       }
-      return chair;
+      return formatChairForResponse(chair);
     } catch (error) {
       throw new Error(`Failed to fetch infusion chair: ${error.message}`);
     }
@@ -154,7 +232,7 @@ class ChairService {
         console.error('Failed to send chair account SMS:', e);
       }
 
-      return chair;
+      return formatChairForResponse(chair);
     } catch (error) {
       throw new Error(`Failed to create infusion chair: ${error.message}`);
     }
@@ -242,7 +320,7 @@ class ChairService {
         },
       });
 
-      return chairs;
+      return chairs.map(formatChairForResponse);
     } catch (error) {
       throw new Error(`Failed to fetch chairs with patients: ${error.message}`);
     }

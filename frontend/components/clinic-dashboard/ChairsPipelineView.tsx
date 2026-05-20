@@ -1,61 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertCircle, Fullscreen, CheckCircle2, RefreshCcwIcon, Loader } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import PatientDetailModal from '@/components/PatientDetailModal';
+import ChairCard from './ChairCard';
+import { EnrichedChair } from '@/lib/chairDisplay';
 
-interface ChairUser {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-}
-
-interface ChairPatient {
-  id: string;
-  firstName: string;
-  lastName: string;
-  pipelineStage?: string;
-  primaryDiagnosis?: string;
-  urgencyLevel?: string;
-  status?: string;
-  user?: ChairUser | null;
-}
-
-interface Chair {
-  id: string;
-  chairNumber: string;
-  status?: string;
-  patient?: ChairPatient | null;
-}
-
-interface ChairWithPatients extends Chair {
-  patients?: ChairPatient[];
-}
-
-function patientDisplayName(patient: ChairPatient | null | undefined): string {
-  if (!patient) return 'No Patient';
-  const userName = [patient.user?.firstName, patient.user?.lastName].filter(Boolean).join(' ');
-  if (userName) return userName;
-  return `${patient.firstName} ${patient.lastName}`.trim();
-}
+const API_URL = 'https://scriptishrxnewmark.onrender.com/v1';
 
 export default function ChairsPipelineView() {
   const { clinic, patients } = useClinicDashboardView();
-  const [chairs, setChairs] = useState<ChairWithPatients[]>([]);
+  const [chairs, setChairs] = useState<EnrichedChair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
-  const [nextStages, setNextStages] = useState<Record<string, string>>({});
-  const [hoveredStage, setHoveredStage] = useState<string | null>(null);
-  const [expandedChairs, setExpandedChairs] = useState<Record<string, boolean>>({});
-  const [hoveredChair, setHoveredChair] = useState<string | null>(null);
 
   useEffect(() => {
     fetchChairsWithPatients();
-  }, []);
+  }, [clinic?.id]);
 
   const fetchChairsWithPatients = async () => {
     try {
@@ -67,8 +31,7 @@ export default function ChairsPipelineView() {
         return;
       }
 
-      const apiUrl = 'https://scriptishrxnewmark.onrender.com/v1';
-      const response = await fetchWithAuth(`${apiUrl}/chairs/${clinic.id}/with-patients`, {
+      const response = await fetchWithAuth(`${API_URL}/chairs/${clinic.id}/with-patients`, {
         method: 'GET',
       });
 
@@ -77,26 +40,7 @@ export default function ChairsPipelineView() {
       }
 
       const data = await response.json();
-      const chairsData = data.data || [];
-
-      console.log('Patients:',patients)
-
-      console.log('Chairs befor joining',chairsData)
-      // Map patients to chairs (example mapping - you may need to adjust based on your data structure)
-      const chairsWithPatients = chairsData.map((chair: Chair) => {
-        const assignedPatient =
-          chair.patient ??
-          patients.find((patient) => patient.infusionChairId === chair.id) ??
-          null;
-        return {
-          ...chair,
-          patients: assignedPatient ? [assignedPatient] : [],
-        };
-      });
-
-      console.log("Chairs with patient:",chairsWithPatients)
-
-      setChairs(chairsWithPatients);
+      setChairs(data.data || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch chairs';
       setError(errorMessage);
@@ -106,48 +50,11 @@ export default function ChairsPipelineView() {
     }
   };
 
-  const pipelineStages = [
-    { id: 'new_referral', detail: 'New Referral', label: 'New Referral' },
-    { id: 'insurance', detail: 'Insurance Verification', label: 'Insurance' },
-    { id: 'authorization', detail: 'Prior Authorization', label: 'Authorization' },
-    { id: 'scheduling', detail: 'Scheduling Treatment', label: 'Scheduling' },
-    { id: 'treatment', detail: 'Treatment In Process', label: 'Treatment' },
-    { id: 'complete', detail: 'Treatment Is Completed', label: 'Completed' },
-    { id: 'follow_up', detail: 'Treatment Follow-ups', label: 'Follow-up' },
-    { id: 'inactive_archived', label: 'Patient Archived', detail: 'INACTIVE_ARCHIVED' }
-  ];
-
-  function getStageStatus(stageId: string, currentPipelineStage: string) {
-    const order = pipelineStages.map(s => s.id);
-    const currentIdx = order.indexOf((currentPipelineStage || '').toLowerCase());
-    const stageIdx = order.indexOf(stageId);
-    if (stageIdx < currentIdx) return 'completed';
-    if (stageIdx === currentIdx) return 'active';
-    return 'pending';
-  }
-
-  useEffect(() => {
-    if (patients && patients.length > 0) {
-      const stages: Record<string, string> = {};
-      patients.forEach((patient) => {
-        const currentStage = patient.pipelineStage;
-        if (currentStage === 'NEW_REFERRAL') stages[patient.id] = 'insurance';
-        else if (currentStage === 'INSURANCE') stages[patient.id] = 'authorization';
-        else if (currentStage === 'AUTHORIZATION') stages[patient.id] = 'scheduling';
-        else if (currentStage === 'SCHEDULING') stages[patient.id] = 'treatment';
-        else if (currentStage === 'TREATMENT') stages[patient.id] = 'complete';
-        else if (currentStage === 'COMPLETE') stages[patient.id] = 'follow_up';
-        else if (currentStage === 'FOLLOW_UP') stages[patient.id] = 'inactive_archived';
-      });
-      setNextStages(stages);
-    }
-  }, [patients]);
-
   const handleUpdateStatus = async (patientId: string, nextStage: string) => {
     try {
       const referralId = selectedPatient?._referral?.id;
       if (!referralId) throw new Error('Referral id not found');
-      const response = await fetchWithAuth(`https://scriptishrxnewmark.onrender.com/v1/referrals/${referralId}/status`, {
+      const response = await fetchWithAuth(`${API_URL}/referrals/${referralId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ nextStage }),
       });
@@ -159,136 +66,63 @@ export default function ChairsPipelineView() {
     }
   };
 
-  const getUrgencyColor = (urgency?: string) => {
-    switch (urgency) {
-      case 'URGENT':
-        return 'bg-red-500/20 text-red-700';
-      case 'HIGH':
-        return 'bg-orange-500/20 text-orange-700';
-      case 'MEDIUM':
-        return 'bg-yellow-500/20 text-yellow-700';
-      default:
-        return 'bg-blue-500/20 text-blue-700';
-    }
+  const openPatientModal = (chair: EnrichedChair) => {
+    const patientId = chair.patient?.id;
+    if (!patientId) return;
+    const fullPatient = patients.find((p) => p.id === patientId);
+    setSelectedPatient(fullPatient || chair.patient);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-foreground/70">Loading chairs pipeline...</p>
-        </div>
-      </div>
+      <section className="flex items-center justify-center h-full">
+        <p className="text-center text-foreground/70">
+          <span className="block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
+          Loading chairs pipeline...
+        </p>
+      </section>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
+    <section className="p-6 space-y-6">
+      <header>
         <h1 className="text-3xl font-bold text-foreground">Chairs Pipeline</h1>
-        <p className="text-foreground/60 mt-1">View infusion chairs and their assigned patients</p>
-      </div>
+        <p className="text-foreground/60 mt-1">View infusion chairs with staff, treatment, and appointments</p>
+      </header>
 
-      {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
+        <section className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <p className="text-red-700 text-sm">{error}</p>
-        </div>
+        </section>
       )}
 
-      {/* Empty State */}
       {chairs.length === 0 && !error && (
-        <div className="text-center py-12 bg-background/50 rounded-lg border border-border/30">
+        <section className="text-center py-12 bg-background/50 rounded-lg border border-border/30">
           <p className="text-foreground/60 mb-2">No infusion chairs found</p>
-          <p className="text-sm text-foreground/50">
-            Create chairs to start managing your patient pipeline
-          </p>
-        </div>
+          <p className="text-sm text-foreground/50">Create chairs to start managing your patient pipeline</p>
+        </section>
       )}
 
-      {/* Chairs Grid (2-column, compact cards) - show patient pipeline stage on card */}
       {chairs.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {chairs.map((chair) => {
-            const firstPatient = chair.patients?.[0];
-            const patientStageRaw = firstPatient?.pipelineStage?.toUpperCase().replace('_',' ') || '';
-            const patientStage = patientStageRaw ? patientStageRaw : '';
-            const isInfusing = patientStage === 'treatment' || chair.status === 'IN_USE';
-            const subtitle = patientDisplayName(firstPatient);
-
-            const cardBase = ` bg-purple-400/10 shadow-sm hover:shadow-lg rounded-lg p-4 hover:shadow-lg shadow-sm transition-colors relative overflow-hidden border`;
-            const cardStyle = isInfusing
-              ? `${cardBase} col-span-2 bg-gradient-to-br from-purple-700/80 to-purple-600/70 border-transparent text-white shadow-lg h-36`
-              : `${cardBase} bg-background/40 border-border/30 hover:border-border/50 h-28`;
+            const stage = (chair.patient?.pipelineStage || '').toUpperCase();
+            const isInfusing = stage === 'TREATMENT' || stage === 'IN_TREATMENT' || chair.status === 'IN_USE';
 
             return (
-              <div key={chair.id} className={`${cardStyle} items-center justify-center`}>
-                <div className="flex flex-col h-full justify-between">
-                  <div>
-                    <div className="text-xs font-semibold text-foreground/60 mb-2 text-center">{chair.chairNumber}</div>
-                    <div className="text-base font-semibold text-center">
-                      {patientStage || 'No Patient'}
-                    </div>
-                    <div className={`text-sm mt-1 text-center ${isInfusing ? 'text-purple-100/90' : 'text-foreground/60'}`}>
-                      {subtitle}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const firstPatient = chair.patients?.[0];
-                        if (firstPatient) {
-                          setSelectedPatient(firstPatient);
-                        }
-                      }}
-                      className="p-2 text-foreground/60 absolute bottom-1 right-1 hover:bg-background/80 rounded-lg transition-colors"
-                      title="View patient details"
-                    >
-                      <Fullscreen className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* Expanded patients area (keeps original behavior) */}
-                  {expandedChairs[chair.id] && (
-                    <div className="col-span-2 mt-3">
-                      {chair.patients && chair.patients.length > 0 ? (
-                        <div className="divide-y divide-border/30 rounded-md overflow-hidden">
-                          {chair.patients.map(patient => (
-                            <div key={patient.id} className="p-3 bg-background/20">
-                              <div className="flex justify-between">
-                                <div>
-                                  <div className="font-medium text-foreground">{patient.firstName} {patient.lastName}</div>
-                                  {patient.primaryDiagnosis && <div className="text-sm text-foreground/60">{patient.primaryDiagnosis}</div>}
-                                </div>
-                                <div className="text-right">
-                                  {patient.urgencyLevel && (
-                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(patient.urgencyLevel)}`}>
-                                      {patient.urgencyLevel}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-3 text-foreground/60 text-sm">No patients assigned to this chair</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ChairCard
+                key={chair.id}
+                chair={chair}
+                isInfusing={isInfusing}
+                onViewPatient={() => openPatientModal(chair)}
+              />
             );
           })}
-        </div>
+        </section>
       )}
 
-      {/* Patient Detail Modal */}
       {selectedPatient && (
         <PatientDetailModal
           patient={selectedPatient}
@@ -298,6 +132,6 @@ export default function ChairsPipelineView() {
           clinicId={clinic?.id}
         />
       )}
-    </div>
+    </section>
   );
 }
