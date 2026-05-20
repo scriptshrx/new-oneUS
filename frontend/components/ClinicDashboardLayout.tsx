@@ -149,12 +149,12 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               icon:Calendar,
               allowedRoles:['CLINIC_ADMIN']
             },
-            {
-              id: 'patients' as ViewType,
-              label: 'Patient Pipelines',
-              icon: Workflow,
-              allowedRoles: ['CLINIC_ADMIN'],
-            },
+            // {
+            //   id: 'patients' as ViewType,
+            //   label: 'Patient Pipelines',
+            //   icon: Workflow,
+            //   allowedRoles: ['CLINIC_ADMIN'],
+            // },
             {
               id: 'archives' as ViewType,
               label: 'Archives',

@@ -835,10 +835,19 @@ const[copied,setCopied]=useState(false)
 const[phone,setPhone]=useState('');
 const[notifying,setNotifying]=useState(false)
 
-const handleGenerateLink=(value)=>{
+const handleGenerateLink=(value: string)=>{
   if(!value)return;
 
-  const linkUrl = `https://scriptishrx.net/register/staff?clinicId=${clinic.id}&role=${value.replace(' ','_')}&clinicName=${clinic.name}`;
+  const encodedPayload = encodeURIComponent(
+    btoa(
+      JSON.stringify({
+        clinicId: clinic.id,
+        role: value.replace(' ', '_'),
+        clinicName: clinic.name,
+      })
+    )
+  );
+  const linkUrl = `https://scriptishrx.net/register/staff?data=${encodedPayload}`;
 setLink(linkUrl)
 console.log('Link generated successfully')
 setNotice('Link Generated!')
@@ -966,7 +975,7 @@ const handleCopy=()=>{
         {
        <div className='flex flex-col space-y-4'>
           {!selecTrigger&&<button onClick={()=>{setSelectTrigger(true);if(selectedRole)return}}
-          className='rounded-md shadow-lg cursor-pointer p-2 hover:shadow-md text-center bg-blue-900 text-white'>Register Staff</button>}
+          className='rounded-md shadow-lg cursor-pointer p-2 font-boldhover:shadow-md text-center bg-blue-900 text-white'>Register Staff</button>}
              {selecTrigger &&
            <div className='flex flex-col space-y-4'>
            <Select
@@ -992,7 +1001,7 @@ const handleCopy=()=>{
                                       </Select>
                                       {link &&<div className='flex gap-2 items-center w-20 justify-between'>
                                         <div className='text-black text-xs'>{link.slice(0,25)}</div>
-                                        <button onClick={()=>handleCopy(link)}
+                                        <button onClick={handleCopy}
                                         className='rounded-lg p-1 px-2 text-center items-center flex justify-center bg-gray-800 text-white cursor-pointer shadow-sm'>{copied?'Copied':'Copy'}</button>
                                         </div>}
                                       <Input

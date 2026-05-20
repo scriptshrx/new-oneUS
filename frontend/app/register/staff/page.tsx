@@ -57,37 +57,69 @@ export default function StaffRegistrationForm() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-
+    const encodedDataParam = params.get('data');
     const clinicIdParam = params.get('clinicId');
     const roleParam = params.get('role');
-    const clinicNam = params.get('clinicName')
-    if(clinicNam){
-        setClinicName(clinicNam);
-        setFormData((prev)=>({...prev, clinicName:clinicNam}))
-        console.log('Clinic name is:',clinicNam)
+    const clinicNameParam = params.get('clinicName');
 
+    if (encodedDataParam) {
+      try {
+        const decodedData = JSON.parse(atob(decodeURIComponent(encodedDataParam)));
+        const decodedClinicId = decodedData?.clinicId || '';
+        const decodedRole = decodedData?.role || '';
+        const decodedClinicName = decodedData?.clinicName || '';
+
+        if (decodedClinicName) {
+          setClinicName(decodedClinicName);
+          console.log('Clinic name set from encoded data:', decodedClinicName);
+        }
+
+        if (decodedClinicId) {
+          setClinicId(decodedClinicId);
+          setFormData(prev => ({
+            ...prev,
+            clinicId: decodedClinicId,
+          }));
+          console.log('ClinicId set from encoded data:', decodedClinicId);
+        }
+
+        if (decodedRole) {
+          setRole(decodedRole);
+          setFormData(prev => ({
+            ...prev,
+            role: decodedRole,
+          }));
+          console.log('Role set from encoded data:', decodedRole);
+        }
+
+        return;
+      } catch (error) {
+        console.error('Failed to decode registration data from URL:', error);
+      }
+    }
+
+    // Backward compatibility with old query params
+    if (clinicNameParam) {
+      setClinicName(clinicNameParam);
+      console.log('Clinic name set from query params:', clinicNameParam);
     }
 
     if (clinicIdParam) {
       setClinicId(clinicIdParam);
-
       setFormData(prev => ({
         ...prev,
         clinicId: clinicIdParam,
       }));
-
-      console.log('ClinicId set:', clinicIdParam);
+      console.log('ClinicId set from query params:', clinicIdParam);
     }
 
     if (roleParam) {
       setRole(roleParam);
-
       setFormData(prev => ({
         ...prev,
         role: roleParam,
       }));
-
-      console.log('Role set:', roleParam);
+      console.log('Role set from query params:', roleParam);
     }
   }, []);
 

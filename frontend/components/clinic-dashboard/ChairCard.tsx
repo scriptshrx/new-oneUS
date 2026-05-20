@@ -10,6 +10,7 @@ import {
 
 interface ChairCardProps {
   chair: EnrichedChair;
+  role: string;
   isInfusing?: boolean;
   onViewPatient?: () => void;
   onDelete?: () => void;
@@ -18,6 +19,7 @@ interface ChairCardProps {
 
 export default function ChairCard({
   chair,
+  role,
   isInfusing = false,
   onViewPatient,
   onDelete,
@@ -75,7 +77,7 @@ export default function ChairCard({
             <Fullscreen className="h-5 w-5" />
           </button>
         )}
-        {onDelete && (
+        {onDelete && role === 'CLINIC_ADMIN' && (
           <button
             type="button"
             onClick={(e) => {

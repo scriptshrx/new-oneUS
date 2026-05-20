@@ -10,11 +10,12 @@ import { EnrichedChair } from '@/lib/chairDisplay';
 const API_URL = 'https://scriptishrxnewmark.onrender.com/v1';
 
 export default function AllChairsView() {
-  const { clinic } = useClinicDashboardView();
+  const { clinic, role } = useClinicDashboardView();
   const [chairs, setChairs] = useState<EnrichedChair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  
 
   useEffect(() => {
     fetchChairs();
@@ -116,6 +117,7 @@ export default function AllChairsView() {
               <ChairCard
                 key={chair.id}
                 chair={chair}
+                role={role}
                 isInfusing={isInfusing}
                 onDelete={() => handleDeleteChair(chair.id)}
                 deleting={deleting === chair.id}
