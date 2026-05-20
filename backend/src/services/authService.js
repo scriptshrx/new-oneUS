@@ -199,7 +199,7 @@ async function registerStaff(input){
     role:user.role,
 
     temporaryToken,
-    nextStep: user ? 'ACTIVE',
+    nextStep:'ACTIVE',
     userId: user?.id,
   };
 
