@@ -14,6 +14,10 @@ import EditPatientModal from '@/components/EditPatientModal';
 import { useState, useEffect } from 'react';
 import ClinicDashboardLayout, { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
+import {
+  formatAppointmentDateFromIso,
+  formatScheduledStartTimeFromIso,
+} from '@/lib/clinicAppointmentDisplay';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 import dayjs from 'dayjs';
 import { Input } from '../ui/input';
@@ -78,21 +82,14 @@ const getUrgencyColor = (urgency: string | undefined) => {
 
 const getDisplayDate = (patient: Patient) => {
   if (patient.appointment?.scheduledStartTime) {
-    const dateParts = patient.appointment.scheduledStartTime.split('T')[0]?.split('-') || [];
-    const date = new Date(dateParts.join('-'));
-    return date.toLocaleDateString();
+    return formatAppointmentDateFromIso(patient.appointment.scheduledStartTime);
   }
   return patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'N/A';
 };
 
 const getDateTimeDisplay = (patient: Patient) => {
   if (patient.appointment?.scheduledStartTime) {
-    const startParts = patient.appointment.scheduledStartTime.split('T')[1]?.split(':') || [];
-    const startHours = parseInt(startParts[0] || '0');
-    const startMinutes = parseInt(startParts[1] || '0');
-    const startAmpm = startHours >= 12 ? 'PM' : 'AM';
-    const startDisplay = startHours > 12 ? startHours - 12 : (startHours === 0 ? 12 : startHours);
-    return `${startDisplay}:${String(startMinutes).padStart(2, '0')} ${startAmpm}`;
+    return formatScheduledStartTimeFromIso(patient.appointment.scheduledStartTime);
   }
   return '';
 };
@@ -732,7 +729,7 @@ function AppointmentsTab({
                       </td>
                       <td className="px-6 py-4 border-r border-primary/40">
                         <span className="text-sm text-foreground/70">
-                          {dayjs(appointment.scheduledStartTime).format('hh:mm A') || 'N/A'}
+                          {formatScheduledStartTimeFromIso(appointment.scheduledStartTime) || 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4 border-r border-primary/40">

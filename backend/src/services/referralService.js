@@ -2,6 +2,7 @@ const prisma = require('../db/client');
 const { NotFoundError, ValidationError, ConflictError } = require('../middleware/errorHandler');
 const { generateVerificationCode } = require('../utils/password');
 const { sendPatientPortalLink } = require('../utils/email');
+const { getTimezoneForState, convertUTCToClinicTime } = require('../utils/timezone');
 
 const createReferral = async (input, hospitalIdParam) => {
   // Validate required fields
@@ -130,6 +131,25 @@ const patientId = patient.id;
   };
 };
 
+function attachClinicLocalAppointmentsToPatient(patient, clinicState) {
+  if (!patient?.appointments?.length || !clinicState) {
+    return patient;
+  }
+  try {
+    const tz = getTimezoneForState(clinicState);
+    const converted = patient.appointments.map((a) => ({
+      ...a,
+      scheduledStartTime: convertUTCToClinicTime(a.scheduledStartTime, tz),
+      scheduledEndTime: a.scheduledEndTime
+        ? convertUTCToClinicTime(a.scheduledEndTime, tz)
+        : null,
+    }));
+    return { ...patient, appointments: converted };
+  } catch {
+    return patient;
+  }
+}
+
 const getReferrals = async (clinicId, hospitalId, filters = {}) => {
   // Determine filter: prefer clinicId, otherwise use hospitalId
   const where = {};
@@ -152,7 +172,23 @@ const getReferrals = async (clinicId, hospitalId, filters = {}) => {
   const referrals = await prisma.referral.findMany({
     where,
     include: {
-      patient: true,
+      patient: {
+        include: {
+          appointments: {
+            orderBy: { scheduledStartTime: 'desc' },
+            take: 1,
+            select: {
+              id: true,
+              appointmentType: true,
+              scheduledDate: true,
+              scheduledStartTime: true,
+              scheduledEndTime: true,
+              status: true,
+              treatmentType: true,
+            },
+          },
+        },
+      },
       clinic: true,
       referringPhysician: true,
     },
@@ -161,7 +197,10 @@ const getReferrals = async (clinicId, hospitalId, filters = {}) => {
     take: filters.take || 50,
   });
 
-  return referrals;
+  return referrals.map((ref) => ({
+    ...ref,
+    patient: attachClinicLocalAppointmentsToPatient(ref.patient, ref.clinic?.state),
+  }));
 };
 
 const getReferralById = async (referralId, clinicId, hospitalId) => {

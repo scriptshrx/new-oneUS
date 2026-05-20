@@ -75,11 +75,33 @@ function pickPatientAppointment(appointments) {
   return appointments[0];
 }
 
-function formatChairForResponse(chair) {
+/**
+ * Match getAppointmentsByClinic: return Date objects from convertUTCToClinicTime only.
+ * Do not use formatClinicLocalTime here — it uses the *server* timezone (getHours), which
+ * shifts times vs the appointments tab when the host runs in UTC.
+ */
+function mapAppointmentTimesForDisplay(appointment, clinicTimezone) {
+  if (!appointment || !clinicTimezone) {
+    return appointment;
+  }
+  return {
+    ...appointment,
+    scheduledStartTime: convertUTCToClinicTime(
+      appointment.scheduledStartTime,
+      clinicTimezone
+    ),
+    scheduledEndTime: appointment.scheduledEndTime
+      ? convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone)
+      : null,
+  };
+}
+
+function formatChairForResponse(chair, clinicTimezone) {
   if (!chair) return chair;
 
   const referral = chair.patient?.referrals?.[0];
-  const appointment = pickPatientAppointment(chair.patient?.appointments);
+  const appointmentRaw = pickPatientAppointment(chair.patient?.appointments);
+  const appointment = mapAppointmentTimesForDisplay(appointmentRaw, clinicTimezone);
 
   const patient = chair.patient
     ? {
@@ -107,6 +129,17 @@ function formatChairForResponse(chair) {
   };
 }
 
+async function getClinicTimezoneOrNull(clinicId) {
+  const clinic = await prisma.clinic.findUnique({
+    where: { id: clinicId },
+    select: { state: true },
+  });
+  if (!clinic?.state) {
+    return null;
+  }
+  return getTimezoneForState(clinic.state);
+}
+
 class ChairService {
   /**
    * Get all infusion chairs for a clinic
@@ -115,6 +148,7 @@ class ChairService {
    */
   static async getChairsByClinic(clinicId) {
     try {
+      const clinicTimezone = await getClinicTimezoneOrNull(clinicId);
       const chairs = await prisma.infusionChair.findMany({
         where: {
           clinicId: clinicId,
@@ -124,7 +158,7 @@ class ChairService {
           createdAt: 'desc',
         },
       });
-      return chairs.map(formatChairForResponse);
+      return chairs.map((c) => formatChairForResponse(c, clinicTimezone));
     } catch (error) {
       throw new Error(`Failed to fetch infusion chairs: ${error.message}`);
     }
@@ -146,7 +180,8 @@ class ChairService {
       if (!chair) {
         throw new Error('Infusion chair not found');
       }
-      return formatChairForResponse(chair);
+      const clinicTimezone = await getClinicTimezoneOrNull(chair.clinicId);
+      return formatChairForResponse(chair, clinicTimezone);
     } catch (error) {
       throw new Error(`Failed to fetch infusion chair: ${error.message}`);
     }
@@ -232,7 +267,8 @@ class ChairService {
         console.error('Failed to send chair account SMS:', e);
       }
 
-      return formatChairForResponse(chair);
+      const clinicTimezone = await getClinicTimezoneOrNull(clinicId);
+      return formatChairForResponse(chair, clinicTimezone);
     } catch (error) {
       throw new Error(`Failed to create infusion chair: ${error.message}`);
     }
@@ -320,7 +356,9 @@ class ChairService {
         },
       });
 
-      return chairs.map(formatChairForResponse);
+      const clinicTimezone = await getClinicTimezoneOrNull(clinicId);
+
+      return chairs.map((c) => formatChairForResponse(c, clinicTimezone));
     } catch (error) {
       throw new Error(`Failed to fetch chairs with patients: ${error.message}`);
     }

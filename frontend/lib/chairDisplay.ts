@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { formatAppointmentDateFromIso, formatScheduledStartTimeFromIso } from '@/lib/clinicAppointmentDisplay';
 
 export interface ChairStaffUser {
   id: string;
@@ -52,13 +52,35 @@ export function patientDisplayName(patient?: ChairPatient | null): string {
   return `${patient.firstName} ${patient.lastName}`.trim();
 }
 
+export function matchesSchedulingSearch(
+  query: string,
+  ...fields: Array<string | null | undefined>
+): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return fields
+    .filter((f): f is string => Boolean(f?.trim()))
+    .join(' ')
+    .toLowerCase()
+    .includes(q);
+}
+
+export function chairMatchesSchedulingSearch(chair: EnrichedChair, query: string): boolean {
+  return matchesSchedulingSearch(
+    query,
+    chair.chairNumber,
+    staffDisplayName(chair.user, chair.staffName),
+    chair.patient ? patientDisplayName(chair.patient) : '',
+  );
+}
+
 export function formatChairAppointment(appointment?: ChairAppointment | null): string | null {
-  if (!appointment) return null;
+  if (!appointment?.scheduledStartTime) return null;
   try {
-    const start = new Date(appointment.scheduledStartTime);
-    const dateLabel = format(start, 'MMM d, yyyy');
-    const timeLabel = format(start, 'h:mm a');
+    const dateLabel = formatAppointmentDateFromIso(appointment.scheduledStartTime);
+    const timeLabel = formatScheduledStartTimeFromIso(appointment.scheduledStartTime);
     const type = appointment.appointmentType?.replace(/_/g, ' ') || appointment.treatmentType || 'Appointment';
+    if (!dateLabel || !timeLabel) return `${type} · Scheduled`;
     return `${type} · ${dateLabel} at ${timeLabel}`;
   } catch {
     return 'Scheduled appointment';

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Clock, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Clock, CheckCircle2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -10,12 +10,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import PatientDetailModal from '@/components/PatientDetailModal';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 import { format } from 'date-fns';
-import { patientDisplayName, staffDisplayName, type EnrichedChair } from '@/lib/chairDisplay';
+import {
+  chairMatchesSchedulingSearch,
+  matchesSchedulingSearch,
+  patientDisplayName,
+  staffDisplayName,
+  type EnrichedChair,
+} from '@/lib/chairDisplay';
+import { Input } from '@/components/ui/input';
 
 
 interface Patient {
@@ -124,6 +131,7 @@ export default function Scheduling({
   const [bookingSelectedTimeDisplay, setBookingSelectedTimeDisplay] = useState<string | null>(null);
   const [bookingSelectedChair, setBookingSelectedChair] = useState<string | null>(null);
   const [chairs, setChairs] = useState<EnrichedChair[]>([]);
+  const [schedulingSearchQuery, setSchedulingSearchQuery] = useState('');
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -373,6 +381,23 @@ export default function Scheduling({
 
   const selectedChair = chairs.find((c) => c.id === bookingSelectedChair);
 
+  const filteredChairs = useMemo(() => {
+    if (!schedulingSearchQuery.trim()) return chairs;
+    return chairs.filter((chair) => chairMatchesSchedulingSearch(chair, schedulingSearchQuery));
+  }, [chairs, schedulingSearchQuery]);
+
+  const patientMatchesSearch = (patient: Patient) => {
+    const chair = chairs.find((c) => c.patient?.id === patient.id);
+    return matchesSchedulingSearch(
+      schedulingSearchQuery,
+      patient.firstName,
+      patient.lastName,
+      chair?.chairNumber,
+      chair ? staffDisplayName(chair.user, chair.staffName) : null,
+      chair?.patient ? patientDisplayName(chair.patient) : null,
+    );
+  };
+
   // Group patients by pipeline stage
   const schedulingPatients = patients.filter(
     (p) => (p.pipelineStage || '').toLowerCase() === 'scheduling'
@@ -475,9 +500,18 @@ export default function Scheduling({
             )}
             <h1 className="text-3xl font-bold text-foreground">Scheduling</h1>
             <p className="text-sm text-foreground/70 mt-1">
-              {/* {patients.length} patient{patients.length !== 1 ? 's' : ''} referred */}
               Schedule Patient Appointment
             </p>
+            <div className="relative mt-4 max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50" />
+              <Input
+                type="search"
+                placeholder="Search by chair, staff, or patient Name..."
+                value={schedulingSearchQuery}
+                onChange={(e) => setSchedulingSearchQuery(e.target.value)}
+                className="bg-background border-border/30 md:w-100 pl-9"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -537,7 +571,7 @@ export default function Scheduling({
                       Select Infusion Chair
                     </label>
                     <p className="text-sm text-foreground/60 mb-2">
-                      Patient is taken from the chair assignment. Only patients assigned to a chai can be booked.
+                      Patient is taken from the chair assignment. Only patient assigned to a chair can be booked.
                     </p>
                     {bookingLoading ? (
                       <div className="flex items-center justify-center py-8">
@@ -546,14 +580,16 @@ export default function Scheduling({
                       </div>
                     ) : chairs.length === 0 ? (
                       <p className="text-foreground/70 text-center py-8">No chairs available</p>
+                    ) : filteredChairs.length === 0 ? (
+                      <p className="text-foreground/70 text-center py-8">No chairs match your search</p>
                     ) : (
                       <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {chairs.map((chair) => {
+                        {filteredChairs.map((chair) => {
                           const hasPatient = Boolean(chair.patient);
                           return (
                             <label
                               key={chair.id}
-                              className={`flex items-start p-4 border rounded-lg transition-colors ${
+                              className={`flex items-start p-4 border bg-primary/10 rounded-lg transition-colors ${
                                 !hasPatient
                                   ? 'border-border/20 bg-muted/30 cursor-not-allowed opacity-60'
                                   : bookingSelectedChair === chair.id
@@ -573,7 +609,7 @@ export default function Scheduling({
                               <div className="flex-1">
                                 <p className="font-semibold text-foreground">Chair {chair.chairNumber}</p>
                                 <p className="text-sm text-foreground/70 mt-1">
-                                  Staff: {staffDisplayName(chair.user, chair.staffName)}
+                                  Nurse: {staffDisplayName(chair.user, chair.staffName)}
                                 </p>
                                 <p className="text-sm text-foreground/70">
                                   Patient: {hasPatient ? patientDisplayName(chair.patient) : 'Not assigned'}
@@ -753,7 +789,9 @@ export default function Scheduling({
             {pipelineStages
               .filter((stage) => stage.id !== 'inactive_archived')
               .map((stage) => {
-                const stagePatients = patientsByStage[stage.id as keyof typeof patientsByStage] || [];
+                const stagePatients = (patientsByStage[stage.id as keyof typeof patientsByStage] || []).filter(
+                  patientMatchesSearch
+                );
                 return (stagePatients.length>0&&
                   <div key={stage.id} className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
                     <div className="p-6">
@@ -914,7 +952,8 @@ export default function Scheduling({
               })}
 
             {/* Archived Patients Section */}
-            {patientsByStage['inactive_archived'] && patientsByStage['inactive_archived'].length > 0 && (
+            {patientsByStage['inactive_archived'] &&
+              patientsByStage['inactive_archived'].filter(patientMatchesSearch).length > 0 && (
               <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-6">
@@ -938,7 +977,7 @@ export default function Scheduling({
                         </tr>
                       </thead>
                       <tbody>
-                        {patientsByStage['inactive_archived']?.map((patient: Patient) => (
+                        {patientsByStage['inactive_archived']?.filter(patientMatchesSearch).map((patient: Patient) => (
                           <tr
                             key={patient.id}
                             className="border-b border-border/20 hover:bg-primary/5 transition-colors"

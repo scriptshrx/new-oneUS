@@ -161,12 +161,12 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               icon: Archive,
               allowedRoles: ['CLINIC_ADMIN'],
             },
-            {
-              id: 'waitlist' as ViewType,
-              label: 'View Waitlist',
-              icon: Users,
-              allowedRoles: ['CLINIC_ADMIN'],
-            },
+            // {
+            //   id: 'waitlist' as ViewType,
+            //   label: 'View Waitlist',
+            //   icon: Users,
+            //   allowedRoles: ['CLINIC_ADMIN'],
+            // },
           ].filter(item => item.allowedRoles.includes(role)),
         },
         {
@@ -362,6 +362,9 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
             // Timeline
             createdAt: referral.createdAt,
             updatedAt: referral.updatedAt,
+
+            // Latest appointment (clinic-local times, same as appointments API)
+            appointment: patient.appointments?.[0] ?? undefined,
             
             // Store full referral object for treatment history
             _referral: referral,

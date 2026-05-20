@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { formatChairAppointment } from '@/lib/chairDisplay';
 
 const API_URL = 'https://scriptishrxnewmark.onrender.com/v1';
 const NONE_VALUE = '__none__';
@@ -91,6 +92,12 @@ export default function AddChairsView() {
     () => staff.find((u) => u.id === formData.userId) ?? null,
     [staff, formData.userId]
   );
+
+  const selectedPatientAppointmentLabel = useMemo(() => {
+    const apt = selectedPatient?.appointment;
+    if (!apt) return null;
+    return formatChairAppointment(apt);
+  }, [selectedPatient]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -235,7 +242,7 @@ export default function AddChairsView() {
               <SelectValue placeholder={patientsLoading ? 'Loading patients...' : 'Select a patient'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE_VALUE}>No patient</SelectItem>
+              <SelectItem value={NONE_VALUE}>Select Patient</SelectItem>
               {assignablePatients.map((patient) => (
                 <SelectItem key={patient.id} value={patient.id}>
                   {patient.firstName} {patient.lastName}
@@ -253,6 +260,12 @@ export default function AddChairsView() {
                 <span className="text-foreground/60">Prescribed treatment: </span>
                 {selectedPatient.prescribedTreatment || 'Not specified'}
               </p>
+              {selectedPatientAppointmentLabel && (
+                <p className="text-sm text-foreground/80">
+                  <span className="text-foreground/60">Appointment: </span>
+                  {selectedPatientAppointmentLabel}
+                </p>
+              )}
             </div>
           )}
           {!patientsLoading && assignablePatients.length === 0 && (
@@ -276,7 +289,7 @@ export default function AddChairsView() {
               <SelectValue placeholder={staffLoading ? 'Loading users...' : 'Select a clinic user'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE_VALUE}>No user</SelectItem>
+              <SelectItem value={NONE_VALUE}>Select Infusion Nurse</SelectItem>
               {staff.map((member) => (
                 <SelectItem key={member.id} value={member.id}>
                   {staffDisplayName(member)} ({member.role.replace(/_/g, ' ')})
