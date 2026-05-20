@@ -342,7 +342,7 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
 
       {/* Clinic Information Display */}
       <div className="p-6 rounded-xl bg-accent/10 border border-accent/20">
-        <h3 className="text-lg font-semibold text-accent mb-4">Intake Clinic</h3>
+        <h3 className="text-lg font-semibold text-accent mb-4">Intake Form</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-foreground/60 uppercase tracking-wider mb-1">Clinic Name</p>
