@@ -109,7 +109,7 @@ const registerClinic = async (input) => {
         firstName: input.admin.firstName,
         lastName: input.admin.lastName,
         role: input.admin.role,
-        status: 'PENDING_EMAIL_VERIFICATION',
+        status: 'PENDING_VERIFICATION',
         clinicId: clinic.id,
 
       },
@@ -693,7 +693,7 @@ const registerHospital = async (input) => {
         firstName: input.admin.firstName,
         lastName: input.admin.lastName,
         role: input.admin.role,
-        status: 'PENDING_EMAIL_VERIFICATION',
+        status: 'PENDING_VERIFICATION',
         hospitalId: hospital.id,
       },
     });
