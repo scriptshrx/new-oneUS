@@ -15,6 +15,7 @@ import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 import { format } from 'date-fns';
+import { patientDisplayName, staffDisplayName, type EnrichedChair } from '@/lib/chairDisplay';
 
 
 interface Patient {
@@ -115,14 +116,14 @@ export default function Scheduling({
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
 
-  // Booking flow state
-  const [bookingStep, setBookingStep] = useState<'patient' | 'date' | 'time' | 'chair' | 'confirm'>('patient');
+  // Booking flow: chair → date → time → confirm (patient comes from selected chair)
+  const [bookingStep, setBookingStep] = useState<'chair' | 'date' | 'time' | 'confirm'>('chair');
   const [bookingSelectedPatient, setBookingSelectedPatient] = useState<Patient | null>(null);
   const [bookingSelectedDate, setBookingSelectedDate] = useState<Date | undefined>(undefined);
   const [bookingSelectedTime, setBookingSelectedTime] = useState<string | null>(null);
   const [bookingSelectedTimeDisplay, setBookingSelectedTimeDisplay] = useState<string | null>(null);
   const [bookingSelectedChair, setBookingSelectedChair] = useState<string | null>(null);
-  const [chairs, setChairs] = useState<any[]>([]);
+  const [chairs, setChairs] = useState<EnrichedChair[]>([]);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -193,13 +194,14 @@ export default function Scheduling({
     }
   };
 
-  const fetchAvailableSlots = async (date: Date) => {
+  const fetchAvailableSlots = async (date: Date, chairId?: string | null) => {
     try {
       setSlotsLoading(true);
       setBookingError(null);
       const dateStr = date.toISOString().split('T')[0];
+      const chairQuery = chairId ? `&chairId=${chairId}` : '';
       const response = await fetchWithAuth(
-        `https://scriptishrxnewmark.onrender.com/v1/appointments/availability/${effectiveClinicId}/${dateStr}?durationMinutes=60`
+        `https://scriptishrxnewmark.onrender.com/v1/appointments/availability/${effectiveClinicId}/${dateStr}?durationMinutes=60${chairQuery}`
       );
 
       if (!response.ok) {
@@ -217,27 +219,41 @@ export default function Scheduling({
     }
   };
 
-  const handleBookingSelectPatient = (patient: Patient) => {
-    setBookingSelectedPatient(patient);
+  const handleBookingSelectChair = (chair: EnrichedChair) => {
+    if (!chair.patient) {
+      setBookingError('This chair has no patient assigned. Assign a patient when creating or editing the chair.');
+      return;
+    }
+
+    setBookingError(null);
+    setBookingSelectedChair(chair.id);
+    setBookingSelectedPatient({
+      id: chair.patient.id,
+      firstName: chair.patient.firstName,
+      lastName: chair.patient.lastName,
+      prescribedTreatment: chair.patient.prescribedTreatment ?? undefined,
+      pipelineStage: chair.patient.pipelineStage,
+    });
+    setBookingSelectedDate(undefined);
+    setBookingSelectedTime(null);
+    setBookingSelectedTimeDisplay(null);
+    setAvailableSlots([]);
     setBookingStep('date');
   };
 
   const handleBookingSelectDate = (date: Date | undefined) => {
-    if (date) {
-      setBookingSelectedDate(date);
-      fetchAvailableSlots(date);
-      setBookingStep('time');
-    }
+    setBookingSelectedDate(date);
+  };
+
+  const handleContinueToTime = () => {
+    if (!bookingSelectedDate || !bookingSelectedChair) return;
+    fetchAvailableSlots(bookingSelectedDate, bookingSelectedChair);
+    setBookingStep('time');
   };
 
   const handleBookingSelectTime = (slot: any) => {
     setBookingSelectedTime(slot.startTime);
     setBookingSelectedTimeDisplay(slot.clinicLocalTime || slot.startTime);
-    setBookingStep('chair');
-  };
-
-  const handleBookingSelectChair = (chairId: string) => {
-    setBookingSelectedChair(chairId);
     setBookingStep('confirm');
   };
 
@@ -310,7 +326,7 @@ export default function Scheduling({
 const res = await response.json()
       console.log('Appointment created successfully:',res)
       setIsSubmitting(false);
-      setBookingStep('patient');
+      setBookingStep('chair');
       setBookingSelectedPatient(null);
       setBookingSelectedDate(undefined);
       setBookingSelectedTime(null);
@@ -328,20 +344,21 @@ const res = await response.json()
 
   const handleBookingBack = () => {
     if (bookingStep === 'date') {
-      setBookingStep('patient');
+      setBookingStep('chair');
       setBookingSelectedPatient(null);
+      setBookingSelectedChair(null);
+      setBookingSelectedDate(undefined);
     } else if (bookingStep === 'time') {
       setBookingStep('date');
       setBookingSelectedTime(null);
       setBookingSelectedTimeDisplay(null);
       setAvailableSlots([]);
-    } else if (bookingStep === 'chair') {
-      setBookingStep('time');
-      setBookingSelectedChair(null);
     } else if (bookingStep === 'confirm') {
-      setBookingStep('chair');
+      setBookingStep('time');
     }
   };
+
+  const selectedChair = chairs.find((c) => c.id === bookingSelectedChair);
 
   // Group patients by pipeline stage
   const schedulingPatients = patients.filter(
@@ -490,56 +507,80 @@ const res = await response.json()
                   </div>
                 )}
 
-                {/* Step: Patient Selection */}
-                {bookingStep === 'patient' && (
+                {/* Step: Chair Selection */}
+                {bookingStep === 'chair' && (
                   <div className="space-y-4">
                     <label className="block text-sm font-semibold text-foreground mb-3">
-                      Select Patient
+                      Select Infusion Chair
                     </label>
-                    {(() => {
-                      const schedulingPatientsForBooking = patients.filter(
-                        (p) => (p.pipelineStage || '').toLowerCase() === 'scheduling'
-                      );
-                      return schedulingPatientsForBooking.length === 0 ? (
-                        <p className="text-foreground/70 text-center py-4">No patients in scheduling stage</p>
-                      ) : (
-                        <Select
-                          value={bookingSelectedPatient?.id || ''}
-                          onValueChange={(patientId) => {
-                            const patient = schedulingPatientsForBooking.find((p) => p.id === patientId);
-                            if (patient) handleBookingSelectPatient(patient);
-                          }}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Choose a patient..." />
-                          </SelectTrigger>
-                          <SelectContent className="w-full">
-                            {schedulingPatientsForBooking.map((patient) => (
-                              <SelectItem key={patient.id} value={patient.id}>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">
-                                    {patient.firstName} {patient.lastName}
-                                  </span>
-                                  <span className="text-xs text-foreground/60">
-                                    {patient.email || 'N/A'}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      );
-                    })()}
+                    <p className="text-sm text-foreground/60 mb-2">
+                      Patient is taken from the chair assignment. Only chairs with an assigned patient can be booked.
+                    </p>
+                    {bookingLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader className="w-6 h-6 animate-spin text-primary mr-2" />
+                        <p className="text-foreground/70">Loading chairs...</p>
+                      </div>
+                    ) : chairs.length === 0 ? (
+                      <p className="text-foreground/70 text-center py-8">No chairs available</p>
+                    ) : (
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {chairs.map((chair) => {
+                          const hasPatient = Boolean(chair.patient);
+                          return (
+                            <label
+                              key={chair.id}
+                              className={`flex items-start p-4 border rounded-lg transition-colors ${
+                                !hasPatient
+                                  ? 'border-border/20 bg-muted/30 cursor-not-allowed opacity-60'
+                                  : bookingSelectedChair === chair.id
+                                    ? 'border-primary bg-primary/10 cursor-pointer'
+                                    : 'border-border/30 hover:bg-primary/5 cursor-pointer'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="chair"
+                                value={chair.id}
+                                disabled={!hasPatient}
+                                checked={bookingSelectedChair === chair.id}
+                                onChange={() => hasPatient && handleBookingSelectChair(chair)}
+                                className="mt-1 mr-4"
+                              />
+                              <div className="flex-1">
+                                <p className="font-semibold text-foreground">Chair {chair.chairNumber}</p>
+                                <p className="text-sm text-foreground/70 mt-1">
+                                  Staff: {staffDisplayName(chair.user, chair.staffName)}
+                                </p>
+                                <p className="text-sm text-foreground/70">
+                                  Patient: {hasPatient ? patientDisplayName(chair.patient) : 'Not assigned'}
+                                </p>
+                                {hasPatient && chair.patient?.prescribedTreatment && (
+                                  <p className="text-sm text-foreground/70">
+                                    Treatment: {chair.patient.prescribedTreatment}
+                                  </p>
+                                )}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Step: Date Selection */}
-                {bookingStep === 'date' && bookingSelectedPatient && (
+                {bookingStep === 'date' && bookingSelectedPatient && selectedChair && (
                   <div className="space-y-4">
-                    <div className="p-4 bg-primary/5 rounded-lg mb-4">
-                      <p className="text-sm text-foreground/70">Selected Patient:</p>
-                      <p className="font-semibold text-foreground">
-                        {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
+                    <div className="p-4 bg-primary/5 rounded-lg mb-4 space-y-2">
+                      <p className="text-sm text-foreground/70">
+                        Chair: <span className="font-semibold text-foreground">{selectedChair.chairNumber}</span>
+                      </p>
+                      <p className="text-sm text-foreground/70">
+                        Patient:{' '}
+                        <span className="font-semibold text-foreground">
+                          {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
+                        </span>
                       </p>
                     </div>
                     <label className="block text-sm font-semibold text-foreground mb-3">
@@ -549,8 +590,11 @@ const res = await response.json()
                       <div className="border border-border/30 rounded-lg">
                         <input
                           type="date"
-                          onChange={(e) => handleBookingSelectDate(e.target.value ? new Date(e.target.value) : undefined)}
-                          min={new Date().toISOString().split('T')[0]}
+                          value={bookingSelectedDate ? format(bookingSelectedDate, 'yyyy-MM-dd') : ''}
+                          onChange={(e) =>
+                            handleBookingSelectDate(e.target.value ? new Date(`${e.target.value}T12:00:00`) : undefined)
+                          }
+                          min={format(new Date(), 'yyyy-MM-dd')}
                           className="p-4"
                         />
                       </div>
@@ -559,11 +603,23 @@ const res = await response.json()
                 )}
 
                 {/* Step: Time Selection */}
-                {bookingStep === 'time' && bookingSelectedDate && (
+                {bookingStep === 'time' && bookingSelectedDate && selectedChair && (
                   <div className="space-y-4">
-                    <div className="p-4 bg-primary/5 rounded-lg mb-4">
-                      <p className="text-sm text-foreground/70">Selected Date:</p>
-                      <p className="font-semibold text-foreground">{bookingSelectedDate.toLocaleDateString()}</p>
+                    <div className="p-4 bg-primary/5 rounded-lg mb-4 space-y-2">
+                      <p className="text-sm text-foreground/70">
+                        Chair: <span className="font-semibold text-foreground">{selectedChair.chairNumber}</span>
+                      </p>
+                      {bookingSelectedPatient && (
+                        <p className="text-sm text-foreground/70">
+                          Patient:{' '}
+                          <span className="font-semibold text-foreground">
+                            {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
+                          </span>
+                        </p>
+                      )}
+                      <p className="text-sm text-foreground/70">
+                        Date: <span className="font-semibold text-foreground">{bookingSelectedDate.toLocaleDateString()}</span>
+                      </p>
                     </div>
                     <label className="block text-sm font-semibold text-foreground mb-3">
                       Select Time Slot
@@ -593,58 +649,6 @@ const res = await response.json()
                             <Clock className="w-4 h-4 mx-auto mb-1" />
                             {slot.display}
                           </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Step: Chair Selection */}
-                {bookingStep === 'chair' && bookingSelectedTime && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-primary/5 rounded-lg mb-4">
-                      <p className="text-sm text-foreground/70">Selected Time:</p>
-                      <p className="font-semibold text-foreground">{bookingSelectedTimeDisplay}</p>
-                    </div>
-                    <label className="block text-sm font-semibold text-foreground mb-3">
-                      Select Infusion Chair
-                    </label>
-                    {bookingLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader className="w-6 h-6 animate-spin text-primary mr-2" />
-                        <p className="text-foreground/70">Loading chairs...</p>
-                      </div>
-                    ) : chairs.length === 0 ? (
-                      <div className="text-center py-8">
-                        <AlertCircle className="w-12 h-12 text-primary/50 mx-auto mb-4" />
-                        <p className="text-foreground/70">No chairs available</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {chairs.map((chair) => (
-                          <label
-                            key={chair.id}
-                            className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
-                              bookingSelectedChair === chair.id
-                                ? 'border-primary bg-primary/10'
-                                : 'border-border/30 hover:bg-primary/5'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="chair"
-                              value={chair.id}
-                              checked={bookingSelectedChair === chair.id}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBookingSelectChair(e.target.value)}
-                              className="mt-1 mr-4"
-                            />
-                            <div className="flex-1">
-                              <div className="font-semibold text-foreground">{chair.chairNumber}</div>
-                              <div className="text-sm text-foreground/70 mt-1">
-                                Status: {chair.status}
-                              </div>
-                            </div>
-                          </label>
                         ))}
                       </div>
                     )}
@@ -684,7 +688,7 @@ const res = await response.json()
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 mt-8">
-                  {bookingStep !== 'patient' && (
+                  {bookingStep !== 'chair' && (
                     <button
                       onClick={handleBookingBack}
                       className="px-4 py-2 rounded-lg border border-border/30 text-foreground hover:bg-primary/10 transition-colors"
@@ -692,18 +696,9 @@ const res = await response.json()
                       Back
                     </button>
                   )}
-                  {bookingStep === 'patient' && (
-                    <button
-                      onClick={() => {}}
-                      disabled
-                      className="px-4 py-2 rounded-lg bg-primary/50 text-white cursor-not-allowed"
-                    >
-                      Select Patient to Continue
-                    </button>
-                  )}
                   {bookingStep === 'date' && (
                     <button
-                      onClick={() => handleBookingSelectDate(bookingSelectedDate)}
+                      onClick={handleContinueToTime}
                       disabled={!bookingSelectedDate}
                       className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
@@ -712,20 +707,11 @@ const res = await response.json()
                   )}
                   {bookingStep === 'time' && (
                     <button
-                      onClick={() => bookingSelectedTime && setBookingStep('chair')}
+                      onClick={() => bookingSelectedTime && setBookingStep('confirm')}
                       disabled={!bookingSelectedTime}
                       className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      Continue to Chair
-                    </button>
-                  )}
-                  {bookingStep === 'chair' && (
-                    <button
-                      onClick={() => bookingSelectedChair && setBookingStep('confirm')}
-                      disabled={!bookingSelectedChair}
-                      className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Confirm Selection
+                      Continue to Confirm
                     </button>
                   )}
                   {bookingStep === 'confirm' && (

@@ -189,12 +189,12 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               icon: Users2,
               allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
             },
-            {
-              id: 'chairsPipeline' as ViewType,
-              label: 'Chairs Pipeline',
-              icon: Workflow,
-              allowedRoles: ['CLINIC_ADMIN'],
-            },
+            // {
+            //   id: 'chairsPipeline' as ViewType,
+            //   label: 'Chairs Pipeline',
+            //   icon: Workflow,
+            //   allowedRoles: ['CLINIC_ADMIN'],
+            // },
             {
               id: 'addChairs' as ViewType,
               label: 'Add Chairs',
