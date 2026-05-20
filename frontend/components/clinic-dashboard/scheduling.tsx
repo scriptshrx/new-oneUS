@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Clock } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -128,7 +128,14 @@ export default function Scheduling({
   const [bookingLoading, setBookingLoading] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!bookingSuccess) return;
+    const timer = window.setTimeout(() => setBookingSuccess(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [bookingSuccess]);
 
   // Fetch appointments for all patients
   useEffect(() => {
@@ -226,6 +233,7 @@ export default function Scheduling({
     }
 
     setBookingError(null);
+    setBookingSuccess(null);
     setBookingSelectedChair(chair.id);
     setBookingSelectedPatient({
       id: chair.patient.id,
@@ -295,6 +303,10 @@ export default function Scheduling({
     try {
       setIsSubmitting(true);
       setBookingError(null);
+      setBookingSuccess(null);
+
+      const patientName = `${bookingSelectedPatient.firstName} ${bookingSelectedPatient.lastName}`.trim();
+      const chairLabel = chairs.find((c) => c.id === bookingSelectedChair)?.chairNumber ?? 'selected chair';
 
       const response = await fetchWithAuth(
         'https://scriptishrxnewmark.onrender.com/v1/appointments',
@@ -323,17 +335,18 @@ export default function Scheduling({
         console.log('Error creating appointment',errorData)
         throw new Error(errorData.error || 'Failed to create appointment');
       }
-const res = await response.json()
-      console.log('Appointment created successfully:',res)
+      await response.json();
       setIsSubmitting(false);
+      setBookingSuccess(
+        `Appointment created for ${patientName} in chair ${chairLabel} on ${bookingSelectedDate.toLocaleDateString()}.`
+      );
       setBookingStep('chair');
       setBookingSelectedPatient(null);
       setBookingSelectedDate(undefined);
       setBookingSelectedTime(null);
       setBookingSelectedTimeDisplay(null);
       setBookingSelectedChair(null);
-      
-      // Refresh appointments
+
       await fetchAllAppointmentsForRefresh();
     } catch (err) {
       setIsSubmitting(false);
@@ -497,14 +510,24 @@ const res = await response.json()
               <div className="p-6">
                 <h2 className="text-lg font-bold text-primary mb-6">Book New Appointment</h2>
 
-                {bookingError && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                {bookingSuccess && (
+                  <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-red-900">Error</p>
-                      <p className="text-sm text-red-700">{bookingError}</p>
+                      <p className="font-medium text-green-800">Appointment scheduled</p>
+                      <p className="text-sm text-green-700">{bookingSuccess}</p>
                     </div>
                   </div>
+                )}
+
+                {bookingError && (
+                  <section className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <section>
+                      <p className="font-medium text-red-900">Error</p>
+                      <p className="text-sm text-red-700">{bookingError}</p>
+                    </section>
+                  </section>
                 )}
 
                 {/* Step: Chair Selection */}
@@ -514,7 +537,7 @@ const res = await response.json()
                       Select Infusion Chair
                     </label>
                     <p className="text-sm text-foreground/60 mb-2">
-                      Patient is taken from the chair assignment. Only chairs with an assigned patient can be booked.
+                      Patient is taken from the chair assignment. Only patients assigned to a chai can be booked.
                     </p>
                     {bookingLoading ? (
                       <div className="flex items-center justify-center py-8">
