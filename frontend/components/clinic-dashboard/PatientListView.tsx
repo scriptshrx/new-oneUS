@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Users, Clock } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Users, Clock, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -627,15 +627,17 @@ function StaffTab({
 function AppointmentsTab({
   patients,
   effectiveClinicId,
-  clinic,
+  onOpenPatient,
 }: {
   patients: Patient[];
   effectiveClinicId: string;
   clinic: any;
+  onOpenPatient?: (patient: Patient) => void;
 }) {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [appointmentsLoading, setAppointmentsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Fetch appointments on component mount
   useEffect(() => {
@@ -665,8 +667,55 @@ function AppointmentsTab({
     }
   };
 
+  const handleDeleteAppointment = async (appointmentId: string) => {
+    if (!window.confirm('Cancel this appointment?')) return;
+
+    try {
+      setDeletingId(appointmentId);
+      setError(null);
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/appointments/${appointmentId}`,
+        { method: 'DELETE' }
+      );
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || 'Failed to cancel appointment');
+      }
+      setAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to cancel appointment');
+      console.error('Error cancelling appointment:', err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const openPatientFromAppointment = (appointment: any) => {
+    if (!onOpenPatient || !appointment.patient?.id) return;
+    const existing = patients.find((p) => p.id === appointment.patient.id);
+    onOpenPatient(
+      existing || {
+        id: appointment.patient.id,
+        firstName: appointment.patient.firstName || '',
+        lastName: appointment.patient.lastName || '',
+        email: appointment.patient.emailAddress,
+        phone: appointment.patient.phoneNumber,
+        pipelineStage: appointment.patient.pipelineStage,
+        primaryDiagnosis: appointment.patient.primaryDiagnosis,
+        prescribedTreatment: appointment.patient.prescribedTreatment,
+        urgencyLevel: appointment.patient.urgencyLevel,
+      }
+    );
+  };
+
   return (
     <div className="space-y-8">
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
       {/* Appointments Table */}
       <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
         <div className="p-6">
@@ -704,6 +753,9 @@ function AppointmentsTab({
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
                       Type
+                    </th>
+                    <th className="px-6 py-3 text-right text-sm font-semibold">
+                      Action
                     </th>
                   </tr>
                 </thead>
@@ -752,6 +804,29 @@ function AppointmentsTab({
                         <span className="text-sm text-foreground/70">
                           {appointment.appointmentType || 'N/A'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-end gap-1">
+                          {/* {onOpenPatient && (
+                            <button
+                              type="button"
+                              onClick={() => openPatientFromAppointment(appointment)}
+                              className="rounded-lg p-2 text-primary transition-colors hover:bg-primary/10"
+                              title="View patient / schedule"
+                            >
+                              <Plus className="h-5 w-5" />
+                            </button>
+                          )} */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAppointment(appointment.id)}
+                            disabled={deletingId === appointment.id}
+                            className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                            title="Cancel appointment"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1046,6 +1121,7 @@ const handleCopy=()=>{
             patients={patients}
             effectiveClinicId={effectiveClinicId || ''}
             clinic={clinic}
+            onOpenPatient={setSelectedPatient}
           />
         )}
       </div>
