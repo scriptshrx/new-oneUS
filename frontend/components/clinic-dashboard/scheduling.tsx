@@ -453,7 +453,7 @@ export default function Scheduling({
                       </p>
                     </div>
                     <label className="block text-sm font-semibold text-foreground mb-3">
-                      Select Infusion Chair
+                      Select Patient
                     </label>
                     <p className="text-sm text-foreground/60 mb-2">
                       Patient is taken from the chair assignment. Only chairs with an assigned patient can be booked.
