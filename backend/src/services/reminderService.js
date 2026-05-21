@@ -1,11 +1,28 @@
 const prisma = require('../db/client');
 const { sendSMS } = require('../utils/sms');
-const dayjs = require('dayjs');
+const { getTimezoneForState } = require('../utils/timezone');
 
 const REMINDER_OFFSETS = {
-  BEFORE_INFUSION_72H: { hours: -72, label: '72 hours before your infusion' },
-  BEFORE_INFUSION_24H: { hours: -24, label: '24 hours before your infusion' },
-  AFTER_TREATMENT_2H: { hours: 2, label: '2 hours after your treatment', fromEnd: true },
+  BEFORE_INFUSION_72H: { hours: -72, fromEnd: false },
+  BEFORE_INFUSION_24H: { hours: -24, fromEnd: false },
+  AFTER_TREATMENT_2H: { hours: 2, fromEnd: true },
+};
+
+const formatAppointmentDateTime = (utcDate, timezone) => {
+  const date = new Date(utcDate);
+  const dateStr = date.toLocaleDateString('en-US', {
+    timeZone: timezone,
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const timeStr = date.toLocaleTimeString('en-US', {
+    timeZone: timezone,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+  return { dateStr, timeStr };
 };
 
 const computeScheduledFor = (type, appointment) => {
@@ -17,17 +34,30 @@ const computeScheduledFor = (type, appointment) => {
 };
 
 const buildReminderMessage = (reminder, patient, appointment) => {
-  const config = REMINDER_OFFSETS[reminder.type];
-  const start = appointment.scheduledStartTime;
-  const dateStr = dayjs(start).format('MMM D, YYYY');
-  const timeStr = dayjs(start).format('h:mm A');
   const clinicName = appointment.clinic?.name || 'your clinic';
-
-  if (reminder.type === 'AFTER_TREATMENT_2H') {
-    return `Hi ${patient.firstName}, this is ${clinicName}. We hope your infusion on ${dateStr} went well. Please reach out if you have any questions or concerns after your treatment.`;
+  let timezone = 'America/New_York';
+  try {
+    if (appointment.clinic?.state) {
+      timezone = getTimezoneForState(appointment.clinic.state);
+    }
+  } catch {
+    // fallback to Eastern if state unmapped
   }
+  const { dateStr, timeStr } = formatAppointmentDateTime(
+    appointment.scheduledStartTime,
+    timezone
+  );
 
-  return `Hi ${patient.firstName}, this is ${clinicName}. Reminder: your infusion is scheduled for ${dateStr} at ${timeStr} (${config.label}). Reply STOP to opt out.`;
+  switch (reminder.type) {
+    case 'BEFORE_INFUSION_72H':
+      return `Hi ${patient.firstName}, this is ${clinicName}. Reminder: your infusion is scheduled for ${dateStr} at ${timeStr}.`;
+    case 'BEFORE_INFUSION_24H':
+      return `Hi ${patient.firstName}, this is ${clinicName}. Your infusion is tomorrow (${dateStr}) at ${timeStr}. Please arrive on time.`;
+    case 'AFTER_TREATMENT_2H':
+      return `Hi ${patient.firstName}, this is ${clinicName}. We hope your infusion on ${dateStr} went well. Please reach out if you have any questions after your treatment.`;
+    default:
+      return `Hi ${patient.firstName}, this is ${clinicName}. Reminder: your infusion is scheduled for ${dateStr} at ${timeStr}.`;
+  }
 };
 
 const createRemindersForAppointment = async (patientId, appointmentId, types = []) => {
@@ -35,7 +65,7 @@ const createRemindersForAppointment = async (patientId, appointmentId, types = [
 
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    include: { clinic: { select: { name: true } } },
+    include: { clinic: { select: { name: true, state: true } } },
   });
 
   if (!appointment || appointment.patientId !== patientId) {
@@ -47,11 +77,20 @@ const createRemindersForAppointment = async (patientId, appointmentId, types = [
   }
 
   const created = [];
+  const skipped = [];
+  const now = new Date();
 
   for (const type of types) {
     if (!REMINDER_OFFSETS[type]) continue;
 
     const scheduledFor = computeScheduledFor(type, appointment);
+
+    // Don't schedule reminders whose send time has already passed
+    // (e.g. 72h reminder for an appointment booked less than 72 hours out)
+    if (scheduledFor <= now) {
+      skipped.push({ type, reason: 'send_time_already_passed', scheduledFor });
+      continue;
+    }
 
     const reminder = await prisma.reminder.upsert({
       where: {
@@ -74,7 +113,7 @@ const createRemindersForAppointment = async (patientId, appointmentId, types = [
     created.push(reminder);
   }
 
-  return created;
+  return { created, skipped };
 };
 
 const getRemindersByPatient = async (patientId) => {
@@ -122,7 +161,7 @@ const processDueReminders = async () => {
     include: {
       patient: true,
       appointment: {
-        include: { clinic: { select: { name: true } } },
+        include: { clinic: { select: { name: true, state: true } } },
       },
     },
     take: 100,

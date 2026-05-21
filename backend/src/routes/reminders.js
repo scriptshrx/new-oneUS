@@ -17,12 +17,22 @@ router.post('/', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'patientId, appointmentId, and types[] are required' });
     }
 
-    const reminders = await createRemindersForAppointment(patientId, appointmentId, types);
+    const { created, skipped } = await createRemindersForAppointment(patientId, appointmentId, types);
+
+    if (created.length === 0 && skipped.length > 0) {
+      return res.status(400).json({
+        error: 'None of the selected reminders could be scheduled — the send time has already passed for this appointment.',
+        skipped,
+      });
+    }
 
     return res.status(201).json({
       success: true,
-      message: 'Reminders scheduled successfully',
-      data: reminders,
+      message: skipped.length > 0
+        ? `${created.length} reminder(s) scheduled; ${skipped.length} skipped (send time already passed).`
+        : 'Reminders scheduled successfully',
+      data: created,
+      skipped,
     });
   } catch (err) {
     console.error('Error creating reminders:', err);
