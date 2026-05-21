@@ -5,6 +5,7 @@ const {
   getAppointment,
   getAppointmentsByPatient,
   getAppointmentsByClinic,
+  getAppointmentsByChair,
   updateAppointment,
   cancelAppointment,
   getAvailableTimeSlots,
@@ -130,6 +131,25 @@ router.get('/clinic/:clinicId', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Error fetching clinic appointments:', err);
     return res.status(500).json({ error: err.message });
+  }
+});
+
+// Get appointments by infusion chair
+router.get('/chair/:chairId', authMiddleware, async (req, res) => {
+  try {
+    const { chairId } = req.params;
+    const { status } = req.query;
+
+    const appointments = await getAppointmentsByChair(chairId, { status });
+
+    return res.json({
+      success: true,
+      data: appointments,
+    });
+  } catch (err) {
+    console.error('Error fetching chair appointments:', err);
+    const statusCode = err.message === 'Chair not found' ? 404 : 500;
+    return res.status(statusCode).json({ error: err.message });
   }
 });
 

@@ -234,6 +234,55 @@ const getAppointmentsByClinic = async (clinicId, filters = {}) => {
   }));
 };
 
+const getAppointmentsByChair = async (chairId, filters = {}) => {
+  const chair = await prisma.infusionChair.findUnique({
+    where: { id: chairId },
+    select: {
+      id: true,
+      chairNumber: true,
+      clinicId: true,
+      clinic: { select: { state: true } },
+    },
+  });
+
+  if (!chair) {
+    throw new Error('Chair not found');
+  }
+
+  const clinicTimezone = getTimezoneForState(chair.clinic.state);
+  const where = {
+    clinicId: chair.clinicId,
+    OR: [
+      { assignedChair: chair.id },
+      { assignedChair: chair.chairNumber },
+      { patient: { infusionChairId: chair.id } },
+    ],
+  };
+
+  if (filters.status) {
+    where.status = filters.status;
+  } else {
+    where.status = { not: 'CANCELLED' };
+  }
+
+  const appointments = await prisma.appointment.findMany({
+    where,
+    include: {
+      patient: true,
+      assignedNurse: true,
+    },
+    orderBy: { scheduledStartTime: 'asc' },
+  });
+
+  return appointments.map((apt) => ({
+    ...apt,
+    scheduledStartTime: convertUTCToClinicTime(apt.scheduledStartTime, clinicTimezone),
+    scheduledEndTime: apt.scheduledEndTime
+      ? convertUTCToClinicTime(apt.scheduledEndTime, clinicTimezone)
+      : null,
+  }));
+};
+
 const updateAppointment = async (appointmentId, updateData) => {
   const {
     status,
@@ -340,6 +389,18 @@ const updateAppointment = async (appointmentId, updateData) => {
 };
 
 const cancelAppointment = async (appointmentId) => {
+  const existing = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+  });
+
+  if (!existing) {
+    throw new Error('Appointment not found');
+  }
+
+  if (existing.status === 'CANCELLED') {
+    throw new Error('Appointment is already cancelled');
+  }
+
   const appointment = await prisma.appointment.update({
     where: { id: appointmentId },
     data: { status: 'CANCELLED' },
@@ -497,6 +558,7 @@ module.exports = {
   getAppointment,
   getAppointmentsByPatient,
   getAppointmentsByClinic,
+  getAppointmentsByChair,
   updateAppointment,
   cancelAppointment,
   getAvailableTimeSlots,
