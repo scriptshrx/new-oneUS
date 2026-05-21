@@ -207,6 +207,39 @@ class AuthService {
     }
   }
 
+  //Registering a staff:
+
+  async registerStaff(data){
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/auth/register/staff`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || errorData.message || `Registration failed: ${response.statusText}`
+        );
+      }
+      const resData = await response.json();
+
+      // Store temporary token
+      localStorage.setItem('temporaryToken', resData.temporaryToken);
+      localStorage.setItem('accessToken',resData.accessToken)
+      localStorage.setItem('clinicId', resData.clinicId);
+      localStorage.setItem('role',resData.role)
+      localStorage.setItem('clinic',JSON.stringify(resData))
+
+      return resData;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   /**
    * Register a referring hospital
    */

@@ -5,6 +5,141 @@ const { sendSMS } = require('../utils/sms');
 const dayjs = require('dayjs');
 const { getTimezoneForState, convertUTCToClinicTime } = require('../utils/timezone');
 
+const chairWithRelationsInclude = {
+  patient: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+      referrals: {
+        where: { status: { in: ['SUBMITTED', 'REVIEWED', 'APPROVED'] } },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: {
+          id: true,
+          prescribedTreatment: true,
+          primaryDiagnosis: true,
+        },
+      },
+      appointments: {
+        orderBy: { scheduledStartTime: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          appointmentType: true,
+          scheduledDate: true,
+          scheduledStartTime: true,
+          scheduledEndTime: true,
+          status: true,
+          treatmentType: true,
+        },
+      },
+    },
+  },
+  user: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+    },
+  },
+};
+
+const ACTIVE_APPOINTMENT_STATUSES = ['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'];
+
+function displayName(firstName, lastName, fallback = '') {
+  const name = [firstName, lastName].filter(Boolean).join(' ').trim();
+  return name || fallback;
+}
+
+function pickPatientAppointment(appointments) {
+  if (!appointments?.length) return null;
+
+  const now = new Date();
+  const upcoming = appointments
+    .filter(
+      (apt) =>
+        ACTIVE_APPOINTMENT_STATUSES.includes(apt.status) &&
+        new Date(apt.scheduledStartTime) >= now
+    )
+    .sort((a, b) => new Date(a.scheduledStartTime) - new Date(b.scheduledStartTime));
+
+  if (upcoming.length > 0) return upcoming[0];
+  return appointments[0];
+}
+
+/**
+ * Match getAppointmentsByClinic: return Date objects from convertUTCToClinicTime only.
+ * Do not use formatClinicLocalTime here — it uses the *server* timezone (getHours), which
+ * shifts times vs the appointments tab when the host runs in UTC.
+ */
+function mapAppointmentTimesForDisplay(appointment, clinicTimezone) {
+  if (!appointment || !clinicTimezone) {
+    return appointment;
+  }
+  return {
+    ...appointment,
+    scheduledStartTime: convertUTCToClinicTime(
+      appointment.scheduledStartTime,
+      clinicTimezone
+    ),
+    scheduledEndTime: appointment.scheduledEndTime
+      ? convertUTCToClinicTime(appointment.scheduledEndTime, clinicTimezone)
+      : null,
+  };
+}
+
+function formatChairForResponse(chair, clinicTimezone) {
+  if (!chair) return chair;
+
+  const referral = chair.patient?.referrals?.[0];
+  const appointmentRaw = pickPatientAppointment(chair.patient?.appointments);
+  const appointment = mapAppointmentTimesForDisplay(appointmentRaw, clinicTimezone);
+
+  const patient = chair.patient
+    ? {
+        id: chair.patient.id,
+        firstName: chair.patient.firstName,
+        lastName: chair.patient.lastName,
+        pipelineStage: chair.patient.pipelineStage,
+        prescribedTreatment: referral?.prescribedTreatment ?? null,
+        primaryDiagnosis: referral?.primaryDiagnosis ?? null,
+        user: chair.patient.user ?? null,
+        appointment,
+      }
+    : null;
+
+  return {
+    id: chair.id,
+    clinicId: chair.clinicId,
+    chairNumber: chair.chairNumber,
+    status: chair.status,
+    createdAt: chair.createdAt,
+    updatedAt: chair.updatedAt,
+    user: chair.user ?? null,
+    staffName: chair.user ? displayName(chair.user.firstName, chair.user.lastName) : null,
+    patient,
+  };
+}
+
+async function getClinicTimezoneOrNull(clinicId) {
+  const clinic = await prisma.clinic.findUnique({
+    where: { id: clinicId },
+    select: { state: true },
+  });
+  if (!clinic?.state) {
+    return null;
+  }
+  return getTimezoneForState(clinic.state);
+}
+
 class ChairService {
   /**
    * Get all infusion chairs for a clinic
@@ -13,15 +148,17 @@ class ChairService {
    */
   static async getChairsByClinic(clinicId) {
     try {
+      const clinicTimezone = await getClinicTimezoneOrNull(clinicId);
       const chairs = await prisma.infusionChair.findMany({
         where: {
           clinicId: clinicId,
         },
+        include: chairWithRelationsInclude,
         orderBy: {
           createdAt: 'desc',
         },
       });
-      return chairs;
+      return chairs.map((c) => formatChairForResponse(c, clinicTimezone));
     } catch (error) {
       throw new Error(`Failed to fetch infusion chairs: ${error.message}`);
     }
@@ -38,11 +175,13 @@ class ChairService {
         where: {
           id: chairId,
         },
+        include: chairWithRelationsInclude,
       });
       if (!chair) {
         throw new Error('Infusion chair not found');
       }
-      return chair;
+      const clinicTimezone = await getClinicTimezoneOrNull(chair.clinicId);
+      return formatChairForResponse(chair, clinicTimezone);
     } catch (error) {
       throw new Error(`Failed to fetch infusion chair: ${error.message}`);
     }
@@ -56,34 +195,57 @@ class ChairService {
    */
   static async createChair(clinicId, chairData) {
     try {
-      // Validate the required fields
-      const { chairNumber } = chairData;
+      const { chairNumber, patientId, userId } = chairData;
 
-    console.log('About to create chair for', chairData)
+      if (!chairNumber?.trim()) {
+        throw new Error('Chair number is required');
+      }
 
-      // Generate a random 8-character password (alphanumeric)
-      // const generateRandomPassword = (length = 8) => {
-      //   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      //   let pw = '';
-      //   const bytes = crypto.randomBytes(length);
-      //   for (let i = 0; i < length; i++) {
-      //     pw += chars[bytes[i] % chars.length];
-      //   }
-      //   return pw;
-      // };
+      if (patientId) {
+        const patient = await prisma.patient.findUnique({ where: { id: patientId } });
+        if (!patient) {
+          throw new Error('Patient not found');
+        }
+        if (patient.clinicId !== clinicId) {
+          throw new Error('Patient does not belong to this clinic');
+        }
+        if (patient.infusionChairId) {
+          throw new Error('Patient is already assigned to another chair');
+        }
+      }
 
-      // const plainPassword = generateRandomPassword(8);
-      // console.log('The chair password is',plainPassword)
+      if (userId) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+          throw new Error('User not found');
+        }
+        if (user.clinicId !== clinicId) {
+          throw new Error('User does not belong to this clinic');
+        }
+      }
 
-      const chair = await prisma.infusionChair.create({
-        data: {
-          clinicId,
-          chairNumber,
-          status: 'ACTIVE',
-        },
+      const chair = await prisma.$transaction(async (tx) => {
+        const created = await tx.infusionChair.create({
+          data: {
+            clinicId,
+            chairNumber: chairNumber.trim(),
+            status: 'ACTIVE',
+            ...(userId ? { userId } : {}),
+          },
+        });
+
+        if (patientId) {
+          await tx.patient.update({
+            where: { id: patientId },
+            data: { infusionChairId: created.id },
+          });
+        }
+
+        return tx.infusionChair.findUnique({
+          where: { id: created.id },
+          include: chairWithRelationsInclude,
+        });
       });
-
-      console.log('Chair is created successully')
 
       // Try to fetch clinic name for email context
       let clinic = null;
@@ -105,7 +267,8 @@ class ChairService {
         console.error('Failed to send chair account SMS:', e);
       }
 
-      return chair;
+      const clinicTimezone = await getClinicTimezoneOrNull(clinicId);
+      return formatChairForResponse(chair, clinicTimezone);
     } catch (error) {
       throw new Error(`Failed to create infusion chair: ${error.message}`);
     }
@@ -187,14 +350,15 @@ class ChairService {
           clinicId: clinicId,
           status: 'ACTIVE',
         },
+        include: chairWithRelationsInclude,
         orderBy: {
           createdAt: 'asc',
         },
       });
 
-      console.log('ALL chair:',chairs)
+      const clinicTimezone = await getClinicTimezoneOrNull(clinicId);
 
-      return chairs;
+      return chairs.map((c) => formatChairForResponse(c, clinicTimezone));
     } catch (error) {
       throw new Error(`Failed to fetch chairs with patients: ${error.message}`);
     }

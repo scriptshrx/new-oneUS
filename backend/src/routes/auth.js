@@ -3,6 +3,7 @@ const { authMiddleware, temporaryTokenMiddleware, refreshTokenMiddleware } = req
 const {
   registerClinic,
   registerHospital,
+  registerStaff,
   verifyEmail,
   signBAA,
   login,
@@ -26,6 +27,16 @@ router.post('/register/clinic', async (req, res, next) => {
     next(error);
   }
 });
+
+//Register clinic staff
+
+router.post('/register/staff', async(req,res)=>{
+  const input = req.body;
+  const response = await registerStaff(input);
+  res.status(201).json(response)
+})
+
+
 
 router.post('/register/resend-verification',async(req,res)=>{
   console.log('starting to resend verification',req.body);

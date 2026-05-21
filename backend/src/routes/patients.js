@@ -3,7 +3,7 @@
 const {Router} = require('express');
 
 const { authMiddleware } = require('../middleware/auth');
-const {fetchAllPatients, fetchPatientsByChairId, fetchPatientById} = require('../services/patientService')
+const {fetchAllPatients, fetchPatientsByChairId, fetchPatientById, updatePatient} = require('../services/patientService')
 
 const router = Router();
 
@@ -47,6 +47,20 @@ router.get('/:id', async(req,res)=>{
         res.status(200).json(response);
     } catch (err) {
         console.error('Error fetching patient:', err);
+        res.status(500).json({ error: err.message });
+    }
+})
+
+router.patch('/:id', authMiddleware, async(req,res)=>{
+    try {
+        const { id } = req.params;
+        console.log('Attempting to update patient with this id:', id);
+        console.log('Update data:', req.body);
+        const updatedPatient = await updatePatient(id, req.body);
+        console.log('Patient updated successfully:', updatedPatient);
+        res.status(200).json(updatedPatient);
+    } catch (err) {
+        console.error('Error updating patient:', err);
         res.status(500).json({ error: err.message });
     }
 })

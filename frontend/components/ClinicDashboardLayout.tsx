@@ -112,10 +112,12 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
     // Define role-based permissions
     // CLINIC_ADMIN: All access
     // AUXILIARY_STAFF: Chair View, Intake Form
+    // PHYSICIAN: Dashboard, Intake Form
     // NURSE: Chair View, Verifications (Insurance Verify, Prior Auth)
     const ROLE_PERMISSIONS: Record<string, ViewType[]> = {
       'CLINIC_ADMIN': ['dashboard', 'intakeForm', 'patientsList', 'patients', 'scheduling', 'archives', 'waitlist', 'allChairs', 'chairsPipeline', 'addChairs', 'insuranceVerify', 'priorAuth', 'accountSettings', 'analytics', 'logout'],
       'AUXILIARY_STAFF': ['dashboard', 'intakeForm', 'allChairs', 'logout'],
+      'PHYSICIAN': ['dashboard', 'intakeForm', 'logout'],
       'NURSE': ['dashboard', 'allChairs', 'insuranceVerify', 'priorAuth', 'logout'],
     };
 
@@ -129,17 +131,17 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               id: 'dashboard' as ViewType,
               label: 'Dashboard',
               icon: LayoutDashboard,
-              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'PHYSICIAN', 'NURSE'],
             },
             {
               id: 'intakeForm' as ViewType,
               label: 'Intake Form',
               icon: NotebookPen,
-              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF'],
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'PHYSICIAN'],
             },
             {
               id: 'patientsList' as ViewType,
-              label: 'Patient CRM',
+              label: 'Clinic CRM',
               icon: Users,
               allowedRoles: ['CLINIC_ADMIN'],
             },
@@ -149,24 +151,24 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               icon:Calendar,
               allowedRoles:['CLINIC_ADMIN']
             },
-            {
-              id: 'patients' as ViewType,
-              label: 'Patient Pipelines',
-              icon: Workflow,
-              allowedRoles: ['CLINIC_ADMIN'],
-            },
+            // {
+            //   id: 'patients' as ViewType,
+            //   label: 'Patient Pipelines',
+            //   icon: Workflow,
+            //   allowedRoles: ['CLINIC_ADMIN'],
+            // },
             {
               id: 'archives' as ViewType,
               label: 'Archives',
               icon: Archive,
               allowedRoles: ['CLINIC_ADMIN'],
             },
-            {
-              id: 'waitlist' as ViewType,
-              label: 'View Waitlist',
-              icon: Users,
-              allowedRoles: ['CLINIC_ADMIN'],
-            },
+            // {
+            //   id: 'waitlist' as ViewType,
+            //   label: 'View Waitlist',
+            //   icon: Users,
+            //   allowedRoles: ['CLINIC_ADMIN'],
+            // },
           ].filter(item => item.allowedRoles.includes(role)),
         },
         {
@@ -189,12 +191,12 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               icon: Users2,
               allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
             },
-            {
-              id: 'chairsPipeline' as ViewType,
-              label: 'Chairs Pipeline',
-              icon: Workflow,
-              allowedRoles: ['CLINIC_ADMIN'],
-            },
+            // {
+            //   id: 'chairsPipeline' as ViewType,
+            //   label: 'Chairs Pipeline',
+            //   icon: Workflow,
+            //   allowedRoles: ['CLINIC_ADMIN'],
+            // },
             {
               id: 'addChairs' as ViewType,
               label: 'Add Chairs',
@@ -233,7 +235,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
               id: 'logout' as ViewType,
               label: 'Logout',
               icon: LogOut,
-              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'NURSE'],
+              allowedRoles: ['CLINIC_ADMIN', 'AUXILIARY_STAFF', 'PHYSICIAN', 'NURSE'],
             },
           ].filter(item => item.allowedRoles.includes(role)),
         },
@@ -362,6 +364,9 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
             // Timeline
             createdAt: referral.createdAt,
             updatedAt: referral.updatedAt,
+
+            // Latest appointment (clinic-local times, same as appointments API)
+            appointment: patient.appointments?.[0] ?? undefined,
             
             // Store full referral object for treatment history
             _referral: referral,
@@ -429,7 +434,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
           />
         );
       case 'intakeForm':
-        return <PatientIntakeForm />
+        return <PatientIntakeForm onBack={() => setCurrentView('dashboard')} />
       case 'waitlist':
         return <WaitlistView />;
       case 'insuranceVerify':

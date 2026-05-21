@@ -20,8 +20,10 @@ model User {
   passwordHash String     @map("password_hash")
   firstName    String?    @map("first_name")
   lastName     String?    @map("last_name")
+  phoneNumber String? @map("phone_number")
   role         UserRole
   status       UserStatus
+
 
   // Clinic relationship (staff)
   clinic   Clinic? @relation("ClinicStaff", fields: [clinicId], references: [id])
@@ -34,6 +36,9 @@ model User {
   // Patient relationship
   patient   Patient? @relation("PatientUser", fields: [patientId], references: [id])
   patientId String?  @unique @map("patient_id")
+
+  // Infusion chairs this staff member is assigned to
+  assignedInfusionChairs InfusionChair[] @relation("InfusionChairStaff")
 
   // Various staff roles
   assignedReferrals    Referral[]    @relation("ReferralAssignedStaff")
@@ -68,7 +73,7 @@ enum UserRole {
 
 enum UserStatus {
   ACTIVE
-  PENDING_EMAIL_VERIFICATION
+  PENDING_VERIFICATION
   PENDING_BAA_SIGNATURE
   SUSPENDED
   DELETED
@@ -181,14 +186,18 @@ model InfusionChair {
   // Status
   status ChairStatus @default(ACTIVE)
 
-  // Patients assigned to this chair
-  taggedPatients Patient[] @relation("PatientInfusionChair")
+  // Patient currently assigned to this chair (at most one per chair)
+  patient Patient? @relation("PatientInfusionChair")
+
+  // Clinic staff user assigned to this chair
+  user   User?   @relation("InfusionChairStaff", fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @map("user_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([clinicId])
-//  @@index([email])
+  @@index([userId])
   @@map("infusion_chairs")
 }
 
@@ -307,9 +316,9 @@ model Patient {
   clinic   Clinic @relation(fields: [clinicId], references: [id])
   clinicId String @map("clinic_id")
 
-  // Infusion chair relationship (optional)
+  // Infusion chair relationship (optional; unique so each chair has at most one patient)
   infusionChair   InfusionChair? @relation("PatientInfusionChair", fields: [infusionChairId], references: [id])
-  infusionChairId String?        @map("infusion_chair_id")
+  infusionChairId String?        @unique @map("infusion_chair_id")
 
   // User account (optional - for patient portal login)
   user User? @relation("PatientUser")

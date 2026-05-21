@@ -1,57 +1,175 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { formatChairAppointment } from '@/lib/chairDisplay';
+
+const API_URL = 'https://scriptishrxnewmark.onrender.com/v1';
+const NONE_VALUE = '__none__';
 
 interface FormData {
   chairNumber: string;
-
+  patientId: string;
+  userId: string;
 }
 
 interface FormErrors {
   [key: string]: string;
 }
 
+interface StaffMember {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: string;
+}
+
+function staffDisplayName(member: StaffMember): string {
+  const name = [member.firstName, member.lastName].filter(Boolean).join(' ');
+  return name || member.email;
+}
+
+/** True if patient record marks them seated on a chair (camelCase or snake_case). */
+function patientHasChairIdField(p: Record<string, unknown>): boolean {
+  const id =
+    p.infusionChairId ?? p.infusion_chair_id ?? (p as { infusionChair?: { id?: string } }).infusionChair?.id;
+  return id != null && String(id).trim() !== '';
+}
+
+/** Matches Patient List / Scheduling archived bucket */
+function isPatientArchived(pipelineStage?: string | null): boolean {
+  const normalized = (pipelineStage || '').toLowerCase().replace(/-/g, '_').trim();
+  return normalized === 'inactive_archived';
+}
+
 export default function AddChairsView() {
-  const { clinic, setCurrentView } = useClinicDashboardView();
+  const { clinic, setCurrentView, patients, patientsLoading } = useClinicDashboardView();
+  const [chairOccupiedPatientIds, setChairOccupiedPatientIds] = useState<Set<string>>(() => new Set());
+  const [chairsAssignabilityLoaded, setChairsAssignabilityLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staffLoading, setStaffLoading] = useState(true);
+  const [staffError, setStaffError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     chairNumber: '',
-   
+    patientId: '',
+    userId: '',
   });
+
+  useEffect(() => {
+    if (!clinic?.id) return;
+
+    const fetchStaff = async () => {
+      try {
+        setStaffLoading(true);
+        setStaffError(null);
+        const response = await fetchWithAuth(`${API_URL}/clinics/${clinic.id}/staff`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch staff: ${response.statusText}`);
+        }
+        const staffData = await response.json();
+        setStaff(Array.isArray(staffData) ? staffData : []);
+      } catch (err) {
+        setStaffError(err instanceof Error ? err.message : 'Failed to load clinic users');
+      } finally {
+        setStaffLoading(false);
+      }
+    };
+
+    fetchStaff();
+  }, [clinic?.id]);
+
+  useEffect(() => {
+    if (!clinic?.id) return;
+
+    let cancelled = false;
+
+    const fetchChairAssignments = async () => {
+      try {
+        const response = await fetchWithAuth(`${API_URL}/chairs/${clinic.id}`, {
+          method: 'GET',
+        });
+        if (!response.ok || cancelled) return;
+        const data = await response.json();
+        const chairs = (data?.data ?? []) as Array<{ patient?: { id?: string } | null }>;
+        const ids = new Set<string>();
+        for (const chair of chairs) {
+          const pid = chair.patient?.id;
+          if (pid) ids.add(pid);
+        }
+        if (!cancelled) setChairOccupiedPatientIds(ids);
+      } catch {
+        /* keep empty set; infusionChairId filter still applies */
+      } finally {
+        if (!cancelled) setChairsAssignabilityLoaded(true);
+      }
+    };
+
+    setChairsAssignabilityLoaded(false);
+    fetchChairAssignments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clinic?.id]);
+
+  const assignablePatients = useMemo(() => {
+    return patients.filter((p) => {
+      if (isPatientArchived(p.pipelineStage)) return false;
+      const raw = p as Record<string, unknown>;
+      if (patientHasChairIdField(raw)) return false;
+      if (chairOccupiedPatientIds.has(p.id)) return false;
+      return true;
+    });
+  }, [patients, chairOccupiedPatientIds]);
+
+  useEffect(() => {
+    setFormData((prev) => {
+      if (!prev.patientId) return prev;
+      const stillAssignable = assignablePatients.some((x) => x.id === prev.patientId);
+      return stillAssignable ? prev : { ...prev, patientId: '' };
+    });
+  }, [assignablePatients]);
+
+  const selectedPatient = useMemo(
+    () => assignablePatients.find((p) => p.id === formData.patientId) ?? null,
+    [assignablePatients, formData.patientId]
+  );
+
+  const selectedUser = useMemo(
+    () => staff.find((u) => u.id === formData.userId) ?? null,
+    [staff, formData.userId]
+  );
+
+  const selectedPatientAppointmentLabel = useMemo(() => {
+    const apt = selectedPatient?.appointment;
+    if (!apt) return null;
+    return formatChairAppointment(apt);
+  }, [selectedPatient]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-   
-    
     if (!formData.chairNumber.trim()) {
-      newErrors.chairNumber = 'Cahir number is required';
+      newErrors.chairNumber = 'Chair number is required';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: '',
-      }));
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,13 +188,18 @@ export default function AddChairsView() {
         return;
       }
 
-      const apiUrl = 'https://scriptishrxnewmark.onrender.com/v1';
-      const response = await fetchWithAuth(`${apiUrl}/chairs/${clinic.id}`, {
+      const payload: Record<string, string> = {
+        chairNumber: formData.chairNumber.trim(),
+      };
+      if (formData.patientId) payload.patientId = formData.patientId;
+      if (formData.userId) payload.userId = formData.userId;
+
+      const response = await fetchWithAuth(`${API_URL}/chairs/${clinic.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -86,17 +209,11 @@ export default function AddChairsView() {
 
       setSuccess(true);
       setFormData({
-        name: '',
-        email: '',
-        specialty: '',
-        chairPassword:'',
-        operatingAddress: '',
-        city: '',
-        state: '',
-        zipCode: '',
+        chairNumber: '',
+        patientId: '',
+        userId: '',
       });
 
-      // Redirect after success
       setTimeout(() => {
         setCurrentView('allChairs');
       }, 2000);
@@ -111,9 +228,9 @@ export default function AddChairsView() {
 
   return (
     <div className="p-6 max-w-2xl">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
+      <header className="flex items-center gap-2 mb-6">
         <button
+          type="button"
           onClick={() => setCurrentView('allChairs')}
           className="p-1 hover:bg-primary/10 rounded transition-colors"
         >
@@ -121,11 +238,10 @@ export default function AddChairsView() {
         </button>
         <div>
           <h1 className="text-3xl font-bold text-foreground">Add Infusion Chair</h1>
-          <p className="text-foreground/60 text-sm mt-1">Register a new infusion chair officer</p>
+          <p className="text-foreground/60 text-sm mt-1">Register a new infusion chair and optional assignments</p>
         </div>
-      </div>
+      </header>
 
-      {/* Success Message */}
       {success && (
         <div className="mb-6 bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -136,7 +252,6 @@ export default function AddChairsView() {
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -147,19 +262,23 @@ export default function AddChairsView() {
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Chair Officer Name */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
+        <section>
+          <label htmlFor="chairNumber" className="block text-sm font-medium text-foreground mb-2">
             Chair Number
           </label>
           <input
+            id="chairNumber"
             type="text"
             name="chairNumber"
             value={formData.chairNumber}
-            onChange={handleInputChange}
-            placeholder="Enter chair officer name"
+            onChange={(e) => {
+              setFormData((prev) => ({ ...prev, chairNumber: e.target.value }));
+              if (errors.chairNumber) {
+                setErrors((prev) => ({ ...prev, chairNumber: '' }));
+              }
+            }}
+            placeholder="e.g. Chair 1"
             className={`w-full px-4 py-2 rounded-lg border transition-colors bg-background text-foreground placeholder-foreground/50 ${
               errors.chairNumber
                 ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
@@ -167,12 +286,95 @@ export default function AddChairsView() {
             } focus:outline-none focus:ring-2`}
           />
           {errors.chairNumber && <p className="text-red-600 text-sm mt-1">{errors.chairNumber}</p>}
-        </div>
+        </section>
 
-        
-        
+        <section>
+          <label className="block text-sm font-medium text-foreground mb-2">Patient</label>
+          <Select
+            value={formData.patientId || NONE_VALUE}
+            onValueChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                patientId: value === NONE_VALUE ? '' : value,
+              }))
+            }
+            disabled={patientsLoading || !chairsAssignabilityLoaded}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue
+                placeholder={
+                  patientsLoading || !chairsAssignabilityLoaded
+                    ? 'Loading patients...'
+                    : 'Select a patient'
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_VALUE}>Select Patient</SelectItem>
+              {assignablePatients.map((patient) => (
+                <SelectItem key={patient.id} value={patient.id}>
+                  {patient.firstName} {patient.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedPatient && (
+            <div className="mt-3 rounded-lg border border-border/30 bg-background/50 p-4 space-y-1">
+              <p className="text-sm text-foreground/60">Selected patient</p>
+              <p className="font-medium text-foreground">
+                {selectedPatient.firstName} {selectedPatient.lastName}
+              </p>
+              <p className="text-sm text-foreground/80">
+                <span className="text-foreground/60">Medication: </span>
+                {selectedPatient.prescribedTreatment || 'Not specified'}
+              </p>
+              {selectedPatientAppointmentLabel && (
+                <p className="text-sm text-foreground/80">
+                  <span className="text-foreground/60">Appointment: </span>
+                  {selectedPatientAppointmentLabel}
+                </p>
+              )}
+            </div>
+          )}
+          {!patientsLoading && chairsAssignabilityLoaded && assignablePatients.length === 0 && (
+            <p className="text-sm text-foreground/50 mt-2">No unassigned patients available.</p>
+          )}
+        </section>
 
-        {/* Submit Button */}
+        <section>
+          <label className="block text-sm font-medium text-foreground mb-2">Infusion Nurse</label>
+          <Select
+            value={formData.userId || NONE_VALUE}
+            onValueChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                userId: value === NONE_VALUE ? '' : value,
+              }))
+            }
+            disabled={staffLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={staffLoading ? 'Loading users...' : 'Select a clinic user'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_VALUE}>Select Infusion Nurse</SelectItem>
+              {staff.map((member) => (
+                <SelectItem key={member.id} value={member.id}>
+                  {staffDisplayName(member)} ({member.role.replace(/_/g, ' ')})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {staffError && <p className="text-red-600 text-sm mt-1">{staffError}</p>}
+          {selectedUser && (
+            <div className="mt-3 rounded-lg border border-border/30 bg-background/50 p-4 space-y-1">
+              <p className="text-sm text-foreground/60">Selected Infusion Nurse</p>
+              <p className="font-medium text-foreground">{staffDisplayName(selectedUser)}</p>
+              <p className="text-sm text-foreground/80">{selectedUser.email}</p>
+            </div>
+          )}
+        </section>
+
         <div className="flex gap-3 pt-4">
           <button
             type="submit"
@@ -181,7 +383,7 @@ export default function AddChairsView() {
           >
             {loading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block" />
                 Creating...
               </>
             ) : (

@@ -109,7 +109,7 @@ const registerClinic = async (input) => {
         firstName: input.admin.firstName,
         lastName: input.admin.lastName,
         role: input.admin.role,
-        status: 'PENDING_EMAIL_VERIFICATION',
+        status: 'PENDING_VERIFICATION',
         clinicId: clinic.id,
 
       },
@@ -152,6 +152,62 @@ const registerClinic = async (input) => {
     userId: user?.id,
   };
 };
+
+//Register Staff users
+
+async function registerStaff(input){
+  
+ const passwordHash = await hashPassword(input.password);
+ try{
+  
+
+    user = await prisma.user.create({
+      data: {
+        email: input.email,
+        passwordHash,
+        phoneNumber:input.phoneNumber,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        role: input.role,
+        status: 'ACTIVE',
+        clinicId: input.clinicId,
+
+      },
+    });
+
+    console.log('Staff account created successfully for:',input.email);
+
+    const tokenPayload = {
+    userId: user?.id || '',
+    clinicId: input.clinicId,
+    
+    email: input.email,
+    role: input.role || 'CLINIC_ADMIN',
+  };
+
+  const temporaryToken = generateTemporaryToken(tokenPayload,'10m'); // 10 minutes
+  console.log('\x1b[1m🎟️ [REGISTER_STAFF] Temporary token generated\x1b[0m');
+  const accessToken = generateAccessToken(tokenPayload,'1hr')
+  console.log('\x1b[1m✅ [REGISTER_STAFF] Access token generated, registration complete\x1b[0m');
+  return {
+    clinicId: input.clinicId,
+    accessToken,
+    name:user.firstName + ' ' + user.lastName,
+    primaryPhone:user.phoneNumber,
+    email:user.email,
+    role:user.role,
+
+    temporaryToken,
+    nextStep: 'ACTIVE',
+    userId: user?.id,
+  };
+
+  }
+
+    catch(e){
+      console.log('Error registring staff',e)
+    }
+}
 
 //handle resending of OTP
 const resendVerification = async(input)=>{
@@ -637,7 +693,7 @@ const registerHospital = async (input) => {
         firstName: input.admin.firstName,
         lastName: input.admin.lastName,
         role: input.admin.role,
-        status: 'PENDING_EMAIL_VERIFICATION',
+        status: 'PENDING_VERIFICATION',
         hospitalId: hospital.id,
       },
     });
@@ -718,6 +774,7 @@ const refreshAccessToken = async (userPayload) => {
 module.exports = {
   registerClinic,
   registerHospital,
+  registerStaff,
   verifyEmail,
   signBAA,
   login,

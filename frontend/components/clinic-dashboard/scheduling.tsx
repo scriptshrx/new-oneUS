@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Clock, CheckCircle2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -10,12 +10,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import PatientDetailModal from '@/components/PatientDetailModal';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 import { format } from 'date-fns';
+<<<<<<< HEAD
 import ReminderButtons from './ReminderButtons';
+=======
+import {
+  chairMatchesSchedulingSearch,
+  matchesSchedulingSearch,
+  patientDisplayName,
+  staffDisplayName,
+  type EnrichedChair,
+} from '@/lib/chairDisplay';
+import { Input } from '@/components/ui/input';
+>>>>>>> af3443e40c23139297cae4840c6dc4255fbaedeb
 
 
 interface Patient {
@@ -116,6 +127,28 @@ export default function Scheduling({
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
 
+  // Booking flow: chair → date → time → confirm (patient comes from selected chair)
+  const [bookingStep, setBookingStep] = useState<'chair' | 'date' | 'time' | 'confirm'>('chair');
+  const [bookingSelectedPatient, setBookingSelectedPatient] = useState<Patient | null>(null);
+  const [bookingSelectedDate, setBookingSelectedDate] = useState<Date | undefined>(undefined);
+  const [bookingSelectedTime, setBookingSelectedTime] = useState<string | null>(null);
+  const [bookingSelectedTimeDisplay, setBookingSelectedTimeDisplay] = useState<string | null>(null);
+  const [bookingSelectedChair, setBookingSelectedChair] = useState<string | null>(null);
+  const [chairs, setChairs] = useState<EnrichedChair[]>([]);
+  const [schedulingSearchQuery, setSchedulingSearchQuery] = useState('');
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!bookingSuccess) return;
+    const timer = window.setTimeout(() => setBookingSuccess(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [bookingSuccess]);
+
   // Fetch appointments for all patients
   useEffect(() => {
     const fetchAllAppointments = async () => {
@@ -153,13 +186,234 @@ export default function Scheduling({
     fetchAllAppointments();
   }, [patients]);
 
+  // Fetch chairs on component mount
+  useEffect(() => {
+    fetchChairs();
+  }, []);
+
+  const fetchChairs = async () => {
+    try {
+      setBookingLoading(true);
+      setBookingError(null);
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/chairs/${effectiveClinicId}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch chairs');
+      }
+
+      const data = await response.json();
+      setChairs(data.data || []);
+    } catch (err) {
+      console.error('Error fetching chairs:', err);
+      setBookingError(err instanceof Error ? err.message : 'Failed to fetch chairs');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const fetchAvailableSlots = async (date: Date, chairId?: string | null) => {
+    try {
+      setSlotsLoading(true);
+      setBookingError(null);
+      const dateStr = date.toISOString().split('T')[0];
+      const chairQuery = chairId ? `&chairId=${chairId}` : '';
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/appointments/availability/${effectiveClinicId}/${dateStr}?durationMinutes=60${chairQuery}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch available time slots');
+      }
+
+      const data = await response.json();
+      setAvailableSlots(data.data || []);
+    } catch (err) {
+      console.error('Error fetching slots:', err);
+      setBookingError(err instanceof Error ? err.message : 'Failed to fetch available time slots');
+      setAvailableSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const handleBookingSelectChair = (chair: EnrichedChair) => {
+    if (!chair.patient) {
+      setBookingError('This chair has no patient assigned. Assign a patient when creating or editing the chair.');
+      return;
+    }
+
+    setBookingError(null);
+    setBookingSuccess(null);
+    setBookingSelectedChair(chair.id);
+    setBookingSelectedPatient({
+      id: chair.patient.id,
+      firstName: chair.patient.firstName,
+      lastName: chair.patient.lastName,
+      prescribedTreatment: chair.patient.prescribedTreatment ?? undefined,
+      pipelineStage: chair.patient.pipelineStage,
+    });
+    setBookingSelectedDate(undefined);
+    setBookingSelectedTime(null);
+    setBookingSelectedTimeDisplay(null);
+    setAvailableSlots([]);
+    setBookingStep('date');
+  };
+
+  const handleBookingSelectDate = (date: Date | undefined) => {
+    setBookingSelectedDate(date);
+  };
+
+  const handleContinueToTime = () => {
+    if (!bookingSelectedDate || !bookingSelectedChair) return;
+    fetchAvailableSlots(bookingSelectedDate, bookingSelectedChair);
+    setBookingStep('time');
+  };
+
+  const handleBookingSelectTime = (slot: any) => {
+    setBookingSelectedTime(slot.startTime);
+    setBookingSelectedTimeDisplay(slot.clinicLocalTime || slot.startTime);
+    setBookingStep('confirm');
+  };
+
+  const fetchAllAppointmentsForRefresh = async () => {
+    if (!patients || patients.length === 0) return;
+
+    setLoadingAppointments(true);
+    const appointmentsMap: Record<string, Appointment> = {};
+
+    try {
+      for (const patient of patients) {
+        if (patient.id) {
+          try {
+            const response = await fetchWithAuth(
+              `https://scriptishrxnewmark.onrender.com/v1/appointments/patient/${patient.id}`
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              const appointments = Array.isArray(data.data) ? data.data : [];
+              if (appointments.length > 0) {
+                appointmentsMap[patient.id] = appointments[0];
+              }
+            }
+          } catch (err) {
+            console.error(`Error fetching appointment for patient ${patient.id}:`, err);
+          }
+        }
+      }
+      setAppointmentsByPatientId(appointmentsMap);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  const handleCreateAppointment = async () => {
+    if (!bookingSelectedPatient || !bookingSelectedDate || !bookingSelectedTime || !bookingSelectedChair) return;
+
+    try {
+      setIsSubmitting(true);
+      setBookingError(null);
+      setBookingSuccess(null);
+
+      const patientName = `${bookingSelectedPatient.firstName} ${bookingSelectedPatient.lastName}`.trim();
+      const chairLabel = chairs.find((c) => c.id === bookingSelectedChair)?.chairNumber ?? 'selected chair';
+
+      const response = await fetchWithAuth(
+        'https://scriptishrxnewmark.onrender.com/v1/appointments',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            patientId: bookingSelectedPatient.id,
+            clinicId: effectiveClinicId,
+            chairId: bookingSelectedChair,
+            appointmentType: 'IN_CLINIC',
+            scheduledDate: bookingSelectedDate.toISOString(),
+            scheduledStartTime: bookingSelectedTimeDisplay,
+            scheduledEndTime: (() => {
+              const [datePart, timePart] = (bookingSelectedTimeDisplay || '').split('T');
+              const [hours, minutes, seconds = '00'] = timePart.split(':');
+              const newHours = (parseInt(hours) + 1).toString().padStart(2, '0');
+              return `${datePart}T${newHours}:${minutes}:${seconds}`;
+            })(),
+            treatmentType: 'IV_THERAPY',
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log('Error creating appointment',errorData)
+        throw new Error(errorData.error || 'Failed to create appointment');
+      }
+      await response.json();
+      setIsSubmitting(false);
+      setBookingSuccess(
+        `Appointment created for ${patientName} in chair ${chairLabel} on ${bookingSelectedDate.toLocaleDateString()}.`
+      );
+      setBookingStep('chair');
+      setBookingSelectedPatient(null);
+      setBookingSelectedDate(undefined);
+      setBookingSelectedTime(null);
+      setBookingSelectedTimeDisplay(null);
+      setBookingSelectedChair(null);
+
+      await fetchAllAppointmentsForRefresh();
+    } catch (err) {
+      setIsSubmitting(false);
+      console.error('Error creating appointment:', err);
+      setBookingError(err instanceof Error ? err.message : 'Failed to create appointment');
+    }
+  };
+
+  const handleBookingBack = () => {
+    if (bookingStep === 'date') {
+      setBookingStep('chair');
+      setBookingSelectedPatient(null);
+      setBookingSelectedChair(null);
+      setBookingSelectedDate(undefined);
+    } else if (bookingStep === 'time') {
+      setBookingStep('date');
+      setBookingSelectedTime(null);
+      setBookingSelectedTimeDisplay(null);
+      setAvailableSlots([]);
+    } else if (bookingStep === 'confirm') {
+      setBookingStep('time');
+    }
+  };
+
+  const selectedChair = chairs.find((c) => c.id === bookingSelectedChair);
+
+  const filteredChairs = useMemo(() => {
+    if (!schedulingSearchQuery.trim()) return chairs;
+    return chairs.filter((chair) => chairMatchesSchedulingSearch(chair, schedulingSearchQuery));
+  }, [chairs, schedulingSearchQuery]);
+
+  const patientMatchesSearch = (patient: Patient) => {
+    const chair = chairs.find((c) => c.patient?.id === patient.id);
+    return matchesSchedulingSearch(
+      schedulingSearchQuery,
+      patient.firstName,
+      patient.lastName,
+      chair?.chairNumber,
+      chair ? staffDisplayName(chair.user, chair.staffName) : null,
+      chair?.patient ? patientDisplayName(chair.patient) : null,
+    );
+  };
+
   // Group patients by pipeline stage
   const schedulingPatients = patients.filter(
     (p) => (p.pipelineStage || '').toLowerCase() === 'scheduling'
   );
 
+  const archivedPatients = patients.filter(
+    (p) => (p.pipelineStage || '').toLowerCase() === 'inactive_archived'
+  );
+
   const patientsByStage = {
-    'scheduling': schedulingPatients
+    'scheduling': schedulingPatients,
+    'inactive_archived': archivedPatients
   };
 
   const handleUpdateStatus = async (patientId: string, newStage: string) => {
@@ -249,10 +503,20 @@ export default function Scheduling({
                 <span className="text-sm">Back</span>
               </button>
             )}
-            <h1 className="text-3xl font-bold text-foreground">Patients CRM</h1>
+            <h1 className="text-3xl font-bold text-foreground">Scheduling</h1>
             <p className="text-sm text-foreground/70 mt-1">
-              {patients.length} patient{patients.length !== 1 ? 's' : ''} referred
+              Schedule Patient Appointment
             </p>
+            <div className="relative mt-4 max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50" />
+              <Input
+                type="search"
+                placeholder="Search by chair, staff, or patient Name..."
+                value={schedulingSearchQuery}
+                onChange={(e) => setSchedulingSearchQuery(e.target.value)}
+                className="bg-background border-border/30 md:w-100 pl-9"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -280,11 +544,260 @@ export default function Scheduling({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8">
-            {/* Tables for each pipeline stage */}
+            {/* Booking Section */}
+            <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
+              <div className="p-6">
+                <h2 className="text-lg font-bold text-primary mb-6">Book New Appointment</h2>
+
+                {bookingSuccess && (
+                  <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-green-800">Appointment scheduled</p>
+                      <p className="text-sm text-green-700">{bookingSuccess}</p>
+                    </div>
+                  </div>
+                )}
+
+                {bookingError && (
+                  <section className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <section>
+                      <p className="font-medium text-red-900">Error</p>
+                      <p className="text-sm text-red-700">{bookingError}</p>
+                    </section>
+                  </section>
+                )}
+
+                {/* Step: Chair Selection */}
+                {bookingStep === 'chair' && (
+                  <div className="space-y-4">
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Select Infusion Chair
+                    </label>
+                    <p className="text-sm text-foreground/60 mb-2">
+                      Patient is taken from the chair assignment. Only patient assigned to a chair can be booked.
+                    </p>
+                    {bookingLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader className="w-6 h-6 animate-spin text-primary mr-2" />
+                        <p className="text-foreground/70">Loading chairs...</p>
+                      </div>
+                    ) : chairs.length === 0 ? (
+                      <p className="text-foreground/70 text-center py-8">No chairs available</p>
+                    ) : filteredChairs.length === 0 ? (
+                      <p className="text-foreground/70 text-center py-8">No chairs match your search</p>
+                    ) : (
+                      <div className="space-y-3 max-h-80 overflow-y-auto"
+                      style={{scrollbarWidth: 'none'}}>
+                        {filteredChairs.map((chair) => {
+                          const hasPatient = Boolean(chair.patient);
+                          return (
+                            <label
+                              key={chair.id}
+                              className={`flex items-start p-4 border bg-primary/10 rounded-lg transition-colors ${
+                                !hasPatient
+                                  ? 'border-border/20 bg-muted/30 cursor-not-allowed opacity-60'
+                                  : bookingSelectedChair === chair.id
+                                    ? 'border-primary bg-primary/10 cursor-pointer'
+                                    : 'border-border/30 hover:bg-primary/5 cursor-pointer'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="chair"
+                                value={chair.id}
+                                disabled={!hasPatient}
+                                checked={bookingSelectedChair === chair.id}
+                                onChange={() => hasPatient && handleBookingSelectChair(chair)}
+                                className="mt-1 mr-4"
+                              />
+                              <div className="flex-1">
+                                <p className="font-semibold text-foreground">Chair {chair.chairNumber}</p>
+                                <p className="text-sm text-foreground/70 mt-1">
+                                  Nurse: {staffDisplayName(chair.user, chair.staffName)}
+                                </p>
+                                <p className="text-sm text-foreground/70">
+                                  Patient: {hasPatient ? patientDisplayName(chair.patient) : 'Not assigned'}
+                                </p>
+                                {hasPatient && chair.patient?.prescribedTreatment && (
+                                  <p className="text-sm text-foreground/70">
+                                    Treatment: {chair.patient.prescribedTreatment}
+                                  </p>
+                                )}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step: Date Selection */}
+                {bookingStep === 'date' && bookingSelectedPatient && selectedChair && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/5 rounded-lg mb-4 space-y-2">
+                      <p className="text-sm text-foreground/70">
+                        Chair: <span className="font-semibold text-foreground">{selectedChair.chairNumber}</span>
+                      </p>
+                      <p className="text-sm text-foreground/70">
+                        Patient:{' '}
+                        <span className="font-semibold text-foreground">
+                          {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
+                        </span>
+                      </p>
+                    </div>
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Select Date
+                    </label>
+                    <div className="flex justify-center">
+                      <div className="border border-border/30 rounded-lg">
+                        <input
+                          type="date"
+                          value={bookingSelectedDate ? format(bookingSelectedDate, 'yyyy-MM-dd') : ''}
+                          onChange={(e) =>
+                            handleBookingSelectDate(e.target.value ? new Date(`${e.target.value}T12:00:00`) : undefined)
+                          }
+                          min={format(new Date(), 'yyyy-MM-dd')}
+                          className="p-4"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step: Time Selection */}
+                {bookingStep === 'time' && bookingSelectedDate && selectedChair && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/5 rounded-lg mb-4 space-y-2">
+                      <p className="text-sm text-foreground/70">
+                        Chair: <span className="font-semibold text-foreground">{selectedChair.chairNumber}</span>
+                      </p>
+                      {bookingSelectedPatient && (
+                        <p className="text-sm text-foreground/70">
+                          Patient:{' '}
+                          <span className="font-semibold text-foreground">
+                            {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
+                          </span>
+                        </p>
+                      )}
+                      <p className="text-sm text-foreground/70">
+                        Date: <span className="font-semibold text-foreground">{bookingSelectedDate.toLocaleDateString()}</span>
+                      </p>
+                    </div>
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Select Time Slot
+                    </label>
+                    {slotsLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader className="w-6 h-6 animate-spin text-primary mr-2" />
+                        <p className="text-foreground/70">Loading available slots...</p>
+                      </div>
+                    ) : availableSlots.length === 0 ? (
+                      <div className="text-center py-8">
+                        <AlertCircle className="w-12 h-12 text-primary/50 mx-auto mb-4" />
+                        <p className="text-foreground/70">No available time slots for this date</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+                        {availableSlots.map((slot, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleBookingSelectTime(slot)}
+                            className={`p-3 rounded-lg border transition-colors text-sm font-medium ${
+                              bookingSelectedTime === slot.startTime
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border/30 text-foreground hover:bg-primary/5'
+                            }`}
+                          >
+                            <Clock className="w-4 h-4 mx-auto mb-1" />
+                            {slot.display}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step: Confirmations */}
+                {bookingStep === 'confirm' && bookingSelectedPatient && bookingSelectedDate && bookingSelectedTimeDisplay && bookingSelectedChair && (
+                  <div className="space-y-6">
+                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 space-y-4">
+                      <div>
+                        <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Patient</p>
+                        <p className="text-foreground font-semibold">
+                          {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Date</p>
+                        <p className="text-foreground font-semibold">{bookingSelectedDate.toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Time</p>
+                        <p className="text-foreground font-semibold">{bookingSelectedTimeDisplay}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Chair</p>
+                        <p className="text-foreground font-semibold">
+                          {chairs.find((c) => c.id === bookingSelectedChair)?.chairNumber}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground/70">
+                      Click <span className="font-semibold">Create Appointment</span> to book this appointment.
+                    </p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 mt-8">
+                  {bookingStep !== 'chair' && (
+                    <button
+                      onClick={handleBookingBack}
+                      className="px-4 py-2 rounded-lg border border-border/30 text-foreground hover:bg-primary/10 transition-colors"
+                    >
+                      Back
+                    </button>
+                  )}
+                  {bookingStep === 'date' && (
+                    <button
+                      onClick={handleContinueToTime}
+                      disabled={!bookingSelectedDate}
+                      className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Continue to Time
+                    </button>
+                  )}
+                  {bookingStep === 'time' && (
+                    <button
+                      onClick={() => bookingSelectedTime && setBookingStep('confirm')}
+                      disabled={!bookingSelectedTime}
+                      className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Continue to Confirm
+                    </button>
+                  )}
+                  {bookingStep === 'confirm' && (
+                    <button
+                      onClick={handleCreateAppointment}
+                      disabled={isSubmitting}
+                      className="ml-auto px-4 py-2 rounded-lg bg-accent text-white hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isSubmitting ? 'Creating...' : 'Create Appointment'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+                      {/* Tables for each pipeline stage */}
             {pipelineStages
               .filter((stage) => stage.id !== 'inactive_archived')
               .map((stage) => {
-                const stagePatients = patientsByStage[stage.id] || [];
+                const stagePatients = (patientsByStage[stage.id as keyof typeof patientsByStage] || []).filter(
+                  patientMatchesSearch
+                );
                 return (stagePatients.length>0&&
                   <div key={stage.id} className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
                     <div className="p-6">
@@ -312,7 +825,7 @@ export default function Scheduling({
                               </tr>
                             </thead>
                             <tbody>
-                              {stagePatients.map((patient,i) => (
+                              {stagePatients.map((patient: Patient, i: number) => (
                                 <tr
                                   key={i}
                                   className={`${(i%2)===0?'bg-primary/5':'bg-transparent'} border-b border-gray-400/50 hover:bg-white/10 transition-colors`}
@@ -457,7 +970,8 @@ export default function Scheduling({
               })}
 
             {/* Archived Patients Section */}
-            {patientsByStage['inactive_archived'] && patientsByStage['inactive_archived'].length > 0 && (
+            {patientsByStage['inactive_archived'] &&
+              patientsByStage['inactive_archived'].filter(patientMatchesSearch).length > 0 && (
               <div className="bg-primary/10 border border-border/30 rounded-2xl overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-6">
@@ -481,7 +995,7 @@ export default function Scheduling({
                         </tr>
                       </thead>
                       <tbody>
-                        {patientsByStage['inactive_archived'].map((patient) => (
+                        {patientsByStage['inactive_archived']?.filter(patientMatchesSearch).map((patient: Patient) => (
                           <tr
                             key={patient.id}
                             className="border-b border-border/20 hover:bg-primary/5 transition-colors"
