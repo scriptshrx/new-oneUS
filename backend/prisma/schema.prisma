@@ -322,6 +322,7 @@ model Patient {
   intakeForm          PatientIntakeForm?
   hipaaConsent        HIPAAConsent?
   appointments        Appointment[]
+  reminders           Reminder[]
   priorAuthorizations PriorAuthorization[]
   portalMessages      PortalMessage[]
 
@@ -797,8 +798,9 @@ model Appointment {
   // Linked records
   treatment TreatmentRecord?
   followUps FollowUp[]
+  reminders Reminder[]
 
-  // Reminders sent
+  // Reminders sent (legacy)
   confirmationSentAt DateTime? @map("confirmation_sent_at")
   reminder48hSentAt  DateTime? @map("reminder_48h_sent_at")
   reminder24hSentAt  DateTime? @map("reminder_24h_sent_at")
@@ -831,6 +833,50 @@ enum AppointmentStatus {
   RESCHEDULED
 
   @@map("appointment_statuses")
+}
+
+// ============================================================================
+// APPOINTMENT REMINDERS (SMS)
+// ============================================================================
+
+model Reminder {
+  id String @id @default(cuid())
+
+  patient   Patient @relation(fields: [patientId], references: [id])
+  patientId String  @map("patient_id")
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  appointmentId String      @map("appointment_id")
+
+  type         ReminderType
+  scheduledFor DateTime     @map("scheduled_for")
+  sentAt       DateTime?    @map("sent_at")
+  status       ReminderStatus @default(PENDING)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([appointmentId, type])
+  @@index([patientId])
+  @@index([scheduledFor])
+  @@index([status])
+  @@map("reminders")
+}
+
+enum ReminderType {
+  BEFORE_INFUSION_72H
+  BEFORE_INFUSION_24H
+  AFTER_TREATMENT_2H
+
+  @@map("reminder_types")
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  CANCELLED
+
+  @@map("reminder_statuses")
 }
 
 // ============================================================================

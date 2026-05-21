@@ -9,6 +9,7 @@ const waitlistRoutes = require('./routes/waitlist');
 
 const chairRoutes = require('./routes/chairs');
 const appointmentRoutes = require('./routes/appointments');
+const reminderRoutes = require('./routes/reminders');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/v1/waitlist',waitlistRoutes);
 app.use('/v1/patients',patientRoutes);
 
 app.use('/v1/appointments', appointmentRoutes);
+app.use('/v1/reminders', reminderRoutes);
 app.use('/v1', chairRoutes);
 
 // 404 handler

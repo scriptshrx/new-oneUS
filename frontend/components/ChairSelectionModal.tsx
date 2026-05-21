@@ -5,7 +5,8 @@ import { X, Loader, AlertCircle, Calendar as CalendarIcon, Clock } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
-import { format, addDays, isAfter, startOfToday, setHours, setMinutes } from 'date-fns';
+import { format, addDays, startOfToday } from 'date-fns';
+import { ReminderType } from '@/components/clinic-dashboard/ReminderButtons';
 
 interface Chair {
   id: string;
@@ -68,6 +69,7 @@ export default function ChairSelectionModal({
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const [selectedReminders, setSelectedReminders] = useState<Set<ReminderType>>(new Set());
 
   useEffect(() => {
     if (isOpen) {
@@ -80,6 +82,7 @@ export default function ChairSelectionModal({
       setSelectedDate(undefined);
       setSelectedTime(null);
       setSelectedTimeDisplay(null);
+      setSelectedReminders(new Set());
       setError(null);
       
       // Pre-fill chair if rescheduling
@@ -165,10 +168,32 @@ export default function ChairSelectionModal({
 
   const handleSelectTime = (timeSlot: TimeSlot) => {
     setSelectedTime(timeSlot.startTime); // UTC time for API
-    // Use clinicLocalTime for display, or fallback to parsing the display string
     const displayTime = timeSlot.clinicLocalTime || timeSlot.startTime;
     setSelectedTimeDisplay(displayTime);
+    setSelectedReminders(new Set());
     setStep('confirm');
+  };
+
+  const toggleReminder = (type: ReminderType) => {
+    setSelectedReminders((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  };
+
+  const scheduleRemindersForAppointment = async (appointmentId: string) => {
+    if (selectedReminders.size === 0) return;
+
+    await fetchWithAuth('https://scriptishrxnewmark.onrender.com/v1/reminders', {
+      method: 'POST',
+      body: JSON.stringify({
+        patientId,
+        appointmentId,
+        types: Array.from(selectedReminders),
+      }),
+    });
   };
 
   const handleRescheduleAppointment = async () => {
@@ -209,6 +234,8 @@ export default function ChairSelectionModal({
       }
 
       // Trigger callback
+      await scheduleRemindersForAppointment(appointment.id);
+
       if (onAppointmentRescheduled) {
         await onAppointmentRescheduled(appointment.id);
       }
@@ -266,13 +293,14 @@ export default function ChairSelectionModal({
       }
 
       const appointmentData = await appointmentResponse.json();
+      const newAppointmentId = appointmentData.data.id;
 
-      // Also tag the chair to the patient
+      await scheduleRemindersForAppointment(newAppointmentId);
+
       await onChairSelected(selectedChairId);
 
-      // Trigger callback if provided
       if (onAppointmentCreated) {
-        await onAppointmentCreated(appointmentData.data.id);
+        await onAppointmentCreated(newAppointmentId);
       }
 
       // Reset and close
@@ -540,10 +568,54 @@ export default function ChairSelectionModal({
                 </div>
               </div>
 
+              <div className="border-t border-border/30 pt-4">
+                <p className="text-sm font-semibold text-foreground mb-3">Schedule SMS Reminders</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleReminder('BEFORE_INFUSION_72H')}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm text-left transition-colors ${
+                      selectedReminders.has('BEFORE_INFUSION_72H')
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border/30 hover:bg-primary/5'
+                    }`}
+                  >
+                    72hrs reminder before infusion start time
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleReminder('BEFORE_INFUSION_24H')}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm text-left transition-colors ${
+                      selectedReminders.has('BEFORE_INFUSION_24H')
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border/30 hover:bg-primary/5'
+                    }`}
+                  >
+                    24hrs reminder before infusion start time
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleReminder('AFTER_TREATMENT_2H')}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm text-left transition-colors ${
+                      selectedReminders.has('AFTER_TREATMENT_2H')
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border/30 hover:bg-primary/5'
+                    }`}
+                  >
+                    2hrs reminder after treatment stop time
+                  </button>
+                </div>
+                {selectedReminders.size > 0 && (
+                  <p className="text-xs text-foreground/60 mt-2">
+                    {selectedReminders.size} reminder{selectedReminders.size > 1 ? 's' : ''} will be scheduled when you confirm.
+                  </p>
+                )}
+              </div>
+
               <p className="text-sm text-foreground/70">
-                {mode === 'reschedule' 
-                  ? <span> Click <span className="font-semibold">Reschedule Appointment</span> to update your appointment.</span>
-                  : <span> Click <span className="font-semibold">Create Appointment</span> to create your appointment.</span>}
+                {mode === 'reschedule'
+                  ? <span>Click <span className="font-semibold">Reschedule Appointment</span> to update your appointment.</span>
+                  : <span>Click <span className="font-semibold">Create Appointment</span> to create your appointment.</span>}
               </p>
             </div>
           )}

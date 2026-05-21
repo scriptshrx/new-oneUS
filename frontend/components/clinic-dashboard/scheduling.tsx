@@ -15,6 +15,7 @@ import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 import { format } from 'date-fns';
+import ReminderButtons from './ReminderButtons';
 
 
 interface Patient {
@@ -206,6 +207,7 @@ export default function Scheduling({
       const date = new Date(dateParts.join('-') + 'T00:00:00Z');
       const dateStr = format(date, 'MMM d, yyyy');
 
+
       // Parse time from ISO string
       const startParts = appointment.scheduledStartTime.split('T')[1]?.split(':') || [];
       const startHours = parseInt(startParts[0] || '0');
@@ -305,6 +307,7 @@ export default function Scheduling({
                                 
                                 {!insuranceOnly && <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Status</th>}
                                 <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Scheduled</th>
+                                <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">Reminders</th>
                                 <th className="px-6 py-3 text-right text-sm font-semibold ">Action</th>
                               </tr>
                             </thead>
@@ -406,6 +409,17 @@ export default function Scheduling({
                                         </span>
                                       )}
                                     </div>
+                                  </td>
+                                  <td className="px-6 py-4 border-r border-primary/40 min-w-[200px]">
+                                    {appointmentsByPatientId[patient.id]?.scheduledStartTime ? (
+                                      <ReminderButtons
+                                        patientId={patient.id}
+                                        appointmentId={appointmentsByPatientId[patient.id].id}
+                                        compact
+                                      />
+                                    ) : (
+                                      <span className="text-xs text-foreground/50">Schedule appointment first</span>
+                                    )}
                                   </td>
                                   <td className="px-6 py-4 text-right">
                                     {insuranceOnly ? (
