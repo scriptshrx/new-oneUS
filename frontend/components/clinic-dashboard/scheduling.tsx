@@ -15,9 +15,7 @@ import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
 import { format } from 'date-fns';
-<<<<<<< HEAD
-import ReminderButtons from './ReminderButtons';
-=======
+import ReminderButtons, { ReminderType } from './ReminderButtons';
 import {
   chairMatchesSchedulingSearch,
   matchesSchedulingSearch,
@@ -26,7 +24,6 @@ import {
   type EnrichedChair,
 } from '@/lib/chairDisplay';
 import { Input } from '@/components/ui/input';
->>>>>>> af3443e40c23139297cae4840c6dc4255fbaedeb
 
 
 interface Patient {
@@ -142,6 +139,7 @@ export default function Scheduling({
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedReminders, setSelectedReminders] = useState<Set<ReminderType>>(new Set());
 
   useEffect(() => {
     if (!bookingSuccess) return;
@@ -274,7 +272,30 @@ export default function Scheduling({
   const handleBookingSelectTime = (slot: any) => {
     setBookingSelectedTime(slot.startTime);
     setBookingSelectedTimeDisplay(slot.clinicLocalTime || slot.startTime);
+    setSelectedReminders(new Set());
     setBookingStep('confirm');
+  };
+
+  const toggleReminder = (type: ReminderType) => {
+    setSelectedReminders((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  };
+
+  const scheduleRemindersForAppointment = async (appointmentId: string, patientId: string) => {
+    if (selectedReminders.size === 0) return;
+
+    await fetchWithAuth('https://scriptishrxnewmark.onrender.com/v1/reminders', {
+      method: 'POST',
+      body: JSON.stringify({
+        patientId,
+        appointmentId,
+        types: Array.from(selectedReminders),
+      }),
+    });
   };
 
   const fetchAllAppointmentsForRefresh = async () => {
@@ -347,7 +368,11 @@ export default function Scheduling({
         console.log('Error creating appointment',errorData)
         throw new Error(errorData.error || 'Failed to create appointment');
       }
-      await response.json();
+      const appointmentData = await response.json();
+      await scheduleRemindersForAppointment(
+        appointmentData.data.id,
+        bookingSelectedPatient.id
+      );
       setIsSubmitting(false);
       setBookingSuccess(
         `Appointment created for ${patientName} in chair ${chairLabel} on ${bookingSelectedDate.toLocaleDateString()}.`
@@ -358,6 +383,7 @@ export default function Scheduling({
       setBookingSelectedTime(null);
       setBookingSelectedTimeDisplay(null);
       setBookingSelectedChair(null);
+      setSelectedReminders(new Set());
 
       await fetchAllAppointmentsForRefresh();
     } catch (err) {
@@ -745,6 +771,50 @@ export default function Scheduling({
                         </p>
                       </div>
                     </div>
+                    <div className="border-t border-border/30 pt-4">
+                      <p className="text-sm font-semibold text-foreground mb-3">Schedule SMS Reminders</p>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleReminder('BEFORE_INFUSION_72H')}
+                          className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm text-left transition-colors ${
+                            selectedReminders.has('BEFORE_INFUSION_72H')
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border/30 hover:bg-primary/5'
+                          }`}
+                        >
+                          72hrs reminder before infusion start time
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleReminder('BEFORE_INFUSION_24H')}
+                          className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm text-left transition-colors ${
+                            selectedReminders.has('BEFORE_INFUSION_24H')
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border/30 hover:bg-primary/5'
+                          }`}
+                        >
+                          24hrs reminder before infusion start time
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleReminder('AFTER_TREATMENT_2H')}
+                          className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm text-left transition-colors ${
+                            selectedReminders.has('AFTER_TREATMENT_2H')
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border/30 hover:bg-primary/5'
+                          }`}
+                        >
+                          2hrs reminder after treatment stop time
+                        </button>
+                      </div>
+                      {selectedReminders.size > 0 && (
+                        <p className="text-xs text-foreground/60 mt-2">
+                          {selectedReminders.size} reminder{selectedReminders.size > 1 ? 's' : ''} will be scheduled when you confirm.
+                        </p>
+                      )}
+                    </div>
+
                     <p className="text-sm text-foreground/70">
                       Click <span className="font-semibold">Create Appointment</span> to book this appointment.
                     </p>
