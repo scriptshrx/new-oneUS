@@ -190,9 +190,10 @@ const convertClinicTimeToUTC = (localDate, timezone) => {
  * @param {string} timezone - IANA timezone identifier
  * @param {number} openHour - Opening hour (0-23) in clinic's local time
  * @param {number} closeHour - Closing hour (0-23) in clinic's local time
+ * @param {number} closeMinute - Closing minute (0-59) in clinic's local time
  * @returns {object} { startOfDay: Date, endOfDay: Date } in UTC
  */
-const getClinicHoursUTC = (clinicDate, timezone, openHour = 8, closeHour = 17) => {
+const getClinicHoursUTC = (clinicDate, timezone, openHour = 8, closeHour = 17, closeMinute = 0) => {
   const date = new Date(clinicDate);
   
   // Create local time at clinic open and close
@@ -200,7 +201,7 @@ const getClinicHoursUTC = (clinicDate, timezone, openHour = 8, closeHour = 17) =
   openTimeLocal.setHours(openHour, 0, 0, 0);
   
   const closeTimeLocal = new Date(date);
-  closeTimeLocal.setHours(closeHour, 0, 0, 0);
+  closeTimeLocal.setHours(closeHour, closeMinute, 0, 0);
   
   // Convert to UTC
   const openTimeUTC = convertClinicTimeToUTC(openTimeLocal, timezone);

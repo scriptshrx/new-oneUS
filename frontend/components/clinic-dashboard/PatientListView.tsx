@@ -15,7 +15,7 @@ import { useState, useEffect } from 'react';
 import ClinicDashboardLayout, { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import {
-  formatAppointmentDateFromIso,
+  formatAppointmentScheduledDate,
   formatScheduledStartTimeFromIso,
 } from '@/lib/clinicAppointmentDisplay';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
@@ -81,8 +81,8 @@ const getUrgencyColor = (urgency: string | undefined) => {
 };
 
 const getDisplayDate = (patient: Patient) => {
-  if (patient.appointment?.scheduledStartTime) {
-    return formatAppointmentDateFromIso(patient.appointment.scheduledStartTime);
+  if (patient.appointment?.scheduledDate) {
+    return formatAppointmentScheduledDate(patient.appointment.scheduledDate) || 'N/A';
   }
   return patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'N/A';
 };
@@ -722,9 +722,7 @@ function AppointmentsTab({
                       </td>
                       <td className="px-6 py-4 border-r border-primary/40">
                         <span className="text-sm text-foreground/70">
-                          {appointment.scheduledDate
-                            ? new Date(appointment.scheduledDate).toLocaleDateString()
-                            : 'N/A'}
+                          {formatAppointmentScheduledDate(appointment.scheduledDate) || 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4 border-r border-primary/40">

@@ -19,3 +19,9 @@ export function formatAppointmentDateFromIso(scheduledStartTime?: string | null)
   const date = new Date(dateParts.join('-'));
   return date.toLocaleDateString();
 }
+
+/** Match Appointments tab table: locale date from scheduledDate. */
+export function formatAppointmentScheduledDate(scheduledDate?: string | null): string {
+  if (!scheduledDate) return '';
+  return new Date(scheduledDate).toLocaleDateString();
+}

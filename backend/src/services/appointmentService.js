@@ -361,7 +361,27 @@ const cancelAppointment = async (appointmentId) => {
   };
 };
 
-const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chairId = null) => {
+const parseClinicTimeHHMM = (timeStr, fallbackHour, fallbackMinute = 0) => {
+  if (!timeStr || typeof timeStr !== 'string') {
+    return { hour: fallbackHour, minute: fallbackMinute };
+  }
+  const [hourPart, minutePart] = timeStr.split(':');
+  const hour = parseInt(hourPart, 10);
+  const minute = parseInt(minutePart, 10);
+  return {
+    hour: Number.isFinite(hour) ? hour : fallbackHour,
+    minute: Number.isFinite(minute) ? minute : fallbackMinute,
+  };
+};
+
+const getAvailableTimeSlots = async (
+  clinicId,
+  date,
+  durationMinutes = 60,
+  chairId = null,
+  openTime = '08:00',
+  closeTime = '20:30',
+) => {
   // Fetch clinic to get timezone
   const clinic = await prisma.clinic.findUnique({
     where: { id: clinicId },
@@ -374,8 +394,17 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chair
 
   const clinicTimezone = getTimezoneForState(clinic.state);
 
+  const { hour: clinicOpenTime, minute: clinicOpenMinute } = parseClinicTimeHHMM(openTime, 8, 0);
+  const { hour: clinicCloseHour, minute: clinicCloseMinute } = parseClinicTimeHHMM(closeTime, 20, 30);
+
   // Get clinic hours in UTC
-  const { startOfDay, endOfDay } = getClinicHoursUTC(date, clinicTimezone, 8, 17);
+  const { startOfDay, endOfDay } = getClinicHoursUTC(
+    date,
+    clinicTimezone,
+    clinicOpenTime,
+    clinicCloseHour,
+    clinicCloseMinute,
+  );
 
   // Get appointments for the clinic on that day
   // If chairId is provided, only get appointments for that specific chair
@@ -404,10 +433,9 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chair
     },
   });
 
-  // Default clinic hours: 8 AM to 5 PM (in clinic's local timezone)
-  const clinicOpenTime = 8;
-  const clinicCloseTime = 17;
   const slotDuration = durationMinutes;
+  const openMinutes = clinicOpenTime * 60 + clinicOpenMinute;
+  const closeMinutes = clinicCloseHour * 60 + clinicCloseMinute;
 
   const slots = [];
   
@@ -419,17 +447,18 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chair
     chair: apt.assignedChair,
   }));
 
-  // Generate slots in clinic's local timezone
-  for (let hour = clinicOpenTime; hour < clinicCloseTime; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
+  // Generate 30-minute start slots in clinic's local timezone (last slot may end at close time)
+  for (let totalMinutes = openMinutes; totalMinutes < closeMinutes; totalMinutes += 30) {
+      const hour = Math.floor(totalMinutes / 60);
+      const minute = totalMinutes % 60;
       // Create slot time in clinic's local timezone
       const slotStartLocal = new Date(date);
       slotStartLocal.setHours(hour, minute, 0, 0);
       const slotEndLocal = new Date(slotStartLocal);
       slotEndLocal.setMinutes(slotStartLocal.getMinutes() + slotDuration);
 
-      // Check if slot is within clinic hours
-      if (slotEndLocal.getHours() > clinicCloseTime) {
+      const slotEndTotalMinutes = totalMinutes + slotDuration;
+      if (slotEndTotalMinutes > closeMinutes) {
         continue;
       }
 
@@ -458,7 +487,6 @@ const getAvailableTimeSlots = async (clinicId, date, durationMinutes = 60, chair
           clinicLocalTime: formatClinicLocalTime(slotStartLocal),  // Send as local time without UTC conversion
         });
       }
-    }
   }
 
   return slots;

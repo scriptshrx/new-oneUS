@@ -97,6 +97,10 @@ const getStatusColor = (status: string | undefined) => {
   }
 };
 
+/** Clinic booking window — passed to availability API (local clinic time). */
+const CLINIC_SLOT_OPEN_TIME = '08:00';
+const CLINIC_SLOT_CLOSE_TIME = '20:30';
+
 const pipelineStages = [
   { id: 'new_referral', detail: 'New Referral', label: 'New Referral' },
   { id: 'insurance', detail: 'Insurance Verification', label: 'Insurance' },
@@ -217,8 +221,9 @@ export default function Scheduling({
       setBookingError(null);
       const dateStr = date.toISOString().split('T')[0];
       const chairQuery = chairId ? `&chairId=${chairId}` : '';
+      const hoursQuery = `&openTime=${CLINIC_SLOT_OPEN_TIME}&closeTime=${CLINIC_SLOT_CLOSE_TIME}`;
       const response = await fetchWithAuth(
-        `https://scriptishrxnewmark.onrender.com/v1/appointments/availability/${effectiveClinicId}/${dateStr}?durationMinutes=60${chairQuery}`
+        `https://scriptishrxnewmark.onrender.com/v1/appointments/availability/${effectiveClinicId}/${dateStr}?durationMinutes=60${chairQuery}${hoursQuery}`
       );
 
       if (!response.ok) {
