@@ -1,6 +1,7 @@
 'use client';
 
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Loader, Clock, CheckCircle2, Search } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar as CalendarIcon, AlertCircle, Loader, Clock, CheckCircle2, Search } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -14,7 +15,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceOnlyModal from '../registration/InsuranceOnlymodal';
-import { format } from 'date-fns';
+import { addDays, format, startOfToday } from 'date-fns';
 import ReminderButtons, { ReminderType } from './ReminderButtons';
 import {
   chairMatchesSchedulingSearch,
@@ -128,8 +129,8 @@ export default function Scheduling({
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
 
-  // Booking flow: chair → date → time → confirm (patient comes from selected chair)
-  const [bookingStep, setBookingStep] = useState<'chair' | 'date' | 'time' | 'confirm'>('chair');
+  // Booking flow: date → chair → time → reminders (patient comes from selected chair)
+  const [bookingStep, setBookingStep] = useState<'date' | 'chair' | 'time' | 'reminders'>('date');
   const [bookingSelectedPatient, setBookingSelectedPatient] = useState<Patient | null>(null);
   const [bookingSelectedDate, setBookingSelectedDate] = useState<Date | undefined>(undefined);
   const [bookingSelectedTime, setBookingSelectedTime] = useState<string | null>(null);
@@ -257,15 +258,22 @@ export default function Scheduling({
       prescribedTreatment: chair.patient.prescribedTreatment ?? undefined,
       pipelineStage: chair.patient.pipelineStage,
     });
-    setBookingSelectedDate(undefined);
     setBookingSelectedTime(null);
     setBookingSelectedTimeDisplay(null);
     setAvailableSlots([]);
-    setBookingStep('date');
   };
 
   const handleBookingSelectDate = (date: Date | undefined) => {
     setBookingSelectedDate(date);
+    setBookingSelectedTime(null);
+    setBookingSelectedTimeDisplay(null);
+    setAvailableSlots([]);
+  };
+
+  const handleContinueToChair = () => {
+    if (!bookingSelectedDate) return;
+    setBookingError(null);
+    setBookingStep('chair');
   };
 
   const handleContinueToTime = () => {
@@ -277,8 +285,12 @@ export default function Scheduling({
   const handleBookingSelectTime = (slot: any) => {
     setBookingSelectedTime(slot.startTime);
     setBookingSelectedTimeDisplay(slot.clinicLocalTime || slot.startTime);
+  };
+
+  const handleContinueToReminders = () => {
+    if (!bookingSelectedTime) return;
     setSelectedReminders(new Set());
-    setBookingStep('confirm');
+    setBookingStep('reminders');
   };
 
   const toggleReminder = (type: ReminderType) => {
@@ -382,7 +394,7 @@ export default function Scheduling({
       setBookingSuccess(
         `Appointment created for ${patientName} in chair ${chairLabel} on ${bookingSelectedDate.toLocaleDateString()}.`
       );
-      setBookingStep('chair');
+      setBookingStep('date');
       setBookingSelectedPatient(null);
       setBookingSelectedDate(undefined);
       setBookingSelectedTime(null);
@@ -399,20 +411,27 @@ export default function Scheduling({
   };
 
   const handleBookingBack = () => {
-    if (bookingStep === 'date') {
-      setBookingStep('chair');
-      setBookingSelectedPatient(null);
-      setBookingSelectedChair(null);
-      setBookingSelectedDate(undefined);
-    } else if (bookingStep === 'time') {
+    if (bookingStep === 'chair') {
       setBookingStep('date');
+      setBookingSelectedChair(null);
+      setBookingSelectedPatient(null);
+    } else if (bookingStep === 'time') {
+      setBookingStep('chair');
       setBookingSelectedTime(null);
       setBookingSelectedTimeDisplay(null);
       setAvailableSlots([]);
-    } else if (bookingStep === 'confirm') {
+    } else if (bookingStep === 'reminders') {
       setBookingStep('time');
     }
   };
+
+  const bookingSteps = [
+    { id: 'date' as const, label: 'Date' },
+    { id: 'chair' as const, label: 'Chair' },
+    { id: 'time' as const, label: 'Time' },
+    { id: 'reminders' as const, label: 'Reminders' },
+  ];
+  const bookingStepIndex = bookingSteps.findIndex((s) => s.id === bookingStep);
 
   const selectedChair = chairs.find((c) => c.id === bookingSelectedChair);
 
@@ -580,6 +599,32 @@ export default function Scheduling({
               <div className="p-6">
                 <h2 className="text-lg font-bold text-primary mb-6">Book New Appointment</h2>
 
+                <nav className="flex items-center gap-2 mb-8 flex-wrap" aria-label="Booking progress">
+                  {bookingSteps.map((step, index) => (
+                    <div key={step.id} className="flex items-center gap-2">
+                      <span
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                          index <= bookingStepIndex
+                            ? 'bg-primary text-white'
+                            : 'bg-primary/10 text-foreground/50'
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      <span
+                        className={`text-sm font-medium ${
+                          step.id === bookingStep ? 'text-foreground' : 'text-foreground/50'
+                        }`}
+                      >
+                        {step.label}
+                      </span>
+                      {index < bookingSteps.length - 1 && (
+                        <span className="mx-1 h-px w-6 bg-border/40 hidden sm:block" />
+                      )}
+                    </div>
+                  ))}
+                </nav>
+
                 {bookingSuccess && (
                   <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
@@ -600,14 +645,56 @@ export default function Scheduling({
                   </section>
                 )}
 
-                {/* Step: Chair Selection */}
-                {bookingStep === 'chair' && (
+                {/* Step 1: Date Selection */}
+                {bookingStep === 'date' && (
                   <div className="space-y-4">
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Select Appointment Date
+                    </label>
+                    <div className="flex justify-center">
+                      <Calendar
+                        mode="single"
+                        selected={bookingSelectedDate}
+                        onSelect={handleBookingSelectDate}
+                        disabled={(date) => {
+                          const today = startOfToday();
+                          const maxDate = addDays(today, 90);
+                          return date < today || date > maxDate;
+                        }}
+                        className="rounded-lg border border-border/30 bg-background shadow-sm"
+                      />
+                    </div>
+                    {bookingSelectedDate && (
+                      <p className="text-sm text-center text-foreground/70">
+                        Selected:{' '}
+                        <span className="font-semibold text-foreground">
+                          {format(bookingSelectedDate, 'EEEE, MMMM d, yyyy')}
+                        </span>
+                      </p>
+                    )}
+                    <p className="text-xs text-foreground/50 text-center">
+                      Choose a date within the next 90 days
+                    </p>
+                  </div>
+                )}
+
+                {/* Step 2: Chair Selection */}
+                {bookingStep === 'chair' && bookingSelectedDate && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/5 rounded-lg mb-4">
+                      <p className="text-sm text-foreground/70">
+                        Date:{' '}
+                        <span className="font-semibold text-foreground flex items-center gap-2 mt-1">
+                          <CalendarIcon className="w-4 h-4" />
+                          {format(bookingSelectedDate, 'EEEE, MMMM d, yyyy')}
+                        </span>
+                      </p>
+                    </div>
                     <label className="block text-sm font-semibold text-foreground mb-3">
                       Select Infusion Chair
                     </label>
                     <p className="text-sm text-foreground/60 mb-2">
-                      Patient is taken from the chair assignment. Only patient assigned to a chair can be booked.
+                      Patient is taken from the chair assignment. Only chairs with an assigned patient can be booked.
                     </p>
                     {bookingLoading ? (
                       <div className="flex items-center justify-center py-8">
@@ -619,8 +706,7 @@ export default function Scheduling({
                     ) : filteredChairs.length === 0 ? (
                       <p className="text-foreground/70 text-center py-8">No chairs match your search</p>
                     ) : (
-                      <div className="space-y-3 max-h-80 overflow-y-auto"
-                      style={{scrollbarWidth: 'none'}}>
+                      <div className="space-y-3 max-h-80 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
                         {filteredChairs.map((chair) => {
                           const hasPatient = Boolean(chair.patient);
                           return (
@@ -662,39 +748,6 @@ export default function Scheduling({
                         })}
                       </div>
                     )}
-                  </div>
-                )}
-
-                {/* Step: Date Selection */}
-                {bookingStep === 'date' && bookingSelectedPatient && selectedChair && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-primary/5 rounded-lg mb-4 space-y-2">
-                      <p className="text-sm text-foreground/70">
-                        Chair: <span className="font-semibold text-foreground">{selectedChair.chairNumber}</span>
-                      </p>
-                      <p className="text-sm text-foreground/70">
-                        Patient:{' '}
-                        <span className="font-semibold text-foreground">
-                          {bookingSelectedPatient.firstName} {bookingSelectedPatient.lastName}
-                        </span>
-                      </p>
-                    </div>
-                    <label className="block text-sm font-semibold text-foreground mb-3">
-                      Select Date
-                    </label>
-                    <div className="flex justify-center">
-                      <div className="border border-border/30 rounded-lg">
-                        <input
-                          type="date"
-                          value={bookingSelectedDate ? format(bookingSelectedDate, 'yyyy-MM-dd') : ''}
-                          onChange={(e) =>
-                            handleBookingSelectDate(e.target.value ? new Date(`${e.target.value}T12:00:00`) : undefined)
-                          }
-                          min={format(new Date(), 'yyyy-MM-dd')}
-                          className="p-4"
-                        />
-                      </div>
-                    </div>
                   </div>
                 )}
 
@@ -751,8 +804,8 @@ export default function Scheduling({
                   </div>
                 )}
 
-                {/* Step: Confirmations */}
-                {bookingStep === 'confirm' && bookingSelectedPatient && bookingSelectedDate && bookingSelectedTimeDisplay && bookingSelectedChair && (
+                {/* Step 4: Reminders */}
+                {bookingStep === 'reminders' && bookingSelectedPatient && bookingSelectedDate && bookingSelectedTimeDisplay && bookingSelectedChair && (
                   <div className="space-y-6">
                     <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 space-y-4">
                       <div>
@@ -763,7 +816,9 @@ export default function Scheduling({
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Date</p>
-                        <p className="text-foreground font-semibold">{bookingSelectedDate.toLocaleDateString()}</p>
+                        <p className="text-foreground font-semibold">
+                          {format(bookingSelectedDate, 'EEEE, MMMM d, yyyy')}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-primary/80 uppercase mb-1">Time</p>
@@ -821,14 +876,14 @@ export default function Scheduling({
                     </div>
 
                     <p className="text-sm text-foreground/70">
-                      Click <span className="font-semibold">Create Appointment</span> to book this appointment.
+                      Reminders are optional. Click <span className="font-semibold">Create Appointment</span> when ready.
                     </p>
                   </div>
                 )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 mt-8">
-                  {bookingStep !== 'chair' && (
+                  {bookingStep !== 'date' && (
                     <button
                       onClick={handleBookingBack}
                       className="px-4 py-2 rounded-lg border border-border/30 text-foreground hover:bg-primary/10 transition-colors"
@@ -838,8 +893,17 @@ export default function Scheduling({
                   )}
                   {bookingStep === 'date' && (
                     <button
-                      onClick={handleContinueToTime}
+                      onClick={handleContinueToChair}
                       disabled={!bookingSelectedDate}
+                      className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Continue to Chair
+                    </button>
+                  )}
+                  {bookingStep === 'chair' && (
+                    <button
+                      onClick={handleContinueToTime}
+                      disabled={!bookingSelectedChair || !bookingSelectedPatient}
                       className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Continue to Time
@@ -847,14 +911,14 @@ export default function Scheduling({
                   )}
                   {bookingStep === 'time' && (
                     <button
-                      onClick={() => bookingSelectedTime && setBookingStep('confirm')}
+                      onClick={handleContinueToReminders}
                       disabled={!bookingSelectedTime}
                       className="ml-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      Continue to Confirm
+                      Continue to Reminders
                     </button>
                   )}
-                  {bookingStep === 'confirm' && (
+                  {bookingStep === 'reminders' && (
                     <button
                       onClick={handleCreateAppointment}
                       disabled={isSubmitting}
@@ -988,7 +1052,7 @@ export default function Scheduling({
                                   )}
                                   <td className="px-6 py-4 border-r border-primary/40">
                                     <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                      <Calendar className="w-4 h-4" />
+                                      <CalendarIcon className="w-4 h-4" />
                                       {loadingAppointments ? (
                                         <span className="text-foreground/50">Loading...</span>
                                       ) : (
@@ -1127,7 +1191,7 @@ export default function Scheduling({
                             </td>
                             <td className="px-6 py-4 border-r border-primary/40">
                               <div className="flex items-center gap-2 text-sm text-foreground/70">
-                                <Calendar className="w-4 h-4" />
+                                <CalendarIcon className="w-4 h-4" />
                                 {loadingAppointments ? (
                                   <span className="text-foreground/50">Loading...</span>
                                 ) : (
