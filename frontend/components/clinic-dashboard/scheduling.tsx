@@ -616,7 +616,7 @@ export default function Scheduling({
                           step.id === bookingStep ? 'text-foreground' : 'text-foreground/50'
                         }`}
                       >
-                        {step.label}
+                        {step.label=='Chair' ? 'Patient' : step.label}
                       </span>
                       {index < bookingSteps.length - 1 && (
                         <span className="mx-1 h-px w-6 bg-border/40 hidden sm:block" />
