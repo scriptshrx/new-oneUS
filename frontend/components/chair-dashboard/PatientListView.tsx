@@ -106,6 +106,7 @@ export default function PatientListView({
   const [appointmentsLoading, setAppointmentsLoading] = useState(false);
   const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingPatientId, setDeletingPatientId] = useState<string | null>(null);
 
   const fetchAppointments = async () => {
     if (!chair?.id) {
@@ -151,6 +152,28 @@ export default function PatientListView({
     } catch (error) {
       console.error('Error updating patient status:', error);
       throw error;
+    }
+  };
+
+  const handleDeletePatient = async (patientId: string) => {
+    if (!window.confirm('Archive this patient?')) return;
+
+    try {
+      setDeletingPatientId(patientId);
+      const response = await fetchWithAuth(`${API_URL}/patients/${patientId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error((errBody as { error?: string }).error || 'Failed to archive patient');
+      }
+      window.location.reload();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to archive patient';
+      console.error('Error archiving patient:', err);
+      alert(message);
+    } finally {
+      setDeletingPatientId(null);
     }
   };
 
@@ -342,13 +365,24 @@ export default function PatientListView({
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedPatient(patient)}
-                            className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                          >
-                            View Details
-                          </button>
+                          <div className="flex justify-end gap-1 items-center">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPatient(patient)}
+                              className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            >
+                              View Details
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePatient(patient.id)}
+                              disabled={deletingPatientId === patient.id}
+                              className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                              title="Archive patient"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

@@ -128,6 +128,8 @@ function PatientsTab({
   setShowInsurance,
   handleUpdateStatus,
   effectiveClinicId,
+  onDeletePatient,
+  deletingPatientId,
 }: {
   patients: Patient[];
   patientsError: string | null;
@@ -140,6 +142,8 @@ function PatientsTab({
   setShowInsurance: (show: boolean) => void;
   handleUpdateStatus: (patientId: string, newStage: string) => Promise<void>;
   effectiveClinicId: string;
+  onDeletePatient?: (patientId: string) => Promise<void>;
+  deletingPatientId?: string | null;
 }) {
   const [showInssur, setShowInssur] = useState(false);
 
@@ -329,7 +333,7 @@ function PatientsTab({
                                       Verify
                                     </button>
                                   ) : (
-                                    <div className="flex gap-2 justify-end">
+                                    <div className="flex gap-2 justify-end items-center">
                                       <button
                                         onClick={() => setSelectedPatient(patient)}
                                         className="px-3 py-2 text-sm text-white bg-primary font-medium hover:bg-primary/60 rounded-lg transition-colors"
@@ -342,6 +346,17 @@ function PatientsTab({
                                       >
                                         Edit
                                       </button>
+                                      {onDeletePatient && (
+                                        <button
+                                          type="button"
+                                          onClick={() => onDeletePatient(patient.id)}
+                                          disabled={deletingPatientId === patient.id}
+                                          className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                                          title="Archive patient"
+                                        >
+                                          <Trash2 className="h-5 w-5" />
+                                        </button>
+                                      )}
                                     </div>
                                   )}
                                 </td>
@@ -450,12 +465,25 @@ function PatientsTab({
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button
-                              onClick={() => setSelectedPatient(patient)}
-                              className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                            >
-                              View Details
-                            </button>
+                            <div className="flex gap-2 justify-end items-center">
+                              <button
+                                onClick={() => setSelectedPatient(patient)}
+                                className="px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                              >
+                                View Details
+                              </button>
+                              {onDeletePatient && (
+                                <button
+                                  type="button"
+                                  onClick={() => onDeletePatient(patient.id)}
+                                  disabled={deletingPatientId === patient.id}
+                                  className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                                  title="Archive patient"
+                                >
+                                  <Trash2 className="h-5 w-5" />
+                                </button>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 border-r border-primary/40">
                             <div className="flex flex-col gap-1 text-sm text-foreground/70">
@@ -492,10 +520,14 @@ function StaffTab({
   staff,
   staffLoading,
   staffError,
+  onDeleteStaff,
+  deletingStaffId,
 }: {
   staff: StaffMember[];
   staffLoading: boolean;
   staffError: string | null;
+  onDeleteStaff?: (userId: string) => Promise<void>;
+  deletingStaffId?: string | null;
 }) {
   if (staffLoading) {
     return (
@@ -556,6 +588,9 @@ function StaffTab({
                     <th className="px-6 py-3 text-left text-sm font-semibold border-r border-border/40">
                       Last Login
                     </th>
+                    <th className="px-6 py-3 text-right text-sm font-semibold">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -608,6 +643,21 @@ function StaffTab({
                             ? dayjs(member.lastLogin).format('hh:mm A MMM DD, YYYY')
                             : 'N/A'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {onDeleteStaff && (
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => onDeleteStaff(member.id)}
+                              disabled={deletingStaffId === member.id}
+                              className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                              title="Remove staff member"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -859,6 +909,8 @@ export default function PatientListView({
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
+  const [deletingPatientId, setDeletingPatientId] = useState<string | null>(null);
+  const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
   const { setCurrentView, clinic } = useClinicDashboardView();
   const effectiveClinicId = clinicId || clinic?.id;
   const[notice,setNotice]=useState('')
@@ -885,7 +937,11 @@ export default function PatientListView({
       }
 
       const staffData = await response.json();
-      setStaff(staffData);
+      setStaff(
+        (Array.isArray(staffData) ? staffData : []).filter(
+          (member: StaffMember) => member.status !== 'DELETED'
+        )
+      );
     } catch (error) {
       console.error('Error fetching staff:', error);
       setStaffError(error instanceof Error ? error.message : 'Failed to load staff');
@@ -952,6 +1008,53 @@ const handleCopy=()=>{
   setCopied(true);
   setTimeout(()=>setCopied(false),2000)
 }
+
+  const handleDeletePatient = async (patientId: string) => {
+    if (!window.confirm('Archive this patient? They will move to Archived Patients.')) return;
+
+    try {
+      setDeletingPatientId(patientId);
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/patients/${patientId}`,
+        { method: 'DELETE' }
+      );
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || 'Failed to archive patient');
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error('Error archiving patient:', error);
+      setNotice(error instanceof Error ? error.message : 'Failed to archive patient');
+      setTimeout(() => setNotice(''), 3000);
+    } finally {
+      setDeletingPatientId(null);
+    }
+  };
+
+  const handleDeleteStaff = async (userId: string) => {
+    if (!effectiveClinicId) return;
+    if (!window.confirm('Remove this staff member from the clinic?')) return;
+
+    try {
+      setDeletingStaffId(userId);
+      setStaffError(null);
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/clinics/${effectiveClinicId}/staff/${userId}`,
+        { method: 'DELETE' }
+      );
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || 'Failed to remove staff member');
+      }
+      setStaff((prev) => prev.filter((member) => member.id !== userId));
+    } catch (error) {
+      console.error('Error removing staff:', error);
+      setStaffError(error instanceof Error ? error.message : 'Failed to remove staff member');
+    } finally {
+      setDeletingStaffId(null);
+    }
+  };
 
   const handleUpdateStatus = async (patientId: string, newStage: string) => {
     const patient = patients.find((p) => p.id === patientId);
@@ -1105,6 +1208,8 @@ const handleCopy=()=>{
             setShowInsurance={setShowInsurance}
             handleUpdateStatus={handleUpdateStatus}
             effectiveClinicId={effectiveClinicId || ''}
+            onDeletePatient={handleDeletePatient}
+            deletingPatientId={deletingPatientId}
           />
         )}
 
@@ -1113,6 +1218,8 @@ const handleCopy=()=>{
             staff={staff}
             staffLoading={staffLoading}
             staffError={staffError}
+            onDeleteStaff={handleDeleteStaff}
+            deletingStaffId={deletingStaffId}
           />
         )}
 

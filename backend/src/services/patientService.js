@@ -84,4 +84,29 @@ const updatePatient = async(patientId, updateData) => {
   }
 }
 
-module.exports={fetchAllPatients, fetchPatientsByChairId, fetchPatientById, updatePatient}
+const archivePatient = async (patientId) => {
+  const patient = await prisma.patient.findUnique({
+    where: { id: patientId },
+  });
+
+  if (!patient) {
+    throw new Error('Patient not found');
+  }
+
+  if (patient.pipelineStage === 'INACTIVE_ARCHIVED') {
+    throw new Error('Patient is already archived');
+  }
+
+  return prisma.patient.update({
+    where: { id: patientId },
+    data: { pipelineStage: 'INACTIVE_ARCHIVED' },
+  });
+};
+
+module.exports = {
+  fetchAllPatients,
+  fetchPatientsByChairId,
+  fetchPatientById,
+  updatePatient,
+  archivePatient,
+};

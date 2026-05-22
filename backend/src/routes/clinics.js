@@ -185,4 +185,51 @@ router.post('/:clinicId/staff', authMiddleware, async (req, res, next) => {
   }
 });
 
+// DELETE /clinics/:clinicId/staff/:userId — soft-delete staff member
+router.delete('/:clinicId/staff/:userId', authMiddleware, async (req, res, next) => {
+  try {
+    const { clinicId, userId } = req.params;
+
+    if (req.user.clinicId !== clinicId && req.user.role !== 'PLATFORM_ADMIN') {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (req.user.userId === userId) {
+      res.status(400).json({ error: 'You cannot remove your own account' });
+      return;
+    }
+
+    const staffMember = await prisma.user.findFirst({
+      where: { id: userId, clinicId },
+    });
+
+    if (!staffMember) {
+      res.status(404).json({ error: 'Staff member not found' });
+      return;
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { status: 'DELETED' },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        status: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Staff member removed',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

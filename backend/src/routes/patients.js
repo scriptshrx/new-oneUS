@@ -3,7 +3,13 @@
 const {Router} = require('express');
 
 const { authMiddleware } = require('../middleware/auth');
-const {fetchAllPatients, fetchPatientsByChairId, fetchPatientById, updatePatient} = require('../services/patientService')
+const {
+  fetchAllPatients,
+  fetchPatientsByChairId,
+  fetchPatientById,
+  updatePatient,
+  archivePatient,
+} = require('../services/patientService');
 
 const router = Router();
 
@@ -63,6 +69,23 @@ router.patch('/:id', authMiddleware, async(req,res)=>{
         console.error('Error updating patient:', err);
         res.status(500).json({ error: err.message });
     }
-})
+});
 
-module.exports = router
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const archived = await archivePatient(id);
+    return res.json({
+      success: true,
+      message: 'Patient archived',
+      patientId: archived.id,
+      data: archived,
+    });
+  } catch (err) {
+    console.error('Error archiving patient:', err);
+    const statusCode = err.message === 'Patient not found' ? 404 : 400;
+    return res.status(statusCode).json({ error: err.message });
+  }
+});
+
+module.exports = router;
