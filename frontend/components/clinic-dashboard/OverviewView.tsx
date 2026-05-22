@@ -124,7 +124,8 @@ export default function OverviewView({ onBack }: OverviewViewProps) {
           ) : (
             <div className="text-center py-12 bg-primary/10 rounded-lg border border-border/20">
               <p className="text-foreground/60 mb-4">No patients in this stage</p>
-              <Button variant="outline" size="sm">
+              <Button
+              onClick={()=>{setCurrentView('intakeForm');localStorage.setItem('dashboardView','intakeForm')}} variant="outline" size="sm">
                 Add New Referral
               </Button>
             </div>
