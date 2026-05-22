@@ -9,6 +9,7 @@ const {
   fetchPatientById,
   updatePatient,
   archivePatient,
+  permanentDeletePatient,
 } = require('../services/patientService');
 
 const router = Router();
@@ -74,6 +75,17 @@ router.patch('/:id', authMiddleware, async(req,res)=>{
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
+    const permanent = req.query.permanent === 'true';
+
+    if (permanent) {
+      const deleted = await permanentDeletePatient(id);
+      return res.json({
+        success: true,
+        message: 'Patient permanently deleted',
+        patientId: deleted.id,
+      });
+    }
+
     const archived = await archivePatient(id);
     return res.json({
       success: true,
@@ -82,7 +94,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
       data: archived,
     });
   } catch (err) {
-    console.error('Error archiving patient:', err);
+    console.error('Error deleting patient:', err);
     const statusCode = err.message === 'Patient not found' ? 404 : 400;
     return res.status(statusCode).json({ error: err.message });
   }

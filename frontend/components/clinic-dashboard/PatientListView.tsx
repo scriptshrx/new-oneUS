@@ -129,6 +129,7 @@ function PatientsTab({
   handleUpdateStatus,
   effectiveClinicId,
   onDeletePatient,
+  onPermanentDeletePatient,
   deletingPatientId,
 }: {
   patients: Patient[];
@@ -143,6 +144,7 @@ function PatientsTab({
   handleUpdateStatus: (patientId: string, newStage: string) => Promise<void>;
   effectiveClinicId: string;
   onDeletePatient?: (patientId: string) => Promise<void>;
+  onPermanentDeletePatient?: (patientId: string) => Promise<void>;
   deletingPatientId?: string | null;
 }) {
   const [showInssur, setShowInssur] = useState(false);
@@ -472,13 +474,13 @@ function PatientsTab({
                               >
                                 View Details
                               </button>
-                              {onDeletePatient && (
+                              {onPermanentDeletePatient && (
                                 <button
                                   type="button"
-                                  onClick={() => onDeletePatient(patient.id)}
+                                  onClick={() => onPermanentDeletePatient(patient.id)}
                                   disabled={deletingPatientId === patient.id}
                                   className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
-                                  title="Archive patient"
+                                  title="Permanently delete patient record"
                                 >
                                   <Trash2 className="h-5 w-5" />
                                 </button>
@@ -1032,6 +1034,35 @@ const handleCopy=()=>{
     }
   };
 
+  const handlePermanentDeletePatient = async (patientId: string) => {
+    if (
+      !window.confirm(
+        'Permanently delete this patient and all related records? This cannot be undone.'
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingPatientId(patientId);
+      const response = await fetchWithAuth(
+        `https://scriptishrxnewmark.onrender.com/v1/patients/${patientId}?permanent=true`,
+        { method: 'DELETE' }
+      );
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || 'Failed to delete patient');
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error('Error permanently deleting patient:', error);
+      setNotice(error instanceof Error ? error.message : 'Failed to delete patient');
+      setTimeout(() => setNotice(''), 3000);
+    } finally {
+      setDeletingPatientId(null);
+    }
+  };
+
   const handleDeleteStaff = async (userId: string) => {
     if (!effectiveClinicId) return;
     if (!window.confirm('Remove this staff member from the clinic?')) return;
@@ -1209,6 +1240,7 @@ const handleCopy=()=>{
             handleUpdateStatus={handleUpdateStatus}
             effectiveClinicId={effectiveClinicId || ''}
             onDeletePatient={handleDeletePatient}
+            onPermanentDeletePatient={handlePermanentDeletePatient}
             deletingPatientId={deletingPatientId}
           />
         )}

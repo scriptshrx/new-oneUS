@@ -103,10 +103,78 @@ const archivePatient = async (patientId) => {
   });
 };
 
+const permanentDeletePatient = async (patientId) => {
+  const patient = await prisma.patient.findUnique({
+    where: { id: patientId },
+  });
+
+  if (!patient) {
+    throw new Error('Patient not found');
+  }
+
+  if (patient.pipelineStage !== 'INACTIVE_ARCHIVED') {
+    throw new Error('Only archived patients can be permanently deleted');
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const appointments = await tx.appointment.findMany({
+      where: { patientId },
+      select: { id: true },
+    });
+    const appointmentIds = appointments.map((a) => a.id);
+
+    if (appointmentIds.length > 0) {
+      await tx.treatmentRecord.deleteMany({
+        where: { appointmentId: { in: appointmentIds } },
+      });
+      await tx.followUp.deleteMany({
+        where: { appointmentId: { in: appointmentIds } },
+      });
+    }
+
+    await tx.reminder.deleteMany({
+      where: {
+        OR: [
+          { patientId },
+          ...(appointmentIds.length ? [{ appointmentId: { in: appointmentIds } }] : []),
+        ],
+      },
+    });
+
+    await tx.appointment.deleteMany({ where: { patientId } });
+    await tx.priorAuthorization.deleteMany({ where: { patientId } });
+
+    const insurance = await tx.insuranceInformation.findUnique({
+      where: { patientId },
+      select: { id: true },
+    });
+    if (insurance) {
+      await tx.insuranceVerification.deleteMany({
+        where: { insuranceId: insurance.id },
+      });
+      await tx.insuranceInformation.delete({ where: { patientId } });
+    }
+
+    await tx.referral.deleteMany({ where: { patientId } });
+    await tx.hIPAAConsent.deleteMany({ where: { patientId } });
+    await tx.patientIntakeForm.deleteMany({ where: { patientId } });
+    await tx.portalMessage.deleteMany({ where: { patientId } });
+    await tx.user.updateMany({
+      where: { patientId },
+      data: { patientId: null },
+    });
+
+    await tx.patient.delete({ where: { id: patientId } });
+  });
+
+  return { id: patientId };
+};
+
 module.exports = {
   fetchAllPatients,
   fetchPatientsByChairId,
   fetchPatientById,
   updatePatient,
   archivePatient,
+  permanentDeletePatient,
 };
