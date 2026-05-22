@@ -210,75 +210,7 @@ export default function FooterSection() {
             </div>
           )}
 
-          <button
-            onClick={() => setTermsVisible(!isTermsVisible)}
-            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
-          >
-            Terms of Service
-            <ChevronDown
-              className={`w-5 h-5 absolute left-55 transition-transform ${isTermsVisible ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {isTermsVisible && (
-            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
-              <p><strong>Terms of Service:</strong></p>
-              <p>By accessing or using the Scriptish platform, you agree to comply with and be bound by the following terms:</p>
-              <ul className="list-disc pl-6">
-                <li><strong>Account Responsibility:</strong> You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account.</li>
-                <li><strong>Prohibited Activities:</strong> You may not use the platform for any unlawful or unauthorized purpose, including but not limited to distributing malicious software or violating intellectual property rights.</li>
-                <li><strong>Termination:</strong> Scriptish reserves the right to suspend or terminate your access to the platform for violations of these terms.</li>
-                <li><strong>Modifications:</strong> We may update these terms from time to time, and continued use of the platform constitutes acceptance of the updated terms.</li>
-              </ul>
-              <p>For the full Terms of Service, please contact Scriptish LLC.</p>
-            </div>
-          )}
-
-          <button
-            onClick={() => setPrivacyPolicyVisible(!isPrivacyPolicyVisible)}
-            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
-          >
-            Privacy Policy
-            <ChevronDown
-              className={`w-5 h-5 transition-transform absolute left-50  ${isPrivacyPolicyVisible ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {isPrivacyPolicyVisible && (
-            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
-              <p><strong>Privacy Policy:</strong></p>
-              <p>Scriptish LLC is committed to protecting your privacy. This policy outlines how we collect, use, and safeguard your information:</p>
-              <ul className="list-disc pl-6">
-                <li><strong>Data Collection:</strong> We collect only the information necessary to provide and improve our services, including personal and clinic-related data.</li>
-                <li><strong>Data Usage:</strong> Your data is used solely for the purposes of delivering our services and is not sold or shared with third parties without your consent.</li>
-                <li><strong>Security Measures:</strong> We implement industry-standard security practices to protect your data from unauthorized access or breaches.</li>
-                <li><strong>Data Retention:</strong> Your data is retained only as long as necessary to fulfill the purposes outlined in this policy.</li>
-              </ul>
-              <p>For more details, please review our full Privacy Policy or contact us directly.</p>
-            </div>
-          )}
-
-          <button
-            onClick={() => setSecurityVisible(!isSecurityVisible)}
-            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
-          >
-            Security
-            <ChevronDown
-              className={`w-5 h-5 transition-transform absolute left-40 ${isSecurityVisible ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {isSecurityVisible && (
-            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
-              <p><strong>Security Practices:</strong></p>
-              <p>At Scriptish LLC, we prioritize the security of your data and implement the following measures to ensure its protection:</p>
-              <ul className="list-disc pl-6">
-                <li><strong>Encryption:</strong> All sensitive data is encrypted using AES-256 encryption at rest and TLS 1.2+ during transmission.</li>
-                <li><strong>Access Controls:</strong> Multi-factor authentication and role-based access controls are enforced to limit access to authorized personnel only.</li>
-                <li><strong>Continuous Monitoring:</strong> Real-time monitoring and logging of system activities to detect and respond to potential threats.</li>
-                <li><strong>Regular Audits:</strong> Periodic security audits and vulnerability assessments to identify and mitigate risks.</li>
-                <li><strong>Incident Response:</strong> A comprehensive incident response plan to address and resolve security breaches promptly.</li>
-              </ul>
-              <p>We are committed to maintaining the highest standards of security to protect your data and ensure compliance with industry regulations.</p>
-            </div>
-          )}
+         
         </div>
 
         {/* Bottom Bar */}
