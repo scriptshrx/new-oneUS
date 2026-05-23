@@ -1217,7 +1217,7 @@ const handleCopy=()=>{
                                       onChange={(e)=>setPhone(e.target.value)}/>
                                       <button onClick={()=>{handleNotifyStaff()}}
                                       disabled={notifying || !phone || !link || !selectedRole}
-          className='rounded-md shadow-lg cursor-pointer p-2 hover:shadow-md text-center bg-blue-900 text-white'>Notify Staff</button>
+          className={`rounded-md ${notifying || !phone || !link || !selectedRole?'opacity-50 cursor-not-allowed':'shadow-lg cursor-pointer p-2 hover:shadow-md text-center bg-blue-900 text-white'}`}>{notifying?'Notifying...':'Notify Staff'}</button>
                                       </div>
                                       }
                                       </div>
