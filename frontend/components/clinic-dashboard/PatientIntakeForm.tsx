@@ -44,6 +44,7 @@ const INSURANCE_PLAN_TYPES = [
 interface IntakeFormData {
   // Patient info
   patientFirstName: string;
+  alergy: string;
   patientLastName: string;
   patientDOB: string;
   patientPhone: string;
@@ -106,6 +107,7 @@ const[showInsuranceModal,setShowInsuranceModal] =useState(false)
 
   const [formData, setFormData] = useState<IntakeFormData>({
     patientFirstName: '',
+    alergy: '',
     patientLastName: '',
     patientDOB: '',
     patientPhone: '',
@@ -686,6 +688,21 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
             />
             {errors.prescribedTreatment && (
               <p className="text-xs text-destructive mt-1">{errors.prescribedTreatment}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Alergy (if any)<span className="text-destructive">*</span>
+            </Label>
+            <Input
+              placeholder="Patient alergic reactions (if any)"
+              value={formData.alergy}
+              onChange={(e) => handleChange('alergy', e.target.value)}
+              className="bg-background/50 border-border/30"
+            />
+            {errors.alergy && (
+              <p className="text-xs text-destructive mt-1">{errors.alergy}</p>
             )}
           </div>
 

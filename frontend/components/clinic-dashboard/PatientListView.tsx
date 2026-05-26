@@ -1137,14 +1137,15 @@ const handleCopy=()=>{
                 <span className="text-sm">Back to Dasboard</span>
               </button>
             )}
-            <h1 className="text-3xl font-bold text-foreground">Clinic CRM</h1>
+            <h1 className="text-3xl font-bold text-foreground">{insuranceOnly?'Insurance Verification':'Clinic CRM'}</h1>
             <p className="text-sm text-foreground/70 mt-1">
-              Manage clinic patients, staff, and appointments
+              {insuranceOnly?'Verify insurance information for new referrals':'Manage clinic patients, staff, and appointments'}
             </p>
           </div>
         </div>
 
         {/* Tabs */}
+        {!insuranceOnly&&
         <div className=' flex flex-col justify-between md:flex-row gap-4 items-center'>
         <div className="flex gap-2 mt-6">
           <button
@@ -1211,18 +1212,18 @@ const handleCopy=()=>{
                                         <button onClick={handleCopy}
                                         className='rounded-lg p-1 px-2 text-center items-center flex justify-center bg-gray-800 text-white cursor-pointer shadow-sm'>{copied?'Copied':'Copy'}</button>
                                         </div>}
-                                      <Input
+                                      {/* <Input
                                       placeholder='phone, e.g: +123423223'
                                       className='border border-primary/20'
                                       onChange={(e)=>setPhone(e.target.value)}/>
                                       <button onClick={()=>{handleNotifyStaff()}}
                                       disabled={notifying || !phone || !link || !selectedRole}
-          className={`rounded-md ${notifying || !phone || !link || !selectedRole?'opacity-50 cursor-not-allowed':'shadow-lg cursor-pointer p-2 hover:shadow-md text-center bg-blue-900 text-white'}`}>{notifying?'Notifying...':'Notify Staff'}</button>
+          className={`rounded-md ${notifying || !phone || !link || !selectedRole?'opacity-50 cursor-not-allowed':'shadow-lg cursor-pointer p-2 hover:shadow-md text-center bg-blue-900 text-white'}`}>{notifying?'Notifying...':'Notify Staff'}</button> */}
                                       </div>
                                       }
                                       </div>
         
-        }</div>
+        }</div>}
       </div>
 
       {/* Content */}
