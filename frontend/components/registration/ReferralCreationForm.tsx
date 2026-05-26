@@ -36,14 +36,15 @@ const ICD_10_COMMON = [
 const INSURANCE_PLAN_TYPES = [
   { id: 'PPO', label: 'PPO - Preferred Provider Organization' },
   { id: 'HMO', label: 'HMO - Health Maintenance Organization' },
-  { id: 'EPO', label: 'EPO - Exclusive Provider Organization' },
-  { id: 'POS', label: 'POS - Point of Service' },
-  { id: 'INDEMNITY', label: 'Indemnity - Fee-for-Service' },
+ 
+  {id:'MEDICARE', label:'United States MEDICARE'},
+  {id:'MEDICAID', label:'United States MEDICAID'}
 ];
 
 interface ReferralFormData {
   // Patient info
   patientFirstName: string;
+  alergy: string;
   patientLastName: string;
   patientDOB: string;
   patientPhone: string;
@@ -96,6 +97,7 @@ export default function ReferralCreationPage({
  
   const [formData, setFormData] = useState<ReferralFormData>({
     patientFirstName: '',
+    alergy: '',
     patientLastName: '',
     patientDOB: '',
     patientPhone: '',
@@ -753,6 +755,13 @@ export default function ReferralCreationPage({
             placeholder="Prescribed Treatment"
             value={formData.prescribedTreatment}
             onChange={(e) => handleChange('prescribedTreatment', e.target.value)}
+            className="bg-background/50 border-border/30"
+          />
+
+<Input
+            placeholder="Alergy (if any)"
+            value={formData.alergy}
+            onChange={(e) => handleChange('alergy', e.target.value)}
             className="bg-background/50 border-border/30"
           />
 

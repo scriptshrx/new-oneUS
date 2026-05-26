@@ -33,7 +33,6 @@ const US_STATES = [
 const INSURANCE_PLAN_TYPES = [
   { id: 'PPO', label: 'PPO - Preferred Provider Organization' },
   { id: 'HMO', label: 'HMO - Health Maintenance Organization' },
-  { id: 'EPO', label: 'EPO - Exclusive Provider Organization' },
  
   {id:'MEDICARE', label:'United States MEDICARE'},
   {id:'MEDICAID', label:'United States MEDICAID'}
@@ -288,6 +287,7 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
       setFormData({
         patientFirstName: '',
         patientLastName: '',
+        alergy: '',
         patientDOB: '',
         patientPhone: '',
         patientEmail: '',
