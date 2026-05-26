@@ -170,7 +170,23 @@ export default function FooterSection() {
             </div>
           )}
 
-         
+          <button
+            onClick={() => setSecurityVisible(!isSecurityVisible)}
+            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
+          >
+            Security
+            <ChevronDown
+              className={`w-5 h-5 transition-transform absolute left-60 ${isSecurityVisible ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {isSecurityVisible && (
+            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
+              <p>
+                The ScriptishRx platform employs industry-standard safeguards, including AES-256 encryption at rest, TLS 1.2+ in transit, row-level database isolation per clinic, multi-factor authentication for all staff accounts, session-based access controls, and continuous audit logging. Security events are monitored in real time. Despite these measures, no system is completely immune to unauthorized access, and ScriptishRx LLC does not warrant that the platform will be free from security breaches.
+              </p>
+            </div>
+          )}
+
         </div>
 
         {/* Bottom Bar */}
