@@ -1179,7 +1179,7 @@ const handleCopy=()=>{
             Appointments
           </button>
         </div>
-        {/**Link generation buttton */}
+        {/**Links generation buttton */}
         {
        <div className='flex flex-col space-y-4'>
           {!selecTrigger&&<button onClick={()=>{setSelectTrigger(true);if(selectedRole)return}}
