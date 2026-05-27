@@ -238,7 +238,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.clinicalNotes}</div>
                </div>
                <div className="text-primary/70 text-sm mt-1 flex flex-col">
-               <div>Alergies </div>
+               <div>Allergies </div>
                <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.alergy?patient.alergy:'None'}</div>
                </div>
           </div>

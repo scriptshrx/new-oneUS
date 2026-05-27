@@ -693,7 +693,7 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
 
           <div>
             <Label className="block text-sm font-medium mb-2">
-              Alergy (if any)<span className="text-destructive">*</span>
+              Allergy (if any)<span className="text-destructive">*</span>
             </Label>
             <Input
               placeholder="Patient alergic reactions (if any)"
