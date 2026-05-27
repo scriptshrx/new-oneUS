@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 
 interface Patient {
   id?: string;
+  alergy?: string;
   firstName: string;
   lastName: string;
   treatmentType?: string;
@@ -225,7 +226,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
       onClick={(e)=>e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-[4px] border-primary/80 ">
-          <div>
+          <div className='flex gap-2'>
             <h2 className="text-2xl font-bold text-foreground">{patient.firstName + ' ' + patient.lastName}</h2>
           
                <div className="text-primary/70 text-sm mt-1 flex flex-col">
@@ -235,6 +236,10 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                 <div className="text-primary/70 text-sm mt-1 flex flex-col">
                <div>Medical Notes </div>
                <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.clinicalNotes}</div>
+               </div>
+               <div className="text-primary/70 text-sm mt-1 flex flex-col">
+               <div>Alergies </div>
+               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.alergy?patient.alergy:'None'}</div>
                </div>
           </div>
           <button
