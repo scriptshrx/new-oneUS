@@ -324,9 +324,14 @@ export default function AddChairsView() {
               <p className="font-medium text-foreground">
                 {selectedPatient.firstName} {selectedPatient.lastName}
               </p>
+             
               <p className="text-sm text-foreground/80">
                 <span className="text-foreground/60">Medication: </span>
                 {selectedPatient.prescribedTreatment || 'Not specified'}
+              </p>
+              <p className="text-sm text-foreground/80">
+                <span className="text-foreground/60">Alergies: </span>
+                {selectedPatient.alergy?selectedPatient.alergy:'None'}
               </p>
               {selectedPatientAppointmentLabel && (
                 <p className="text-sm text-foreground/80">

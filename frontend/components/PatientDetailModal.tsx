@@ -226,7 +226,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
       onClick={(e)=>e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-[4px] border-primary/80 ">
-          <div className='flex gap-2'>
+          <div className='flex flex-col md:flex-row gap-2 md:gap-8'>
             <h2 className="text-2xl font-bold text-foreground">{patient.firstName + ' ' + patient.lastName}</h2>
           
                <div className="text-primary/70 text-sm mt-1 flex flex-col">
