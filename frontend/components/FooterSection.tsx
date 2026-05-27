@@ -182,7 +182,36 @@ export default function FooterSection() {
           {isSecurityVisible && (
             <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed">
               <p>
-                The ScriptishRx platform employs industry-standard safeguards, including AES-256 encryption at rest, TLS 1.2+ in transit, row-level database isolation per clinic, multi-factor authentication for all staff accounts, session-based access controls, and continuous audit logging. Security events are monitored in real time. Despite these measures, no system is completely immune to unauthorized access, and ScriptishRx LLC does not warrant that the platform will be free from security breaches.
+                The Scriptish platform employs industry-standard safeguards, including AES-256 encryption at rest, TLS 1.2+ in transit, row-level database isolation per clinic, multi-factor authentication for all staff accounts, session-based access controls, and continuous audit logging. Security events are monitored in real time. Despite these measures, no system is completely immune to unauthorized access, and Scriptish LLC does not warrant that the platform will be free from security breaches.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => setIPRVisible(!isIPRVisible)}
+            className="w-full flex justify-between items-center text-left text-sm sm:text-base font-semibold text-foreground hover:text-brand transition-colors mt-4"
+          >
+            Intellectual Property Rights
+            <ChevronDown
+              className={`w-5 h-5 transition-transform absolute left-75 ${isIPRVisible ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {isIPRVisible && (
+            <div className="mt-2 text-sm sm:text-base text-foreground/70 leading-relaxed space-y-4">
+              <p>
+                <strong>Trademarks.</strong> &quot;Scriptish&quot; and &quot;Scriptish,&quot; the Scriptish logo, and all related product names, service names, and slogans are trademarks or registered trademarks of Scriptish LLC. Unauthorized use of any Scriptish trademark is strictly prohibited.
+              </p>
+              <p>
+                <strong>Patents.</strong> A patent application covering the Scriptish platform is currently pending in the United States. No license, express or implied, to any patent of Scriptish LLC is granted by accessing or using this platform.
+              </p>
+              <p>
+                <strong>Copyrights.</strong> All content, software, source code, algorithms, user interface designs, text, graphics, and other materials on this platform are © 2024–2026 Scriptish LLC and are protected under U.S. and international copyright laws. Reproduction, distribution, or modification without prior written consent is prohibited.
+              </p>
+              <p>
+                <strong>Proprietary Software.</strong> The Scriptish platform, including its infusion workflow engine, live chair orchestration system, prior authorization automation, and HIPAA-compliant data layer, constitutes proprietary trade secrets of Scriptish LLC. Access is granted solely under the terms of an executed agreement.
+              </p>
+              <p>
+                <strong>Restrictions.</strong> You may not reverse-engineer, decompile, disassemble, sublicense, sell, or create derivative works from any part of the Scriptish platform. Any unauthorized use may subject you to civil and criminal liability under applicable law.
               </p>
             </div>
           )}
