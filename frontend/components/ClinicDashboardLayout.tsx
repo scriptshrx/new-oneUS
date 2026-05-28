@@ -338,7 +338,7 @@ export default function ClinicDashboardLayout({ children }: ClinicDashboardLayou
             primaryDiagnosis: referral.primaryDiagnosis,
             prescribedTreatment: referral.prescribedTreatment,
             urgencyLevel: referral.urgencyLevel,
-            alergy: referral.alergy,
+            allergy: referral.allergy,
             clinicalNotes: referral.clinicalNotes,
             status: referral.status,
             

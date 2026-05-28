@@ -88,6 +88,7 @@ const patientId = patient.id;
       primaryDiagnosis: input.clinical.primaryDiagnosis,
       diagnosisDescription: input.clinical.diagnosisDescription,
       prescribedTreatment: input.clinical.prescribedTreatment,
+      allergy: input.clinical.allergy,
       urgencyLevel: input.clinical.urgencyLevel || 'ROUTINE',
       clinicalNotes: input.clinical.clinicalNotes,
       uploadedDocumentUrl: input.uploadedDocumentUrl,

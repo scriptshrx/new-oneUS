@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 
 interface Patient {
   id?: string;
-  alergy?: string;
+  allergy?: string;
   firstName: string;
   lastName: string;
   treatmentType?: string;
@@ -239,7 +239,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                </div>
                <div className="text-primary/70 text-sm mt-1 flex flex-col">
                <div>Allergies </div>
-               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.alergy?patient.alergy:'None'}</div>
+               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.allergy?patient.allergy:'None'}</div>
                </div>
           </div>
           <button
