@@ -181,7 +181,7 @@ const getReferrals = async (clinicId, hospitalId, filters = {}) => {
               id: true,
               appointmentType: true,
               scheduledDate: true,
-              allergy:true,
+              
               scheduledStartTime: true,
               scheduledEndTime: true,
               status: true,
@@ -192,6 +192,7 @@ const getReferrals = async (clinicId, hospitalId, filters = {}) => {
       },
       clinic: true,
       referringPhysician: true,
+      allergy: true,
     },
     orderBy: { createdAt: 'desc' },
     skip: filters.skip || 0,
