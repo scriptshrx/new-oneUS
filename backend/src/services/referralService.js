@@ -192,7 +192,7 @@ const getReferrals = async (clinicId, hospitalId, filters = {}) => {
       },
       clinic: true,
       referringPhysician: true,
-      allergy: true,
+      // allergy: true,
     },
     orderBy: { createdAt: 'desc' },
     skip: filters.skip || 0,
