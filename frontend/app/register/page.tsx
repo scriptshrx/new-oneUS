@@ -20,16 +20,22 @@ interface RegistrationState {
   hospitalId?: string;
 }
 
-
-
 export default function RegisterPage() {
   const [state, setState] = useState<RegistrationState>({
     tenantType: null,
     step: 'type-selection',
     formData: {},
   });
-  
-    const router = useRouter();
+
+  const router = useRouter();
+
+  // Use Tailwind CSS animation for the gradient
+  useEffect(() => {
+    document.body.classList.add('bg-gradient-to-b', 'from-light-blue-50', 'via-white', 'to-light-blue-200');
+    return () => {
+      document.body.classList.remove('bg-gradient-to-b', 'from-light-blue-50', 'via-white', 'to-light-blue-200');
+    };
+  }, []);
 
   const handleTenantTypeSelect = (type: TenantType) => {
     setState(prev => ({
@@ -41,7 +47,7 @@ export default function RegisterPage() {
 
   const handleFormSubmit = (data: Record<string, any>) => {
     const hospitalId = data.hospitalId;
-   
+    
     setState(prev => ({
       ...prev,
       ...data,
@@ -50,14 +56,7 @@ export default function RegisterPage() {
     }));
 
     // Route immediately based on tenant type instead of waiting for state update
-  //   if (state.tenantType === 'referring-hospital') {
-  //     router.push('/hospital-dashboard');
-  //   } else if (state.tenantType === 'clinic') {
-  //     window.location.href = '/clinic-dashboard';
-  //   }
-  // };
-  }
-
+  };
 
   const handleEmailVerified = () => {
     // After email verification, redirect to success or next step
@@ -82,7 +81,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="w-full min-h-screen bg-gradient-to-b from-background via-background to-background/95">
+    <main className="w-full min-h-screen bg-gradient-to-b from-light-blue-50 via-white to-light-blue-200">
      
          <Link href="/" className="text-xl absolute top-4 left-4 sm:text-2xl font-bold bg-gradient-to-r from-primary/10 via-primary to-primary/10 moveBg text-transparent bg-clip-text ">
               Scriptish
