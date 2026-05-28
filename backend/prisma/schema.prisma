@@ -797,6 +797,7 @@ model Appointment {
   treatmentType String  @map("treatment_type")
   drug          String?
   dose          String?
+  allergy String?
 
   // Status
   status AppointmentStatus
