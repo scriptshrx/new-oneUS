@@ -43,7 +43,7 @@ const INSURANCE_PLAN_TYPES = [
 interface IntakeFormData {
   // Patient info
   patientFirstName: string;
-  alergy: string;
+  allergy: string;
   patientLastName: string;
   patientDOB: string;
   patientPhone: string;
@@ -106,7 +106,7 @@ const[showInsuranceModal,setShowInsuranceModal] =useState(false)
 
   const [formData, setFormData] = useState<IntakeFormData>({
     patientFirstName: '',
-    alergy: '',
+    allergy: '',
     patientLastName: '',
     patientDOB: '',
     patientPhone: '',
@@ -253,6 +253,7 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
           primaryDiagnosis: formData.primaryDiagnosis,
           diagnosisDescription: formData.diagnosisDescription,
           prescribedTreatment: formData.prescribedTreatment,
+          allergy: formData.allergy,
           urgencyLevel: formData.urgencyLevel,
           clinicalNotes: formData.clinicalNotes,
         },
@@ -287,7 +288,7 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
       setFormData({
         patientFirstName: '',
         patientLastName: '',
-        alergy: '',
+        allergy: '',
         patientDOB: '',
         patientPhone: '',
         patientEmail: '',
@@ -697,12 +698,12 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
             </Label>
             <Input
               placeholder="Patient alergic reactions (if any)"
-              value={formData.alergy}
-              onChange={(e) => handleChange('alergy', e.target.value)}
+              value={formData.allergy}
+              onChange={(e) => handleChange('allergy', e.target.value)}
               className="bg-background/50 border-border/30"
             />
-            {errors.alergy && (
-              <p className="text-xs text-destructive mt-1">{errors.alergy}</p>
+            {errors.allergy && (
+              <p className="text-xs text-destructive mt-1">{errors.allergy}</p>
             )}
           </div>
 

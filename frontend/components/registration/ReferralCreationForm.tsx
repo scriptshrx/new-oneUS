@@ -44,7 +44,7 @@ const INSURANCE_PLAN_TYPES = [
 interface ReferralFormData {
   // Patient info
   patientFirstName: string;
-  alergy: string;
+  allergy: string;
   patientLastName: string;
   patientDOB: string;
   patientPhone: string;
@@ -97,7 +97,7 @@ export default function ReferralCreationPage({
  
   const [formData, setFormData] = useState<ReferralFormData>({
     patientFirstName: '',
-    alergy: '',
+    allergy: '',
     patientLastName: '',
     patientDOB: '',
     patientPhone: '',
@@ -345,6 +345,7 @@ export default function ReferralCreationPage({
           primaryDiagnosis: formData.primaryDiagnosis,
           diagnosisDescription: formData.diagnosisDescription,
           prescribedTreatment: formData.prescribedTreatment,
+          allergy: formData.allergy,
           urgencyLevel: formData.urgencyLevel,
           clinicalNotes: formData.clinicalNotes,
         },
@@ -384,6 +385,7 @@ export default function ReferralCreationPage({
         patientLastName: '',
         patientDOB: '',
         patientPhone: '',
+        allergy: '',
         patientEmail: '',
         hospitalId: hospitalId || '',
         patientAddress: '',
@@ -759,9 +761,9 @@ export default function ReferralCreationPage({
           />
 
 <Input
-            placeholder="Alergy (if any)"
-            value={formData.alergy}
-            onChange={(e) => handleChange('alergy', e.target.value)}
+            placeholder="allergy (if any)"
+            value={formData.allergy}
+            onChange={(e) => handleChange('allergy', e.target.value)}
             className="bg-background/50 border-border/30"
           />
 
