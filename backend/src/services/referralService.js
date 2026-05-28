@@ -181,7 +181,7 @@ const getReferrals = async (clinicId, hospitalId, filters = {}) => {
               id: true,
               appointmentType: true,
               scheduledDate: true,
-              alergy:true,
+              allergy:true,
               scheduledStartTime: true,
               scheduledEndTime: true,
               status: true,
