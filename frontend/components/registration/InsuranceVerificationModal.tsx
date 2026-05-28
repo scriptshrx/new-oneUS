@@ -79,7 +79,7 @@ export default function InsuranceVerificationModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={()=>{onClose();setTimeout(()=>window.location.reload(),2000)}}
             className="text-foreground/50 hover:text-foreground/80 transition-colors flex-shrink-0"
           >
             <X className="w-5 h-5" />
@@ -160,13 +160,13 @@ export default function InsuranceVerificationModal({
         {/* Footer */}
         <div className="border-t border-border/30 p-6 bg-background/50 flex gap-3">
           <Button
-            onClick={onClose}
+            onClick={()=>{onClose();setTimeout(()=>window.location.reload(),2000)}}
             className="flex-1 bg-accent hover:bg-accent/90 text-white font-semibold"
           >
             Complete Verification
           </Button>
           <Button
-            onClick={onClose}
+            onClick={()=>{onClose();setTimeout(()=>window.location.reload(),2000)}}
             variant="outline"
             className="border-accent/30 text-accent hover:bg-accent/10"
           >
