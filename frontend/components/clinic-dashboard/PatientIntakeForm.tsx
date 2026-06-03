@@ -44,6 +44,8 @@ interface IntakeFormData {
   // Patient info
   patientFirstName: string;
   allergy: string;
+  medications : string;
+  medicalHistory: string;
   patientLastName: string;
   patientDOB: string;
   patientPhone: string;
@@ -106,6 +108,8 @@ const[showInsuranceModal,setShowInsuranceModal] =useState(false)
 
   const [formData, setFormData] = useState<IntakeFormData>({
     patientFirstName: '',
+    medicalHistory:'',
+    medications:'',
     allergy: '',
     patientLastName: '',
     patientDOB: '',
@@ -253,6 +257,8 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
           primaryDiagnosis: formData.primaryDiagnosis,
           diagnosisDescription: formData.diagnosisDescription,
           prescribedTreatment: formData.prescribedTreatment,
+          medications:formData.medications,
+          medicalHistory:formData.medicalHistory,
           allergy: formData.allergy,
           urgencyLevel: formData.urgencyLevel,
           clinicalNotes: formData.clinicalNotes,
@@ -288,6 +294,8 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
       setFormData({
         patientFirstName: '',
         patientLastName: '',
+        medicalHistory:'',
+        medications:'',
         allergy: '',
         patientDOB: '',
         patientPhone: '',
@@ -694,7 +702,37 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
 
           <div>
             <Label className="block text-sm font-medium mb-2">
-              Allergy (if any)<span className="text-destructive">*</span>
+              Medical History<span className="text-destructive"></span>
+            </Label>
+            <Input
+              placeholder="Patient medical history (if any)"
+              value={formData.medicalHistory}
+              onChange={(e) => handleChange('medicalHistory', e.target.value)}
+              className="bg-background/50 border-border/30"
+            />
+            {errors.medications && (
+              <p className="text-xs text-destructive mt-1">{errors.medicalHistory}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Medications<span className="text-destructive"></span>
+            </Label>
+            <Input
+              placeholder="Current patient medications (if any)"
+              value={formData.medications}
+              onChange={(e) => handleChange('medications', e.target.value)}
+              className="bg-background/50 border-border/30"
+            />
+            {errors.medications && (
+              <p className="text-xs text-destructive mt-1">{errors.medications}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Allergy (if any)<span className="text-destructive"></span>
             </Label>
             <Input
               placeholder="Patient alergic reactions (if any)"

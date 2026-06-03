@@ -147,7 +147,7 @@ useEffect(() => {
     <div className='max-w-[1000px] md:mt-20 mx-auto p-8'>
       {/* Back Button */}
       {!isVerified && (
-        <button
+        <button>
           type="button"
           onClick={onBack}
           className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors mb-8"
@@ -169,7 +169,7 @@ useEffect(() => {
           </p>
         </div>
       ) : (
-        <>
+        
           {/* Headers */}
           <div className='flex flex-col gap-2 md:flex-row'>
             <div className='w-full md:w-[60%] md:border-r-[1px] border-r-0 border-accent/20 pr-8 md:mr-8'>

@@ -459,6 +459,8 @@ model Referral {
   diagnosisDescription String       @map("diagnosis_description")
   prescribedTreatment  String       @map("prescribed_treatment")
   urgencyLevel         UrgencyLevel @map("urgency_level")
+  medicalHistory String? @map("medical_history")
+  medications String?
   allergy String?
   clinicalNotes        String?      @map("clinical_notes") @db.Text
 
