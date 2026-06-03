@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 interface Patient {
   id?: string;
   allergy?: string;
+  medications:string;
+  medicalHistory:string;
   firstName: string;
   lastName: string;
   treatmentType?: string;
@@ -226,7 +228,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
       onClick={(e)=>e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-[4px] border-primary/80 ">
-          <div className='flex flex-col md:flex-row gap-2 md:gap-8'>
+          <div className='flex flex-col grid grid-cols-2 md:grid-cols-6 gap-2 md:gap-8'>
             <h2 className="text-2xl font-bold text-foreground">{patient.firstName + ' ' + patient.lastName}</h2>
           
                <div className="text-primary/70 text-sm mt-1 flex flex-col">
@@ -240,6 +242,22 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                <div className="text-primary/70 text-sm mt-1 flex flex-col">
                <div>Allergies </div>
                <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.allergy?patient.allergy:'None'}</div>
+               
+               
+               </div>
+
+               <div className="text-primary/70 text-sm mt-1 flex flex-col">
+               <div>Medications </div>
+               {/* <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.allergy?patient.allergy:'None'}</div> */}
+               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.medications?patient.medications:'None'}</div>
+               
+               </div>
+
+               <div className="text-primary/70 text-sm mt-1 flex flex-col">
+               <div>Medical History </div>
+              
+               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.medicalHistory?patient.medicalHistory:'None'}</div>
+               
                </div>
           </div>
           <button

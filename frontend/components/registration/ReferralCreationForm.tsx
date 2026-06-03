@@ -771,7 +771,7 @@ export default function ReferralCreationPage({
 
 <div>
             <Label className="block text-sm font-medium mb-2">
-              Medical History<span className="text-destructive">*</span>
+              Medical History<span className="text-destructive"></span>
             </Label>
             <Input
               placeholder="Patient medical history (if any)"

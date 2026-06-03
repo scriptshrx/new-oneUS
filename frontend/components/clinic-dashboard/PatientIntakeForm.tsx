@@ -321,9 +321,7 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         clinicalNotes: '',
       });
 
-      setTimeout(() => {
-        onBack();
-      }, 2000);
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit patient intake';
       setApiError(errorMessage);
