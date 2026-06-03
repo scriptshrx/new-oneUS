@@ -44,6 +44,8 @@ const INSURANCE_PLAN_TYPES = [
 interface ReferralFormData {
   // Patient info
   patientFirstName: string;
+  medications:string;
+  medicalHistory:string;
   allergy: string;
   patientLastName: string;
   patientDOB: string;
@@ -97,6 +99,8 @@ export default function ReferralCreationPage({
  
   const [formData, setFormData] = useState<ReferralFormData>({
     patientFirstName: '',
+    medicalHistory:'',
+    medications:'',
     allergy: '',
     patientLastName: '',
     patientDOB: '',
@@ -346,6 +350,8 @@ export default function ReferralCreationPage({
           diagnosisDescription: formData.diagnosisDescription,
           prescribedTreatment: formData.prescribedTreatment,
           allergy: formData.allergy,
+          medicalHistory:formData.medicalHistory,
+          medications:formData.medications,
           urgencyLevel: formData.urgencyLevel,
           clinicalNotes: formData.clinicalNotes,
         },
@@ -383,8 +389,11 @@ export default function ReferralCreationPage({
       setFormData({
         patientFirstName: '',
         patientLastName: '',
+        medicalHistory:'',
+        medications:'',
         patientDOB: '',
         patientPhone: '',
+        
         allergy: '',
         patientEmail: '',
         hospitalId: hospitalId || '',
@@ -759,6 +768,36 @@ export default function ReferralCreationPage({
             onChange={(e) => handleChange('prescribedTreatment', e.target.value)}
             className="bg-background/50 border-border/30"
           />
+
+<div>
+            <Label className="block text-sm font-medium mb-2">
+              Medical History<span className="text-destructive">*</span>
+            </Label>
+            <Input
+              placeholder="Patient medical history (if any)"
+              value={formData.medicalHistory}
+              onChange={(e) => handleChange('medicalHistory', e.target.value)}
+              className="bg-background/50 border-border/30"
+            />
+            {errors.medicalHistory && (
+              <p className="text-xs text-destructive mt-1">{errors.medicalHistory}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Medications<span className="text-destructive"></span>
+            </Label>
+            <Input
+              placeholder="Current patient medications (if any)"
+              value={formData.medications}
+              onChange={(e) => handleChange('medications', e.target.value)}
+              className="bg-background/50 border-border/30"
+            />
+            {errors.medications && (
+              <p className="text-xs text-destructive mt-1">{errors.medications}</p>
+            )}
+          </div>
 
 <Input
             placeholder="allergy (if any)"
