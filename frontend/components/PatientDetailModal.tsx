@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle, Clock, AlertCircle, Archive, Loader, Calendar, MapPin } from 'lucide-react';
+import { X, CheckCircle, Clock, AlertCircle, Archive, Loader, Calendar, MapPin, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChairSelectionModal from '@/components/ChairSelectionModal';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
@@ -10,8 +10,8 @@ import { format } from 'date-fns';
 interface Patient {
   id?: string;
   allergy?: string;
-  medications:string;
-  medicalHistory:string;
+  medications: string;
+  medicalHistory: string;
   firstName: string;
   lastName: string;
   treatmentType?: string;
@@ -27,7 +27,7 @@ interface Patient {
 interface Chair {
   id: string;
   chairNumber: string;
-  status:string
+  status: string
 }
 
 interface Appointment {
@@ -43,7 +43,7 @@ interface Appointment {
 
 interface PatientCRMNodeProps {
   patient: Patient;
-  clinicName:string;
+  clinicName: string;
   onClose: () => void;
   onUpdateStatus?: (patientId: string, nextStage: string) => Promise<void>;
   clinicId?: string;
@@ -56,11 +56,8 @@ const pipelineStages = [
   { id: 'scheduling', label: 'Scheduling Treatment', detail: 'Scheduling Treatment' },
   { id: 'treatment', label: 'Treatment In Process', detail: 'Treatment In Process' },
   { id: 'complete', label: 'Treatment In Process', detail: 'Treatment In Completed' },
-
   { id: 'follow_up', label: 'Treatment Follow-ups', detail: 'Follow-ups' },
-  
   { id: 'inactive_archived', label: 'Archived Patient', detail: 'INACTIVE_ARCHIVED' },
-  
 ];
 
 const getStageStatus = (stageId: string, patientPipelineStage: string) => {
@@ -110,7 +107,7 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-export default function PatientDetailModal({ patient, onClose,clinicName, onUpdateStatus, clinicId }: PatientCRMNodeProps) {
+export default function PatientDetailModal({ patient, onClose, clinicName, onUpdateStatus, clinicId }: PatientCRMNodeProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showChairSelection, setShowChairSelection] = useState(false);
@@ -221,81 +218,75 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
   };
 
   return (
-  <div className="fixed inset-0 absolute z-50 bg-white/50 shadow-md backdrop-blur-md flex items-center justify-center py-4 overflow-y-auto"
-    onClick={()=>onClose()}>
-    <div className=" border border-border/30 rounded-2xl max-w-5xl overflow-hidden overflow-y-auto w-full h-full bg-primary/20 space-y-4 my-8"
-    style={{scrollbarWidth:'none',scrollbarColor:'inherit'}}
-      onClick={(e)=>e.stopPropagation()}>
+    <div className="fixed inset-0 absolute z-50 bg-white/50 shadow-md backdrop-blur-md flex items-center justify-center py-4 overflow-y-auto"
+      onClick={() => onClose()}>
+      <div className=" border border-border/30 relative rounded-2xl max-w-5xl overflow-hidden overflow-y-auto w-full h-full bg-primary/20 space-y-2 my-8"
+        style={{ scrollbarWidth: 'none', scrollbarColor: 'inherit' }}
+        onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={() => { onClose() }}
+          className="p-2 hover:bg-primary/20 rounded-lg transition-colors absolute right-6 top-6 z-10"
+        >
+          <X className="w-6 h-6 text-foreground" />
+        </button>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b-[4px] border-primary/80 ">
-          <div className='flex flex-col grid grid-cols-2 md:grid-cols-6 gap-2 md:gap-8'>
-            <h2 className="text-2xl font-bold text-foreground">{patient.firstName + ' ' + patient.lastName}</h2>
-          
-               <div className="text-primary/70 text-sm mt-1 flex flex-col">
-               <div>Prescribed Treatment </div>
-               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.prescribedTreatment}</div>
-               </div>
-                <div className="text-primary/70 text-sm mt-1 flex flex-col">
-               <div>Medical Notes </div>
-               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.clinicalNotes}</div>
-               </div>
-               <div className="text-primary/70 text-sm mt-1 flex flex-col">
-               <div>Allergies </div>
-               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.allergy?patient.allergy:'None'}</div>
-               
-               
-               </div>
+        <div className="flex items-center justify-between p-6 border-b-[4px] border-primary/80 pt-10">
+          <div className='flex flex-col gap-2 md:gap-4'>
+            <h2 className="text-3xl font-bold text-foreground">{patient.firstName + ' ' + patient.lastName}</h2>
 
-               <div className="text-primary/70 text-sm mt-1 flex flex-col">
-               <div>Medications </div>
-               {/* <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.allergy?patient.allergy:'None'}</div> */}
-               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.medications?patient.medications:'None'}</div>
-               
-               </div>
-
-               <div className="text-primary/70 text-sm mt-1 flex flex-col">
-               <div>Medical History </div>
-              
-               <div className='rounded p-1 px-2 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold'>{patient.medicalHistory?patient.medicalHistory:'None'}</div>
-               
-               </div>
-          </div>
-          <button
-            onClick={()=>{onClose()}}
-            className="p-2 hover:bg-primary/20 rounded-lg transition-colors"
-          >
-            <X className="w-6 h-6 text-foreground" />
-          </button>
-        </div>
-
-        {/* Patient Info */}
-        <div className="p-6 border-b border-primary/20 ">
-          <div className="grid mx-auto grid-cols-1 md:grid-cols-3 gap-6 mx-auto items-center justify-center">
-            <div>
-              <label className="text-sm font-semibold text-primary/80">Referring Physician</label>
-              <p className="text-foreground mt-1">{patient.referringPhysician}</p>
-            </div>
-            <div>
-              
-              <label className="text-sm font-semibold text-primary/80">Primary Diagnosis</label>
-              <p className="text-foreground mt-1">{patient.primaryDiagnosis}</p>
-            </div>
-            
-
-            <div>
-              <label className={`${patient.pipelineStage==='INACTIVE_ARCHIVED'?'text-orange-600':'text-sm text-primary/80'} font-semibold `}>Current Status</label>
-              <p className="text-accent mt-1 font-semibold capitalize">{patient.pipelineStage?.replace(/_/g, ' ').toLowerCase()}</p>
+            <div className="text-primary/70 text-sm mt-1 flex flex-col">
+              <div className='font-bold text-foreground mb-1'>Prescribed Treatment </div>
+              <div className='rounded p-2 px-3 bg-accent/10 border-l-[4px] border-primary bg-background/80 text-primary font-bold text-base'>
+                {patient.prescribedTreatment || 'No specific treatment logged'}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Patient Info Grid */}
+        <div className="p-6 border-b border-primary/20 bg-background/30">
+          <div className="grid mx-auto grid-cols-1 md:grid-cols-3 gap-6 items-start justify-between">
+            <div>
+              <label className="text-sm font-semibold text-primary/80 uppercase tracking-wide">Referring Physician</label>
+              <p className="text-foreground mt-1 font-medium">{patient.referringPhysician || 'N/A'}</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-primary/80 uppercase tracking-wide">Primary Diagnosis</label>
+              <p className="text-foreground mt-1 font-medium">{patient.primaryDiagnosis || 'N/A'}</p>
+            </div>
+            <div>
+              <label className={`${patient.pipelineStage === 'INACTIVE_ARCHIVED' ? 'text-orange-600' : 'text-primary/80'} text-sm font-semibold uppercase tracking-wide`}>Current Status</label>
+              <p className="text-accent mt-1 font-bold capitalize bg-accent/10 px-3 py-1 rounded-full inline-block">
+                {patient.pipelineStage?.replace(/_/g, ' ').toLowerCase()}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Clinical Notes Section (Formatted with whitespace-pre-wrap) */}
+        {patient.clinicalNotes && (
+          <div className="p-6 border-b border-primary/20 bg-background/50">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-bold text-primary/95">Clinical Notes</h3>
+            </div>
+            <div className="p-5 rounded-xl border border-primary/20 bg-background/80 max-h-96 overflow-y-auto">
+              {/* whitespace-pre-wrap is the key to rendering the newlines beautifully */}
+              <div className="text-sm text-foreground/90 font-medium leading-relaxed whitespace-pre-wrap font-sans">
+                {patient.clinicalNotes}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Infusion Chair Section */}
         <div className="p-6 border-b border-primary/20">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-primary/95">Assigned Infusion Chair & Appointment</h3>
           </div>
-          
-          { loadingChair ? (
+
+          {loadingChair ? (
             <div className="flex items-center justify-center py-8">
               <Loader className="w-5 h-5 animate-spin text-primary mr-2" />
               <span className="text-foreground/70">Loading chair and appointment information...</span>
@@ -313,11 +304,10 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                     </div>
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-semibold text-primary/80 uppercase">Status</label>
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                        taggedChair.status === 'ACTIVE'
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${taggedChair.status === 'ACTIVE'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
-                      }`}>
+                        }`}>
                         {taggedChair.status}
                       </span>
                     </div>
@@ -350,7 +340,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                             const startMinutes = parseInt(startParts[1] || '0');
                             const startAmpm = startHours >= 12 ? 'PM' : 'AM';
                             const startDisplay = startHours > 12 ? startHours - 12 : (startHours === 0 ? 12 : startHours);
-                            
+
                             let endDisplay = '';
                             if (appointment.scheduledEndTime) {
                               const endParts = appointment.scheduledEndTime.split('T')[1]?.split(':') || [];
@@ -360,13 +350,13 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                               const displayHours = endHours > 12 ? endHours - 12 : (endHours === 0 ? 12 : endHours);
                               endDisplay = ` - ${displayHours}:${String(endMinutes).padStart(2, '0')} ${endAmpm}`;
                             }
-                            
+
                             return `${startDisplay}:${String(startMinutes).padStart(2, '0')} ${startAmpm}${endDisplay}`;
                           })()}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mt-3">
                       <label className="text-xs font-semibold text-accent/80 uppercase">Type</label>
                       <p className="text-foreground font-semibold text-sm">{appointment.appointmentType.replace(/_/g, ' ')}</p>
                     </div>
@@ -376,12 +366,11 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                     </div>
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-semibold text-accent/80 uppercase">Status</label>
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                        appointment.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-800' :
-                        appointment.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
-                        appointment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${appointment.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-800' :
+                          appointment.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
+                            appointment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                        }`}>
                         {appointment.status}
                       </span>
                     </div>
@@ -415,7 +404,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
               )}
             </div>
           ) : (
-             patient.pipelineStage.toLocaleLowerCase()==='scheduling'&&
+            patient.pipelineStage.toLocaleLowerCase() === 'scheduling' &&
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-yellow-800 mb-3">No infusion chair or appointment assigned to this patient yet.</p>
               {clinicId ? (
@@ -431,7 +420,7 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
             </div>
           )}
         </div>
-        
+
 
         {/* CRM Pipeline */}
         <div className="p-8">
@@ -462,13 +451,12 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                   {!isLast && (
                     <div className="hidden lg:block flex-1 h-1 bg-border/30 mx-2 relative">
                       <div
-                        className={`absolute top-0 left-0 h-full transition-all ${
-                          getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'completed'
+                        className={`absolute top-0 left-0 h-full transition-all ${getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'completed'
                             ? 'bg-green-500/50'
                             : getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'active'
                               ? 'bg-blue-500/50'
                               : 'bg-gray-500/30'
-                        }`}
+                          }`}
                         style={{
                           width: getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'completed' ? '100%' : '0%',
                         }}
@@ -480,13 +468,12 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                   {!isLast && (
                     <div className="lg:hidden flex-col items-center">
                       <div
-                        className={`w-1 h-8 transition-all ${
-                          getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'completed'
+                        className={`w-1 h-8 transition-all ${getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'completed'
                             ? 'bg-green-500/50'
                             : getStageStatus(pipelineStages[index + 1].id, patient.pipelineStage) === 'active'
                               ? 'bg-blue-500/50'
                               : 'bg-gray-500/30'
-                        }`}
+                          }`}
                       />
                     </div>
                   )}
@@ -504,25 +491,23 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
                 return (
                   <div
                     key={stage.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                      status === 'completed'
+                    className={`flex items-center justify-between p-3 rounded-lg border ${status === 'completed'
                         ? 'bg-green-500/10 border-green-500/30'
                         : status === 'active'
                           ? 'bg-blue-500/10 border-blue-500/30'
                           : 'bg-gray-500/10 border-gray-500/30'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-current" />
                       <span className="text-sm font-medium text-foreground">{stage.label}</span>
                     </div>
-                    <span className={`text-xs font-semibold capitalize ${
-                      status === 'completed'
+                    <span className={`text-xs font-semibold capitalize ${status === 'completed'
                         ? 'text-green-400'
                         : status === 'active'
                           ? 'text-blue-400'
                           : 'text-gray-400'
-                    }`}>
+                      }`}>
                       {status}
                     </span>
                   </div>
@@ -531,64 +516,61 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
             </div>
           </div>
 
-            {/* Footer */}
-        <div className="flex justify-end gap-4 p-6 border-border/30 ">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="border-border/30 text-foreground hover:bg-primary/20"
-          >
-            Close
-          </Button>
-          <Button 
-            onClick={handleUpdateStatus}
-            disabled={isUpdating || patient.pipelineStage=='INACTIVE_ARCHIVED'}
-            className={`${nextStage=='INACTIVE_ARCHIVED'?'bg-orange-500/30 text-orange-600':'bg-accent text-white'} hover:bg-gray-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
-          >{nextStage==='INACTIVE_ARCHIVED'&&<Archive className='text-background text-orange-500 mr-1'/>}
-            {isUpdating ? 'Updating...' : nextStage?.toLocaleLowerCase()==='inactive_archived'? 'Archive Patient':'Update Status'}
-          </Button>
-        </div>
-
-        {showConfirm && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-4">
-            <div
-              className="w-full max-w-lg rounded-3xl border border-border/30 bg-background p-6 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
+          {/* Footer */}
+          <div className="flex justify-end gap-4 p-6 border-border/30 mt-6">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="border-border/30 text-foreground hover:bg-primary/20"
             >
-              <h3 className="text-xl font-semibold text-foreground mb-3">
-                Confirm status update
-              </h3>
-              <p className="text-sm text-foreground/70 mb-6">
-                Are you sure you want to update this patient's status from{' '}
-                <span className="font-semibold">
-                  {patient.pipelineStage?.replace(/_/g, ' ').toLowerCase()}
-                </span>{' '}
-                to{' '}
-                <span className="font-semibold">{nextStageLabel}</span>?
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleCancelUpdate}
-                  className="border-border/30 text-foreground hover:bg-primary/20"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleConfirmUpdateStatus}
-                  disabled={isUpdating}
-                  className={`${nextStage==='INACTIVE_ARCHIVED'?'bg-orange-700/20 text-orange-600':'bg-accent text-white'} hover:bg-gray-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {isUpdating ? 'Updating...' : !isUpdating&&nextStage==='INACTIVE_ARCHIVED' ?'Yes, Archive':'Yes, update status'}
-                </Button>
+              Close
+            </Button>
+            <Button
+              onClick={handleUpdateStatus}
+              disabled={isUpdating || patient.pipelineStage == 'INACTIVE_ARCHIVED'}
+              className={`${nextStage == 'INACTIVE_ARCHIVED' ? 'bg-orange-500/30 text-orange-600' : 'bg-accent text-white'} hover:bg-gray-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
+            >{nextStage === 'INACTIVE_ARCHIVED' && <Archive className='text-background text-orange-500 mr-1' />}
+              {isUpdating ? 'Updating...' : nextStage?.toLocaleLowerCase() === 'inactive_archived' ? 'Archive Patient' : 'Update Status'}
+            </Button>
+          </div>
+
+          {showConfirm && (
+            <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-4">
+              <div
+                className="w-full max-w-lg rounded-3xl border border-border/30 bg-background p-6 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-xl font-semibold text-foreground mb-3">
+                  Confirm status update
+                </h3>
+                <p className="text-sm text-foreground/70 mb-6">
+                  Are you sure you want to update this patient's status from{' '}
+                  <span className="font-semibold">
+                    {patient.pipelineStage?.replace(/_/g, ' ').toLowerCase()}
+                  </span>{' '}
+                  to{' '}
+                  <span className="font-semibold">{nextStageLabel}</span>?
+                </p>
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelUpdate}
+                    className="border-border/30 text-foreground hover:bg-primary/20"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmUpdateStatus}
+                    disabled={isUpdating}
+                    className={`${nextStage === 'INACTIVE_ARCHIVED' ? 'bg-orange-700/20 text-orange-600' : 'bg-accent text-white'} hover:bg-gray-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {isUpdating ? 'Updating...' : !isUpdating && nextStage === 'INACTIVE_ARCHIVED' ? 'Yes, Archive' : 'Yes, update status'}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
+          )}
         </div>
-
-      
       </div>
 
       {/* Chair Selection Modal */}
@@ -600,7 +582,6 @@ export default function PatientDetailModal({ patient, onClose,clinicName, onUpda
           clinicName={clinicName}
           patientId={patient.id}
           treatmentType={patient.treatmentType}
-          
           appointment={appointment}
           onChairSelected={handleTagChair}
           onAppointmentCreated={async (appointmentId) => {

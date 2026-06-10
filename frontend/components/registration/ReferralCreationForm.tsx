@@ -16,8 +16,6 @@ import { useDashboardView } from '../HospitalDashboardLayout';
 import { fetchWithAuth } from '@/lib/fetchWithAuth';
 import InsuranceVerificationModal from './InsuranceVerificationModal';
 
-
-
 const URGENCY_LEVELS = [
   { id: 'ROUTINE', label: 'Routine' },
   { id: 'URGENT', label: 'Urgent' },
@@ -36,17 +34,13 @@ const ICD_10_COMMON = [
 const INSURANCE_PLAN_TYPES = [
   { id: 'PPO', label: 'PPO - Preferred Provider Organization' },
   { id: 'HMO', label: 'HMO - Health Maintenance Organization' },
- 
-  {id:'MEDICARE', label:'United States MEDICARE'},
-  {id:'MEDICAID', label:'United States MEDICAID'}
+  { id: 'MEDICARE', label: 'United States MEDICARE' },
+  { id: 'MEDICAID', label: 'United States MEDICAID' }
 ];
 
 interface ReferralFormData {
   // Patient info
   patientFirstName: string;
-  medications:string;
-  medicalHistory:string;
-  allergy: string;
   patientLastName: string;
   patientDOB: string;
   patientPhone: string;
@@ -64,23 +58,58 @@ interface ReferralFormData {
 
   // Referring physician
   physicianFirstName: string;
-  hospitalId:string;
+  hospitalId: string;
   physicianLastName: string;
   physicianNPI: string;
   physicianPracticeName: string;
   physicianPhone: string;
   physicianSpecialty: string;
 
-  // Clinical
+  // Clinical core
   primaryDiagnosis: string;
   diagnosisDescription: string;
   prescribedTreatment: string;
   urgencyLevel: string;
-  clinicalNotes: string;
 
   // Target clinic
   targetClinicId: string;
 }
+
+interface StructuredNotes {
+  chiefComplaint: string;
+  medicalHistory: string;
+  medications: string;
+  vitalSigns: string;
+  allergies: string;
+  rosGeneral: string;
+  rosHEENT: string;
+  rosCardio: string;
+  rosRespiratory: string;
+  rosAbdomen: string;
+  rosExtremities: string;
+  rosSkin: string;
+  rosNeuro: string;
+  labs: string;
+  assessmentAndPlan: string;
+}
+
+const initialStructuredNotes: StructuredNotes = {
+  chiefComplaint: '',
+  medicalHistory: '',
+  medications: '',
+  vitalSigns: '',
+  allergies: '',
+  rosGeneral: '',
+  rosHEENT: '',
+  rosCardio: '',
+  rosRespiratory: '',
+  rosAbdomen: '',
+  rosExtremities: '',
+  rosSkin: '',
+  rosNeuro: '',
+  labs: '',
+  assessmentAndPlan: '',
+};
 
 interface ReferralCreationPageProps {
   hospitalId: string;
@@ -89,19 +118,14 @@ interface ReferralCreationPageProps {
 }
 
 export default function ReferralCreationPage({
-  
   clinicPartners,
   onBack,
 }: ReferralCreationPageProps) {
-
- const{hospitalId, clinics}=useDashboardView();
- const API_BASE_URL = 'https://scriptishrxnewmark.onrender.com/v1';
- 
+  const { hospitalId, clinics } = useDashboardView();
+  const API_BASE_URL = 'https://scriptishrxnewmark.onrender.com/v1';
+  
   const [formData, setFormData] = useState<ReferralFormData>({
     patientFirstName: '',
-    medicalHistory:'',
-    medications:'',
-    allergy: '',
     patientLastName: '',
     patientDOB: '',
     patientPhone: '',
@@ -125,9 +149,10 @@ export default function ReferralCreationPage({
     diagnosisDescription: '',
     prescribedTreatment: '',
     urgencyLevel: 'ROUTINE',
-    clinicalNotes: '',
     targetClinicId: '',
   });
+
+  const [structuredNotes, setStructuredNotes] = useState<StructuredNotes>(initialStructuredNotes);
 
   // Keep formData.hospitalId in sync if context hospitalId loads after mount
   useEffect(() => {
@@ -169,7 +194,6 @@ export default function ReferralCreationPage({
   };
 
   const handleChange = (fieldName: string, value: string) => {
-    // Special handling for clinic selection
     if (fieldName === 'targetClinicId') {
       handleClinicSelection(value);
       return;
@@ -180,7 +204,6 @@ export default function ReferralCreationPage({
       [fieldName]: value,
     }));
 
-    // Clear error for this field when user starts typing
     if (errors[fieldName]) {
       setErrors(prev => ({
         ...prev,
@@ -189,34 +212,32 @@ export default function ReferralCreationPage({
     }
   };
 
+  const handleNoteChange = (field: keyof StructuredNotes, value: string) => {
+    setStructuredNotes(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleClinicSelection = async (clinicId: string) => {
     console.log('🏥 [Stage 1] Clinic selection initiated:', clinicId);
     setCapacityError('');
 
     try {
-      // Fetch clinic details
       console.log('📡 [Stage 2] Fetching clinic details from:', `${API_BASE_URL}/clinics/${clinicId}`);
       
       const selectedClinic = clinics.find(clinic=>clinic.id==clinicId);
       console.log('Selected clinic:',selectedClinic);
-
-      
-      
-
       console.log('✅ [Stage 2] Clinic data hydrated successfully');
 
-      // Fetch patients linked to this clinic
       console.log('📡 [Stage 3] Fetching patients for clinic:', clinicId);
-      const patientsResponse = await fetchWithAuth(`${API_BASE_URL}/patients?clinicId=${clinicId}`
-       );
+      const patientsResponse = await fetchWithAuth(`${API_BASE_URL}/patients?clinicId=${clinicId}`);
 
-      // Check if the response is OK
       if (!patientsResponse.ok) {
         console.error('❌ [Stage 3] Failed to fetch patients:', patientsResponse.statusText);
         throw new Error('Failed to fetch patients');
       }
 
-      // Parse the response safely
       const responseText = await patientsResponse.text();
       if (!responseText) {
         console.error('❌ [Stage 3] Empty response body received');
@@ -236,7 +257,6 @@ export default function ReferralCreationPage({
       const allPatients = Array.isArray(patientsData) ? patientsData : patientsData.patients || [];
       console.log('📊 [Stage 4] Total patients found:', allPatients.length);
 
-      // Filter out archived and completed patients
       console.log('🔍 [Stage 5] Filtering patients - excluding INACTIVE_ARCHIVED and COMPLETE stages');
       const activePatients = allPatients.filter(
         (patient: any) =>
@@ -254,19 +274,17 @@ export default function ReferralCreationPage({
       console.log(`   - Available chairs: ${chairCount}`);
       console.log(`   - Active patients list:`, activePatients.map((p: any) => ({ id: p.id, stage: p.pipelineStage })));
 
-      // Check capacity
-      console.log('⚖️ [Stage 6] Checking capacity: activeCount (${activeCount}) >= chairCount (${chairCount})?');
+      console.log(`⚖️ [Stage 6] Checking capacity: activeCount (${activeCount}) >= chairCount (${chairCount})?`);
       if (activeCount >= chairCount) {
         console.error('❌ [Stage 6] Clinic at capacity - selection rejected');
         setCapacityError(
           `This clinic has reached its capacity. Currently has ${activeCount} active patients with ${chairCount} available chairs.`
         );
-        return; // Reject the selection
+        return;
       }
 
       console.log('✅ [Stage 6] Clinic has available capacity - accepting selection');
 
-      // Selection is valid, update form data
       console.log('💾 [Stage 7] Updating form with selected clinic');
       setFormData(prev => ({
         ...prev,
@@ -279,7 +297,6 @@ export default function ReferralCreationPage({
         activePatients: activeCount,
       });
 
-      // Clear any existing errors for this field
       if (errors.targetClinicId) {
         setErrors(prev => ({
           ...prev,
@@ -317,6 +334,38 @@ export default function ReferralCreationPage({
       }
       console.log('✅ [Submit - Stage 2] Hospital ID confirmed:', effectiveHospitalId);
 
+      // Compile the individual note fields into the final formatted string
+      const compiledClinicalNotes = `Chief Complaint:
+${structuredNotes.chiefComplaint}
+
+Medical History:
+${structuredNotes.medicalHistory}
+
+Medications:
+${structuredNotes.medications}
+
+Vital Signs:
+${structuredNotes.vitalSigns}
+
+Allergies:
+${structuredNotes.allergies}
+
+Review of Systems:
+- General review: ${structuredNotes.rosGeneral}
+- HEENT: ${structuredNotes.rosHEENT}
+- Cardio: ${structuredNotes.rosCardio}
+- Respiratory: ${structuredNotes.rosRespiratory}
+- Abdomen: ${structuredNotes.rosAbdomen}
+- Extremities: ${structuredNotes.rosExtremities}
+- Skin: ${structuredNotes.rosSkin}
+- Neuro: ${structuredNotes.rosNeuro}
+
+Labs:
+${structuredNotes.labs}
+
+Assessment and Plan:
+${structuredNotes.assessmentAndPlan}`;
+
       const referralPayload = {
         clinicId: formData.targetClinicId,
         hospitalId: effectiveHospitalId,
@@ -349,11 +398,11 @@ export default function ReferralCreationPage({
           primaryDiagnosis: formData.primaryDiagnosis,
           diagnosisDescription: formData.diagnosisDescription,
           prescribedTreatment: formData.prescribedTreatment,
-          allergy: formData.allergy,
-          medicalHistory:formData.medicalHistory,
-          medications:formData.medications,
+          allergy: structuredNotes.allergies,
+          medicalHistory: structuredNotes.medicalHistory,
+          medications: structuredNotes.medications,
           urgencyLevel: formData.urgencyLevel,
-          clinicalNotes: formData.clinicalNotes,
+          clinicalNotes: compiledClinicalNotes,
         },
       };
 
@@ -389,12 +438,8 @@ export default function ReferralCreationPage({
       setFormData({
         patientFirstName: '',
         patientLastName: '',
-        medicalHistory:'',
-        medications:'',
         patientDOB: '',
         patientPhone: '',
-        
-        allergy: '',
         patientEmail: '',
         hospitalId: hospitalId || '',
         patientAddress: '',
@@ -415,9 +460,10 @@ export default function ReferralCreationPage({
         diagnosisDescription: '',
         prescribedTreatment: '',
         urgencyLevel: 'ROUTINE',
-        clinicalNotes: '',
         targetClinicId: '',
       });
+
+      setStructuredNotes(initialStructuredNotes);
 
       console.log('✅ [Submit - Stage 5] Form reset complete, showing insurance verification modal');
       setIsSubmitting(false);
@@ -762,49 +808,17 @@ export default function ReferralCreationPage({
             className="bg-background/50 border-border/30"
           />
 
-          <Input
-            placeholder="Prescribed Treatment"
-            value={formData.prescribedTreatment}
-            onChange={(e) => handleChange('prescribedTreatment', e.target.value)}
-            className="bg-background/50 border-border/30"
-          />
-
-<div>
-            <Label className="block text-sm font-medium mb-2">
-              Medical History<span className="text-destructive"></span>
-            </Label>
-            <Input
-              placeholder="Patient medical history (if any)"
-              value={formData.medicalHistory}
-              onChange={(e) => handleChange('medicalHistory', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            {errors.medicalHistory && (
-              <p className="text-xs text-destructive mt-1">{errors.medicalHistory}</p>
-            )}
-          </div>
-
           <div>
             <Label className="block text-sm font-medium mb-2">
-              Medications<span className="text-destructive"></span>
+              Prescribed Treatment
             </Label>
             <Input
-              placeholder="Current patient medications (if any)"
-              value={formData.medications}
-              onChange={(e) => handleChange('medications', e.target.value)}
+              placeholder="Prescribed Treatment"
+              value={formData.prescribedTreatment}
+              onChange={(e) => handleChange('prescribedTreatment', e.target.value)}
               className="bg-background/50 border-border/30"
             />
-            {errors.medications && (
-              <p className="text-xs text-destructive mt-1">{errors.medications}</p>
-            )}
           </div>
-
-<Input
-            placeholder="allergy (if any)"
-            value={formData.allergy}
-            onChange={(e) => handleChange('allergy', e.target.value)}
-            className="bg-background/50 border-border/30"
-          />
 
           <div>
             <Label className="block text-sm font-medium mb-2">Urgency Level</Label>
@@ -822,16 +836,76 @@ export default function ReferralCreationPage({
             </Select>
           </div>
 
-          <div>
-            <Label className="block text-sm font-medium mb-2">Clinical Notes</Label>
-            <textarea
-              placeholder="Additional clinical notes or observations..."
-              value={formData.clinicalNotes}
-              onChange={(e) => handleChange('clinicalNotes', e.target.value)}
-              rows={4}
-              className="w-full px-3 py-2 bg-background/50 border border-border/30 rounded-lg text-foreground text-sm placeholder:text-foreground/40 focus:outline-none focus:border-accent/50"
-            />
+          {/* STRUCTURED CLINICAL NOTES */}
+          <div className="pt-6 border-t border-border/30 space-y-6">
+            <h3 className="text-lg font-semibold text-foreground/90">Clinical Notes</h3>
+            
+            {/* Main Sections */}
+            {[
+              { id: 'chiefComplaint', label: 'Chief Complaint:' },
+              { id: 'medicalHistory', label: 'Medical History:' },
+              { id: 'medications', label: 'Medications:' },
+              { id: 'vitalSigns', label: 'Vital Signs:' },
+              { id: 'allergies', label: 'Allergies:' },
+            ].map((field) => (
+              <div key={field.id}>
+                <Label className="block text-sm font-bold mb-2 text-foreground/80">{field.label}</Label>
+                <textarea
+                  rows={2}
+                  value={structuredNotes[field.id as keyof StructuredNotes]}
+                  onChange={(e) => handleNoteChange(field.id as keyof StructuredNotes, e.target.value)}
+                  className="w-full px-3 py-2 bg-background/50 border border-border/30 rounded-lg text-foreground text-sm focus:outline-none focus:border-accent/50 resize-y placeholder:text-foreground/30"
+                  placeholder={`Enter ${field.label.toLowerCase().replace(':', '')}...`}
+                />
+              </div>
+            ))}
+
+            {/* Review of Systems */}
+            <div className="p-4 bg-primary/5 rounded-xl border border-border/30 space-y-4">
+              <Label className="block text-sm font-bold text-foreground/80">Review of Systems:</Label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { id: 'rosGeneral', label: '- General review:' },
+                  { id: 'rosHEENT', label: '- HEENT:' },
+                  { id: 'rosCardio', label: '- Cardio:' },
+                  { id: 'rosRespiratory', label: '- Respiratory:' },
+                  { id: 'rosAbdomen', label: '- Abdomen:' },
+                  { id: 'rosExtremities', label: '- Extremities:' },
+                  { id: 'rosSkin', label: '- Skin:' },
+                  { id: 'rosNeuro', label: '- Neuro:' },
+                ].map((field) => (
+                  <div key={field.id}>
+                    <Label className="block text-xs font-semibold mb-2 text-foreground/70">{field.label}</Label>
+                    <textarea
+                      rows={2}
+                      value={structuredNotes[field.id as keyof StructuredNotes]}
+                      onChange={(e) => handleNoteChange(field.id as keyof StructuredNotes, e.target.value)}
+                      className="w-full px-3 py-2 bg-background/50 border border-border/30 rounded-lg text-foreground text-sm focus:outline-none focus:border-accent/50 resize-y"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Final Sections */}
+            {[
+              { id: 'labs', label: 'Labs:' },
+              { id: 'assessmentAndPlan', label: 'Assessment and Plan:' },
+            ].map((field) => (
+              <div key={field.id}>
+                <Label className="block text-sm font-bold mb-2 text-foreground/80">{field.label}</Label>
+                <textarea
+                  rows={2}
+                  value={structuredNotes[field.id as keyof StructuredNotes]}
+                  onChange={(e) => handleNoteChange(field.id as keyof StructuredNotes, e.target.value)}
+                  className="w-full px-3 py-2 bg-background/50 border border-border/30 rounded-lg text-foreground text-sm focus:outline-none focus:border-accent/50 resize-y placeholder:text-foreground/30"
+                  placeholder={`Enter ${field.label.toLowerCase().replace(':', '')}...`}
+                />
+              </div>
+            ))}
           </div>
+
         </div>
       </div>
 

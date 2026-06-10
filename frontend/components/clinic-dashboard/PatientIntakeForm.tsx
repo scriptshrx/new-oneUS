@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { useClinicDashboardView } from '../ClinicDashboardLayout';
 import InsuranceVerificationModal from '../registration/InsuranceVerificationModal';
+
 const API_BASE_URL = 'https://scriptishrxnewmark.onrender.com/v1';
 
 const URGENCY_LEVELS = [
@@ -33,19 +34,13 @@ const US_STATES = [
 const INSURANCE_PLAN_TYPES = [
   { id: 'PPO', label: 'PPO - Preferred Provider Organization' },
   { id: 'HMO', label: 'HMO - Health Maintenance Organization' },
- 
-  {id:'MEDICARE', label:'United States MEDICARE'},
-  {id:'MEDICAID', label:'United States MEDICAID'}
-
- 
+  { id: 'MEDICARE', label: 'United States MEDICARE' },
+  { id: 'MEDICAID', label: 'United States MEDICAID' }
 ];
 
 interface IntakeFormData {
   // Patient info
   patientFirstName: string;
-  allergy: string;
-  medications : string;
-  medicalHistory: string;
   patientLastName: string;
   patientDOB: string;
   patientPhone: string;
@@ -69,13 +64,48 @@ interface IntakeFormData {
   physicianPhone: string;
   physicianSpecialty: string;
 
-  // Clinical
+  // Clinical core
   primaryDiagnosis: string;
   diagnosisDescription: string;
   prescribedTreatment: string;
   urgencyLevel: string;
-  clinicalNotes: string;
 }
+
+interface StructuredNotes {
+  chiefComplaint: string;
+  medicalHistory: string;
+  medications: string;
+  vitalSigns: string;
+  allergies: string;
+  rosGeneral: string;
+  rosHEENT: string;
+  rosCardio: string;
+  rosRespiratory: string;
+  rosAbdomen: string;
+  rosExtremities: string;
+  rosSkin: string;
+  rosNeuro: string;
+  labs: string;
+  assessmentAndPlan: string;
+}
+
+const initialStructuredNotes: StructuredNotes = {
+  chiefComplaint: '',
+  medicalHistory: '',
+  medications: '',
+  vitalSigns: '',
+  allergies: '',
+  rosGeneral: '',
+  rosHEENT: '',
+  rosCardio: '',
+  rosRespiratory: '',
+  rosAbdomen: '',
+  rosExtremities: '',
+  rosSkin: '',
+  rosNeuro: '',
+  labs: '',
+  assessmentAndPlan: '',
+};
 
 interface PatientIntakeFormProps {
   onBack: () => void;
@@ -83,7 +113,8 @@ interface PatientIntakeFormProps {
 
 export default function PatientIntakeForm({ onBack }: PatientIntakeFormProps) {
   const { clinic, patients } = useClinicDashboardView();
-const[showInsuranceModal,setShowInsuranceModal] =useState(false)
+  const [showInsuranceModal, setShowInsuranceModal] = useState(false);
+
   useEffect(() => {
     if (clinic && patients) {
       const activePatients = patients.filter(
@@ -108,9 +139,6 @@ const[showInsuranceModal,setShowInsuranceModal] =useState(false)
 
   const [formData, setFormData] = useState<IntakeFormData>({
     patientFirstName: '',
-    medicalHistory:'',
-    medications:'',
-    allergy: '',
     patientLastName: '',
     patientDOB: '',
     patientPhone: '',
@@ -133,31 +161,29 @@ const[showInsuranceModal,setShowInsuranceModal] =useState(false)
     diagnosisDescription: '',
     prescribedTreatment: '',
     urgencyLevel: 'ROUTINE',
-    clinicalNotes: '',
   });
 
+  const [structuredNotes, setStructuredNotes] = useState<StructuredNotes>(initialStructuredNotes);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-const[submittedPatientName,setSubmittedPatientName]=useState('')
+  const [submittedPatientName, setSubmittedPatientName] = useState('');
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Patient Information
     if (!formData.patientFirstName.trim()) newErrors.patientFirstName = 'First name required';
     if (!formData.patientLastName.trim()) newErrors.patientLastName = 'Last name required';
     if (!formData.patientDOB) newErrors.patientDOB = 'Date of birth required';
     if (!formData.patientEmail) newErrors.patientEmail = 'Email required';
     if (!formData.patientPhone) newErrors.patientPhone = 'Phone required';
 
-    // Insurance Information
     if (!formData.insuranceCarrier.trim()) newErrors.insuranceCarrier = 'Insurance carrier required';
     if (!formData.insuranceMemberId.trim()) newErrors.insuranceMemberId = 'Member ID required';
     if (!formData.insuranceGroupNumber.trim()) newErrors.insuranceGroupNumber = 'Group number required';
     if (!formData.insurancePlanType) newErrors.insurancePlanType = 'Plan type required';
 
-    // Clinical Information
     if (!formData.primaryDiagnosis.trim()) newErrors.primaryDiagnosis = 'Diagnosis code required';
     if (!formData.prescribedTreatment.trim()) newErrors.prescribedTreatment = 'Prescribed treatment required';
 
@@ -171,13 +197,19 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
       [fieldName]: value,
     }));
 
-    // Clear error for this field when user starts typing
     if (errors[fieldName]) {
       setErrors(prev => ({
         ...prev,
         [fieldName]: '',
       }));
     }
+  };
+
+  const handleNoteChange = (field: keyof StructuredNotes, value: string) => {
+    setStructuredNotes(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -187,33 +219,23 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
       return;
     }
 
-     const activePatients = patients.filter(
-        (patient: any) =>
-          patient.pipelineStage !== 'INACTIVE_ARCHIVED' &&
-          patient.pipelineStage !== 'COMPLETE' &&
-          patient.pipelineStage?.toLowerCase() !== 'inactive_archived' &&
-          patient.pipelineStage?.toLowerCase() !== 'complete'
-      );
+    const activePatients = patients.filter(
+      (patient: any) =>
+        patient.pipelineStage !== 'INACTIVE_ARCHIVED' &&
+        patient.pipelineStage !== 'COMPLETE' &&
+        patient.pipelineStage?.toLowerCase() !== 'inactive_archived' &&
+        patient.pipelineStage?.toLowerCase() !== 'complete'
+    );
 
-      const activeCount = activePatients.length;
-      const chairCount = clinic.infusionChairCount || 0;
+    const activeCount = activePatients.length;
+    const chairCount = clinic.infusionChairCount || 0;
 
-      console.log('✅ [Stage 5] Filter complete:');
-      console.log(`   - Active patients: ${activeCount}`);
-      console.log(`   - Available chairs: ${chairCount}`);
-      console.log(`   - Active patients list:`, activePatients.map((p: any) => ({ id: p.id, stage: p.pipelineStage })));
-
-       console.log('⚖️ [Stage 6] Checking capacity: activeCount (${activeCount}) >= chairCount (${chairCount})?');
-      if (activeCount >= chairCount) {
-        console.error('❌ [Stage 6] Clinic at capacity - selection rejected');
-        setErrors({CapacityError:
-          `This clinic has reached its capacity. Currently has ${activeCount} active patients with ${chairCount} available chairs.`
+    if (activeCount >= chairCount) {
+      setErrors({
+        CapacityError: `This clinic has reached its capacity. Currently has ${activeCount} active patients with ${chairCount} available chairs.`
       });
-        return; // Reject the selection
-      }
-
-      console.log('✅ [Stage 6] Clinic has available capacity - accepting selection');
-
+      return; 
+    }
 
     setIsSubmitting(true);
     setApiError('');
@@ -225,9 +247,41 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         return;
       }
 
+      // Compile the individual note fields into the final formatted string
+      const compiledClinicalNotes = `Chief Complaint:
+${structuredNotes.chiefComplaint}
+
+Medical History:
+${structuredNotes.medicalHistory}
+
+Medications:
+${structuredNotes.medications}
+
+Vital Signs:
+${structuredNotes.vitalSigns}
+
+Allergies:
+${structuredNotes.allergies}
+
+Review of Systems:
+- General review: ${structuredNotes.rosGeneral}
+- HEENT: ${structuredNotes.rosHEENT}
+- Cardio: ${structuredNotes.rosCardio}
+- Respiratory: ${structuredNotes.rosRespiratory}
+- Abdomen: ${structuredNotes.rosAbdomen}
+- Extremities: ${structuredNotes.rosExtremities}
+- Skin: ${structuredNotes.rosSkin}
+- Neuro: ${structuredNotes.rosNeuro}
+
+Labs:
+${structuredNotes.labs}
+
+Assessment and Plan:
+${structuredNotes.assessmentAndPlan}`;
+
       const referralPayload = {
         clinicId: clinic.id,
-        hospitalId: clinic.id, // Self-referral - clinic refers to itself
+        hospitalId: clinic.id,
         patientInfo: {
           firstName: formData.patientFirstName,
           lastName: formData.patientLastName,
@@ -257,16 +311,17 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
           primaryDiagnosis: formData.primaryDiagnosis,
           diagnosisDescription: formData.diagnosisDescription,
           prescribedTreatment: formData.prescribedTreatment,
-          medications:formData.medications,
-          medicalHistory:formData.medicalHistory,
-          allergy: formData.allergy,
           urgencyLevel: formData.urgencyLevel,
-          clinicalNotes: formData.clinicalNotes,
+          // You originally passed allergy, medications, medicalHistory as separate fields too.
+          // Extracting them from structured notes so your backend still gets them if it expects them there!
+          allergy: structuredNotes.allergies,
+          medications: structuredNotes.medications,
+          medicalHistory: structuredNotes.medicalHistory,
+          clinicalNotes: compiledClinicalNotes, 
         },
       };
 
-      setSubmittedPatientName(`${formData.patientFirstName} ${formData.patientLastName}`)
-      console.log('Patient Intake payload:', JSON.stringify(referralPayload));
+      setSubmittedPatientName(`${formData.patientFirstName} ${formData.patientLastName}`);
 
       const response = await fetch(`${API_BASE_URL}/referrals`, {
         method: 'POST',
@@ -286,17 +341,12 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
       setSuccessMessage(
         `✓ Patient intake submitted successfully! ${result.patientName} has been added to ${clinic.name}.`
       );
-      setIsSubmitting(false)
+      setIsSubmitting(false);
+      setShowInsuranceModal(true);
 
-      setShowInsuranceModal(true)
-
-      // Reset form
       setFormData({
         patientFirstName: '',
         patientLastName: '',
-        medicalHistory:'',
-        medications:'',
-        allergy: '',
         patientDOB: '',
         patientPhone: '',
         patientEmail: '',
@@ -318,10 +368,10 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         diagnosisDescription: '',
         prescribedTreatment: '',
         urgencyLevel: 'ROUTINE',
-        clinicalNotes: '',
       });
 
-      
+      setStructuredNotes(initialStructuredNotes);
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit patient intake';
       setApiError(errorMessage);
@@ -331,7 +381,6 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 p-6">
-      {/* Back Button */}
       <button
         type="button"
         onClick={onBack}
@@ -341,7 +390,6 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         <span className="text-sm text-primary font-medium">Back to Dashboard</span>
       </button>
 
-      {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-foreground mb-2">New Patient Intake</h2>
         <p className="text-foreground/70">
@@ -349,7 +397,6 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         </p>
       </div>
 
-      {/* Clinic Information Display */}
       <div className="p-6 rounded-xl bg-accent/10 border border-accent/20">
         <h3 className="text-lg font-semibold text-accent mb-4">Intake Form</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -372,7 +419,6 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         </div>
       </div>
 
-      {/* Success Alert */}
       {successMessage && (
         <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex gap-3">
           <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center mt-0.5">
@@ -384,7 +430,6 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         </div>
       )}
 
-      {/* Error Alert */}
       {apiError && (
         <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex gap-3">
           <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
@@ -394,7 +439,6 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         </div>
       )}
 
-      {/* Clinic Capacity Error Alert */}
       {errors.CapacityError && (
         <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex gap-3">
           <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
@@ -404,7 +448,6 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
         </div>
       )}
 
-      {/* Main Form Sections */}
       <div className="space-y-8">
         {/* Patient Information */}
         <div className="space-y-4">
@@ -412,119 +455,54 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="block text-sm font-medium mb-2">
-                First Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                placeholder="John"
-                value={formData.patientFirstName}
-                onChange={(e) => handleChange('patientFirstName', e.target.value)}
-                className="bg-background/50 border-border/30"
-              />
-              {errors.patientFirstName && (
-                <p className="text-xs text-destructive mt-1">{errors.patientFirstName}</p>
-              )}
+              <Label className="block text-sm font-medium mb-2">First Name <span className="text-destructive">*</span></Label>
+              <Input placeholder="John" value={formData.patientFirstName} onChange={(e) => handleChange('patientFirstName', e.target.value)} className="bg-background/50 border-border/30" />
+              {errors.patientFirstName && <p className="text-xs text-destructive mt-1">{errors.patientFirstName}</p>}
             </div>
-
             <div>
-              <Label className="block text-sm font-medium mb-2">
-                Last Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                placeholder="Smith"
-                value={formData.patientLastName}
-                onChange={(e) => handleChange('patientLastName', e.target.value)}
-                className="bg-background/50 border-border/30"
-              />
-              {errors.patientLastName && (
-                <p className="text-xs text-destructive mt-1">{errors.patientLastName}</p>
-              )}
+              <Label className="block text-sm font-medium mb-2">Last Name <span className="text-destructive">*</span></Label>
+              <Input placeholder="Smith" value={formData.patientLastName} onChange={(e) => handleChange('patientLastName', e.target.value)} className="bg-background/50 border-border/30" />
+              {errors.patientLastName && <p className="text-xs text-destructive mt-1">{errors.patientLastName}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="block text-sm font-medium mb-2">
-                Date of Birth <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="date"
-                value={formData.patientDOB}
-                onChange={(e) => handleChange('patientDOB', e.target.value)}
-                className="bg-background/50 border-border/30"
-              />
-              {errors.patientDOB && (
-                <p className="text-xs text-destructive mt-1">{errors.patientDOB}</p>
-              )}
+              <Label className="block text-sm font-medium mb-2">Date of Birth <span className="text-destructive">*</span></Label>
+              <Input type="date" value={formData.patientDOB} onChange={(e) => handleChange('patientDOB', e.target.value)} className="bg-background/50 border-border/30" />
+              {errors.patientDOB && <p className="text-xs text-destructive mt-1">{errors.patientDOB}</p>}
             </div>
-
             <div>
-              <Label className="block text-sm font-medium mb-2">
-                Email <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="email"
-                placeholder="patient@email.com"
-                value={formData.patientEmail}
-                onChange={(e) => handleChange('patientEmail', e.target.value)}
-                className="bg-background/50 border-border/30"
-              />
-              {errors.patientEmail && (
-                <p className="text-xs text-destructive mt-1">{errors.patientEmail}</p>
-              )}
+              <Label className="block text-sm font-medium mb-2">Email <span className="text-destructive">*</span></Label>
+              <Input type="email" placeholder="patient@email.com" value={formData.patientEmail} onChange={(e) => handleChange('patientEmail', e.target.value)} className="bg-background/50 border-border/30" />
+              {errors.patientEmail && <p className="text-xs text-destructive mt-1">{errors.patientEmail}</p>}
             </div>
           </div>
 
           <div>
-            <Label className="block text-sm font-medium mb-2">
-              Phone <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              placeholder="+125550000"
-              value={formData.patientPhone}
-              onChange={(e) => handleChange('patientPhone', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            {errors.patientPhone && (
-              <p className="text-xs text-destructive mt-1">{errors.patientPhone}</p>
-            )}
+            <Label className="block text-sm font-medium mb-2">Phone <span className="text-destructive">*</span></Label>
+            <Input placeholder="+125550000" value={formData.patientPhone} onChange={(e) => handleChange('patientPhone', e.target.value)} className="bg-background/50 border-border/30" />
+            {errors.patientPhone && <p className="text-xs text-destructive mt-1">{errors.patientPhone}</p>}
           </div>
 
           <div>
             <Label className="block text-sm font-medium mb-2">Address</Label>
-            <Input
-              placeholder="123 Main St"
-              value={formData.patientAddress}
-              onChange={(e) => handleChange('patientAddress', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
+            <Input placeholder="123 Main St" value={formData.patientAddress} onChange={(e) => handleChange('patientAddress', e.target.value)} className="bg-background/50 border-border/30" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Input
-              placeholder="City"
-              value={formData.patientCity}
-              onChange={(e) => handleChange('patientCity', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
+            <Input placeholder="City" value={formData.patientCity} onChange={(e) => handleChange('patientCity', e.target.value)} className="bg-background/50 border-border/30" />
             <div>
               <Select value={formData.patientState} onValueChange={(val) => handleChange('patientState', val)}>
                 <SelectTrigger className="bg-background/50 border-border/30 text-foreground">
                   <SelectValue placeholder="Select state" />
                 </SelectTrigger>
                 <SelectContent className="border-border/30">
-                  {US_STATES.map(state => (
-                    <SelectItem key={state} value={state}>{state}</SelectItem>
-                  ))}
+                  {US_STATES.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <Input
-              placeholder="ZIP"
-              value={formData.patientZipCode}
-              onChange={(e) => handleChange('patientZipCode', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
+            <Input placeholder="ZIP" value={formData.patientZipCode} onChange={(e) => handleChange('patientZipCode', e.target.value)} className="bg-background/50 border-border/30" />
           </div>
         </div>
 
@@ -534,69 +512,34 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="block text-sm font-medium mb-2">
-                Insurance Carrier <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                placeholder="Insurance Carrier (e.g., Blue Cross)"
-                value={formData.insuranceCarrier}
-                onChange={(e) => handleChange('insuranceCarrier', e.target.value)}
-                className="bg-background/50 border-border/30"
-              />
-              {errors.insuranceCarrier && (
-                <p className="text-xs text-destructive mt-1">{errors.insuranceCarrier}</p>
-              )}
+              <Label className="block text-sm font-medium mb-2">Insurance Carrier <span className="text-destructive">*</span></Label>
+              <Input placeholder="E.g., Blue Cross" value={formData.insuranceCarrier} onChange={(e) => handleChange('insuranceCarrier', e.target.value)} className="bg-background/50 border-border/30" />
+              {errors.insuranceCarrier && <p className="text-xs text-destructive mt-1">{errors.insuranceCarrier}</p>}
             </div>
             <div>
-              <Label className="block text-sm font-medium mb-2">
-                Member ID <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                placeholder="Member ID"
-                value={formData.insuranceMemberId}
-                onChange={(e) => handleChange('insuranceMemberId', e.target.value)}
-                className="bg-background/50 border-border/30"
-              />
-              {errors.insuranceMemberId && (
-                <p className="text-xs text-destructive mt-1">{errors.insuranceMemberId}</p>
-              )}
+              <Label className="block text-sm font-medium mb-2">Member ID <span className="text-destructive">*</span></Label>
+              <Input placeholder="Member ID" value={formData.insuranceMemberId} onChange={(e) => handleChange('insuranceMemberId', e.target.value)} className="bg-background/50 border-border/30" />
+              {errors.insuranceMemberId && <p className="text-xs text-destructive mt-1">{errors.insuranceMemberId}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="block text-sm font-medium mb-2">
-                Group Number <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                placeholder="Group Number"
-                value={formData.insuranceGroupNumber}
-                onChange={(e) => handleChange('insuranceGroupNumber', e.target.value)}
-                className="bg-background/50 border-border/30"
-              />
-              {errors.insuranceGroupNumber && (
-                <p className="text-xs text-destructive mt-1">{errors.insuranceGroupNumber}</p>
-              )}
+              <Label className="block text-sm font-medium mb-2">Group Number <span className="text-destructive">*</span></Label>
+              <Input placeholder="Group Number" value={formData.insuranceGroupNumber} onChange={(e) => handleChange('insuranceGroupNumber', e.target.value)} className="bg-background/50 border-border/30" />
+              {errors.insuranceGroupNumber && <p className="text-xs text-destructive mt-1">{errors.insuranceGroupNumber}</p>}
             </div>
             <div>
-              <Label className="block text-sm font-medium mb-2">
-                Plan Type <span className="text-destructive">*</span>
-              </Label>
+              <Label className="block text-sm font-medium mb-2">Plan Type <span className="text-destructive">*</span></Label>
               <Select value={formData.insurancePlanType} onValueChange={(val) => handleChange('insurancePlanType', val)}>
                 <SelectTrigger className="bg-background/50 border-border/30 text-foreground">
                   <SelectValue placeholder="Select plan type" />
                 </SelectTrigger>
                 <SelectContent className="border-border/30">
-                  {INSURANCE_PLAN_TYPES.map((plan) => (
-                    <SelectItem key={plan.id} value={plan.id}>
-                      {plan.label}
-                    </SelectItem>
-                  ))}
+                  {INSURANCE_PLAN_TYPES.map((plan) => <SelectItem key={plan.id} value={plan.id}>{plan.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {errors.insurancePlanType && (
-                <p className="text-xs text-destructive mt-1">{errors.insurancePlanType}</p>
-              )}
+              {errors.insurancePlanType && <p className="text-xs text-destructive mt-1">{errors.insurancePlanType}</p>}
             </div>
           </div>
         </div>
@@ -606,54 +549,21 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
           <h3 className="text-lg font-semibold text-foreground/90">Referring Physician</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              placeholder="Physician First Name"
-              value={formData.physicianFirstName}
-              onChange={(e) => handleChange('physicianFirstName', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            <Input
-              placeholder="Physician Last Name"
-              value={formData.physicianLastName}
-              onChange={(e) => handleChange('physicianLastName', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
+            <Input placeholder="Physician First Name" value={formData.physicianFirstName} onChange={(e) => handleChange('physicianFirstName', e.target.value)} className="bg-background/50 border-border/30" />
+            <Input placeholder="Physician Last Name" value={formData.physicianLastName} onChange={(e) => handleChange('physicianLastName', e.target.value)} className="bg-background/50 border-border/30" />
           </div>
 
           <div>
-            <Label className="block text-sm font-medium mb-2">
-              Physician NPI
-            </Label>
-            <Input
-              placeholder="10-digit NPI"
-              maxLength={10}
-              value={formData.physicianNPI}
-              onChange={(e) => handleChange('physicianNPI', e.target.value.replace(/\D/g, ''))}
-              className="bg-background/50 border-border/30"
-            />
+            <Label className="block text-sm font-medium mb-2">Physician NPI</Label>
+            <Input placeholder="10-digit NPI" maxLength={10} value={formData.physicianNPI} onChange={(e) => handleChange('physicianNPI', e.target.value.replace(/\D/g, ''))} className="bg-background/50 border-border/30" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              placeholder="Practice Name"
-              value={formData.physicianPracticeName}
-              onChange={(e) => handleChange('physicianPracticeName', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            <Input
-              placeholder="Practice Phone"
-              value={formData.physicianPhone}
-              onChange={(e) => handleChange('physicianPhone', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
+            <Input placeholder="Practice Name" value={formData.physicianPracticeName} onChange={(e) => handleChange('physicianPracticeName', e.target.value)} className="bg-background/50 border-border/30" />
+            <Input placeholder="Practice Phone" value={formData.physicianPhone} onChange={(e) => handleChange('physicianPhone', e.target.value)} className="bg-background/50 border-border/30" />
           </div>
 
-          <Input
-            placeholder="Specialty (e.g., Psychiatry)"
-            value={formData.physicianSpecialty}
-            onChange={(e) => handleChange('physicianSpecialty', e.target.value)}
-            className="bg-background/50 border-border/30"
-          />
+          <Input placeholder="Specialty (e.g., Psychiatry)" value={formData.physicianSpecialty} onChange={(e) => handleChange('physicianSpecialty', e.target.value)} className="bg-background/50 border-border/30" />
         </div>
 
         {/* Clinical Information */}
@@ -661,87 +571,14 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
           <h3 className="text-lg font-semibold text-foreground/90">Clinical Information</h3>
 
           <div>
-            <Label className="block text-sm font-medium mb-2">
-              Primary Diagnosis (ICD-10) <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              type="text"
-              placeholder="E.g., F41.1 - Generalized Anxiety Disorder"
-              value={formData.primaryDiagnosis}
-              onChange={(e) => handleChange('primaryDiagnosis', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            {errors.primaryDiagnosis && (
-              <p className="text-xs text-destructive mt-1">{errors.primaryDiagnosis}</p>
-            )}
+            <Label className="block text-sm font-medium mb-2">Primary Diagnosis (ICD-10) <span className="text-destructive">*</span></Label>
+            <Input type="text" placeholder="E.g., F41.1 - Generalized Anxiety Disorder" value={formData.primaryDiagnosis} onChange={(e) => handleChange('primaryDiagnosis', e.target.value)} className="bg-background/50 border-border/30" />
+            {errors.primaryDiagnosis && <p className="text-xs text-destructive mt-1">{errors.primaryDiagnosis}</p>}
           </div>
 
-          <Input
-            placeholder="Diagnosis Description"
-            value={formData.diagnosisDescription}
-            onChange={(e) => handleChange('diagnosisDescription', e.target.value)}
-            className="bg-background/50 border-border/30"
-          />
+          <Input placeholder="Diagnosis Description" value={formData.diagnosisDescription} onChange={(e) => handleChange('diagnosisDescription', e.target.value)} className="bg-background/50 border-border/30" />
 
-          <div>
-            <Label className="block text-sm font-medium mb-2">
-              Prescribed Treatment <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              placeholder="Prescribed Treatment"
-              value={formData.prescribedTreatment}
-              onChange={(e) => handleChange('prescribedTreatment', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            {errors.prescribedTreatment && (
-              <p className="text-xs text-destructive mt-1">{errors.prescribedTreatment}</p>
-            )}
-          </div>
-
-          <div>
-            <Label className="block text-sm font-medium mb-2">
-              Medical History<span className="text-destructive"></span>
-            </Label>
-            <Input
-              placeholder="Patient medical history (if any)"
-              value={formData.medicalHistory}
-              onChange={(e) => handleChange('medicalHistory', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            {errors.medications && (
-              <p className="text-xs text-destructive mt-1">{errors.medicalHistory}</p>
-            )}
-          </div>
-
-          <div>
-            <Label className="block text-sm font-medium mb-2">
-              Medications<span className="text-destructive"></span>
-            </Label>
-            <Input
-              placeholder="Current patient medications (if any)"
-              value={formData.medications}
-              onChange={(e) => handleChange('medications', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            {errors.medications && (
-              <p className="text-xs text-destructive mt-1">{errors.medications}</p>
-            )}
-          </div>
-
-          <div>
-            <Label className="block text-sm font-medium mb-2">
-              Allergy (if any)<span className="text-destructive"></span>
-            </Label>
-            <Input
-              placeholder="Patient alergic reactions (if any)"
-              value={formData.allergy}
-              onChange={(e) => handleChange('allergy', e.target.value)}
-              className="bg-background/50 border-border/30"
-            />
-            {errors.allergy && (
-              <p className="text-xs text-destructive mt-1">{errors.allergy}</p>
-            )}
-          </div>
+          
 
           <div>
             <Label className="block text-sm font-medium mb-2">Urgency Level</Label>
@@ -750,43 +587,102 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="border-border/30">
-                {URGENCY_LEVELS.map((level) => (
-                  <SelectItem key={level.id} value={level.id}>
-                    {level.label}
-                  </SelectItem>
-                ))}
+                {URGENCY_LEVELS.map((level) => <SelectItem key={level.id} value={level.id}>{level.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
+          {/* STRUCTURED CLINICAL NOTES */}
+          <div className="pt-6 border-t border-border/30 space-y-6">
+            <h3 className="text-lg font-semibold text-foreground/90">Clinical Notes</h3>
+            
+            {/* Main Sections */}
+            {[
+              { id: 'chiefComplaint', label: 'Chief Complaint:' },
+              { id: 'medicalHistory', label: 'Medical History:' },
+              { id: 'medications', label: 'Medications:' },
+              { id: 'vitalSigns', label: 'Vital Signs:' },
+              { id: 'allergies', label: 'Allergies:' },
+            ].map((field) => (
+              <div key={field.id}>
+                <Label className="block text-sm font-bold mb-2 text-foreground/80">{field.label}</Label>
+                <textarea
+                  rows={2}
+                  value={structuredNotes[field.id as keyof StructuredNotes]}
+                  onChange={(e) => handleNoteChange(field.id as keyof StructuredNotes, e.target.value)}
+                  className="w-full px-3 py-2 bg-background/50 border border-border/30 rounded-lg text-foreground text-sm focus:outline-none focus:border-accent/50 resize-y placeholder:text-foreground/30"
+                  placeholder={`Enter ${field.label.toLowerCase().replace(':', '')}...`}
+                />
+              </div>
+            ))}
+
+            {/* Review of Systems */}
+            <div className="p-4 bg-primary/5 rounded-xl border border-border/30 space-y-4">
+              <Label className="block text-sm font-bold text-foreground/80">Review of Systems:</Label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { id: 'rosGeneral', label: '- General review:' },
+                  { id: 'rosHEENT', label: '- HEENT:' },
+                  { id: 'rosCardio', label: '- Cardio:' },
+                  { id: 'rosRespiratory', label: '- Respiratory:' },
+                  { id: 'rosAbdomen', label: '- Abdomen:' },
+                  { id: 'rosExtremities', label: '- Extremities:' },
+                  { id: 'rosSkin', label: '- Skin:' },
+                  { id: 'rosNeuro', label: '- Neuro:' },
+                ].map((field) => (
+                  <div key={field.id}>
+                    <Label className="block text-xs font-semibold mb-2 text-foreground/70">{field.label}</Label>
+                    <textarea
+                      rows={2}
+                      value={structuredNotes[field.id as keyof StructuredNotes]}
+                      onChange={(e) => handleNoteChange(field.id as keyof StructuredNotes, e.target.value)}
+                      className="w-full px-3 py-2 bg-background/50 border border-border/30 rounded-lg text-foreground text-sm focus:outline-none focus:border-accent/50 resize-y"
+                    />
+                  </div>
+                ))}
+                
+              </div>
+            </div>
+
+            {/* Final Sections */}
+            {[
+              { id: 'labs', label: 'Labs:' },
+              { id: 'assessmentAndPlan', label: 'Assessment and Plan:' },
+            ].map((field) => (
+              <div key={field.id}>
+                <Label className="block text-sm font-bold mb-2 text-foreground/80">{field.label}</Label>
+                <textarea
+                  rows={2}
+                  value={structuredNotes[field.id as keyof StructuredNotes]}
+                  onChange={(e) => handleNoteChange(field.id as keyof StructuredNotes, e.target.value)}
+                  className="w-full px-3 py-2 bg-background/50 border border-border/30 rounded-lg text-foreground text-sm focus:outline-none focus:border-accent/50 resize-y placeholder:text-foreground/30"
+                  placeholder={`Enter ${field.label.toLowerCase().replace(':', '')}...`}
+                />
+              </div>
+            ))}
+          </div>
           <div>
-            <Label className="block text-sm font-medium mb-2">Clinical Notes</Label>
-            <textarea
-              placeholder="Additional clinical notes or observations..."
-              value={formData.clinicalNotes}
-              onChange={(e) => handleChange('clinicalNotes', e.target.value)}
-              rows={4}
-              className="w-full px-3 py-2 bg-background/50 border border-border/30 rounded-lg text-foreground text-sm placeholder:text-foreground/40 focus:outline-none focus:border-accent/50"
-            />
+            <Label className="block text-sm font-medium mb-2">Prescribed Treatment <span className="text-destructive">*</span></Label>
+            <Input placeholder="Prescribed Treatment" value={formData.prescribedTreatment} onChange={(e) => handleChange('prescribedTreatment', e.target.value)} className="bg-background/50 border-border/30" />
+            {errors.prescribedTreatment && <p className="text-xs text-destructive mt-1">{errors.prescribedTreatment}</p>}
           </div>
         </div>
-        {showInsuranceModal&&
-        <InsuranceVerificationModal
-         patientName={submittedPatientName}
-          onClose={() => {
-            setShowInsuranceModal(false);
-            setSuccessMessage('');
-            onBack();
-          }}/>}
+
+        {showInsuranceModal && (
+          <InsuranceVerificationModal
+            patientName={submittedPatientName}
+            onClose={() => {
+              setShowInsuranceModal(false);
+              setSuccessMessage('');
+              onBack();
+            }}
+          />
+        )}
       </div>
 
-      {/* Submit Buttons */}
       <div className="flex flex-col md:flex-row gap-3 mt-10">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-1 bg-accent hover:bg-accent/90 text-white font-semibold gap-2"
-        >
+        <Button type="submit" disabled={isSubmitting} className="flex-1 bg-accent hover:bg-accent/90 text-white font-semibold gap-2">
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -799,17 +695,10 @@ const[submittedPatientName,setSubmittedPatientName]=useState('')
             </>
           )}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onBack}
-          disabled={isSubmitting}
-          className="border-accent/30 text-accent hover:bg-accent/10"
-        >
+        <Button type="button" variant="outline" onClick={onBack} disabled={isSubmitting} className="border-accent/30 text-accent hover:bg-accent/10">
           Cancel
         </Button>
       </div>
-      
     </form>
   );
 }
