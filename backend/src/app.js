@@ -49,6 +49,10 @@ console.log('Wake-up call from UptimeRobot')
   return res.json({ status: 'ok' });
 });
 
+app.post('/bytance-backend',(req,res)=>{
+  res.json('This is a new API request for Bytance Academy')
+});
+
 app.post('/notify-staff', async(req,res)=>{
   const {phone, link, clinicName}=req.body;
   console.log('Notifying staff with:',req.body)
