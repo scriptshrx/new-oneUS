@@ -23,6 +23,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       'http://localhost:3000',
+      'http://127.0.0.1:5500/mini-projects/irene',
       'https://scriptishrx.net',
       'http://localhost:3001',
       'https://new-scriptish.vercel.app',
