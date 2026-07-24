@@ -205,9 +205,10 @@ export default function HeroSection() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-accent via-accent to-primary mb-4 sm:mb-6  text-transparent bg-clip-text leading-tight">
-            Operating System for {' '}
+          Seamless Care Coordination for
+ {' '}
             <span className="text-primary enlargeBgText">
-             Infusion Clinics
+            Wellness and Longevity
             </span>
           </h1>
 
