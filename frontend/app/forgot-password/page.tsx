@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
     setError('');
 
     try {
-      const response = await authService.requestPasswordReset(email, npiNumber);
+      const response = await authService.requestPasswordReset(email);
       // Navigate to reset password page with token
       localStorage.setItem('resetToken',response.resetToken)
       router.push(`/reset-password?token=${response.resetToken}`);
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
             Forgot your password?
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email and NPI number to reset your password
+            Enter your email address to reset your password
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div>
+            {/* <div>
               <Label htmlFor="npiNumber" className="sr-only">
                 NPI Number
               </Label>
@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
                 value={npiNumber}
                 onChange={(e) => setNpiNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
               />
-            </div>
+            </div> */}
           </div>
 
           {error && (

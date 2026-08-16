@@ -441,14 +441,14 @@ console.log('Resend OTP response:', resData)
   /**
    * Request password reset
    */
-  async requestPasswordReset(email: string, npiNumber: string): Promise<{ resetToken: string }> {
+  async requestPasswordReset(email: string): Promise<{ resetToken: string }> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/auth/password/forgot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, npiNumber }),
+        body: JSON.stringify({ email }),
       });
 
       if (!response.ok) {
