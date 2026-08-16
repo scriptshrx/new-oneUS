@@ -515,7 +515,7 @@ const login = async (input) => {
 
 const forgotPassword = async (input) => {
   console.log('\x1b[1m🔐 [FORGOT_PASSWORD] START - Password reset requested\x1b[0m', { email: input.email, npiNumber: input.npiNumber });
-  const { email, npiNumber } = input;
+  const { email } = input;
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -541,10 +541,10 @@ const forgotPassword = async (input) => {
     throw new ValidationError('User not associated with clinic or hospital');
   }
 
-  if (associatedNpi !== npiNumber) {
-    console.log('\x1b[1m❌ [FORGOT_PASSWORD] NPI number does not match\x1b[0m');
-    throw new UnauthorizedError('NPI number does not match');
-  }
+  // if (associatedNpi !== npiNumber) {
+  //   console.log('\x1b[1m❌ [FORGOT_PASSWORD] NPI number does not match\x1b[0m');
+  //   throw new UnauthorizedError('NPI number does not match');
+  // }
 
   // Generate reset token
   console.log('\x1b[1m🎟️ [FORGOT_PASSWORD] Generating password reset token...\x1b[0m');
