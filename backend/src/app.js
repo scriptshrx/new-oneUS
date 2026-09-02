@@ -18,7 +18,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// CORS configuration
+// CORS configurations
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
