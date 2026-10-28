@@ -34,7 +34,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // ✅ Import client components inside the function (allowed)
+  // ✅ Import client components inside the function is (allowed)
   const ThemeProvider = require("@/components/theme-provider").ThemeProvider
   const ProtectedLayout = require("@/app/ProtectedLayout").default
 
