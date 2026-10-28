@@ -194,3 +194,12 @@ animation: enlargeBg 2s ease infinite;
     @apply bg-background text-foreground;
   }
 }
+
+.landing-page {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.landing-page a {
+  text-decoration: none;
+}

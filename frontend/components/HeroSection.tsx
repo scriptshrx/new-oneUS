@@ -1,230 +1,102 @@
-'use client';
+import Link from 'next/link';
+import { Check } from 'lucide-react';
 
-import { useEffect, useRef, useState } from 'react';
-import { Building2, DollarSign, Zap } from 'lucide-react';
-
-interface StatItem {
-  value: number;
-  suffix: string;
-  label: string;
-  icon: React.ReactNode;
-  index?: number;
-  image?: string;
-}
-
-const animationStyles = `
-  @keyframes slideInFromLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-150px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes slideInFromTop {
-    from {
-      opacity: 0;
-      transform: translateY(-150px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slideInFromRight {
-    from {
-      opacity: 0;
-      transform: translateX(150px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-`;
-
-function AnimatedStat({ value, suffix, label, icon, index = 0, image }: StatItem) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  const getAnimationName = () => {
-    if (index === 0) return 'slideInFromLeft';
-    if (index === 1) return 'slideInFromTop';
-    if (index === 2) return 'slideInFromRight';
-    return 'slideInFromLeft';
-  };
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-        }
-      },
-      { threshold: 1 }
-    );
-
-    if (ref.current) observer.observe(ref.current);
-    return () => {
-      if (ref.current) observer.unobserve(ref.current);
-    };
-  }, []);
-
-
-  useEffect(() => {
-    if (isInView && !hasAnimated) {
-      const delay = index * 4000; // 4 seconds between each counter
-      const delayTimer = setTimeout(() => {
-        setHasAnimated(true);
-
-        let currentValue = 0;
-        const duration = 6000;
-        const startTime = Date.now();
-
-        const animate = () => {
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(elapsed / duration, 2);
-          currentValue = Math.floor(value * progress);
-          setDisplayValue(currentValue);
-          if (progress < 1) requestAnimationFrame(animate);
-          else setDisplayValue(value);
-        };
-
-        animate();
-      }, delay);
-
-      return () => clearTimeout(delayTimer);
-    }
-  }, [isInView, hasAnimated, value, index]);
-
-  return (
-    <div 
-      ref={ref}
-      className="relative group -mt-4 shadow-lg rounded-2xl"
-      style={{
-        animation: isInView ? `${getAnimationName()} 1s ease-out` : 'none',
-      }}
-    >
-      <div className="relative h-50 rounded-2xl overflow-hidden">
-        {/* Background image */}
-        {image && (
-          <div className="absolute inset-0 rounded-2xl overflow-hidden">
-            <img
-              src={image}
-              alt=""
-              className="w-full h-full group-hover:scale-[1.1] transition-all object-cover"
-            />
-          </div>
-        )}
-
-        {/* Main border */}
-        <div className="absolute inset-0 rounded-2xl backdrop-blur-[0.02px] border-[6px] border-purple-800" />
-
-        {/* ✨ Top-right shiny corner */}
-        <div className="absolute top-0 right-0 pointer-events-none">
-          <div className="w-8 h-8 rounded-tr-2xl overflow-hidden">
-            {/* shiny reflection */}
-            <div className="absolute inset-0 bg-gradient-to-bl from-white/80 via-white/20 to-transparent opacity-70 blur-[2px]" />
-          </div>
-        </div>
-
-        {/* Content layer */}
-        <div className="absolute inset-0 flex items-center justify-center perspective overflow-hidden rounded-2xl">
-        </div>
-      </div>
-    </div>
-  );
-}
+const feedItems = [
+  { time: '7:02 AM', text: 'Missed call returned, new consult booked', tag: 'AI' },
+  { time: '8:15 AM', text: 'Intake packet completed, prior labs uploaded', tag: 'AI' },
+  { time: '9:40 AM', text: 'Refill question flagged and routed to provider', tag: 'Coordinator' },
+  { time: '11:20 AM', text: 'Hormone panel follow-up scheduled', tag: 'AI' },
+  { time: '1:05 PM', text: 'Membership renewal questions answered, renewed', tag: 'Coordinator' },
+  { time: '2:30 PM', text: 'GLP-1 coverage checked before the visit', tag: 'AI' },
+];
 
 export default function HeroSection() {
-
-  const highlights = [
-    { name: 'Patient Referral', color: 'purple-500' },
-    { name: 'Insurance Verification', color: 'green-500' },
-    { name: 'Prior Authorization', color: 'orange-500' },
-    { name: 'Automated Scheduling', color: 'yellow-800' },
-    { name: 'Agentic Follow-Up', color: 'accent' },
-    { name: 'Seamless Infusion', color: 'blue-500' },
-  ];
-
-  const [highlight, setHighlight] = useState(highlights[0].name);
-  const [color, setColor] = useState(highlights[0].color);
-
-  useEffect(() => {
-    let count = 1;
-    const interval = setInterval(() => {
-      setHighlight(highlights[count].name);
-      setColor(highlights[count].color);
-      count = (count + 1) % highlights.length;
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <>
-      <style>{animationStyles}</style>
-      <section className="relative w-full pt-20 pb-16 sm:pt-32 sm:pb-24 overflow-hidden">
-      {/* Clinician background image */}
-      <div
-        className="absolute inset-0 opacity-40 transition-all md:-mt-12 duration-700 dark:opacity-10 pointer-events-none"
-      
-      >
-        <img
-          src="/clinician5.jpg"
-          alt="Clinician"
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-transparent dark:bg-background moveBg" />
-
-      {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center">
-        <div className="text-center">
-          <div className="mb-6 sm:mb-8 h-[100px] md:-mt-10 items-center justify-center relative flex overflow-hidden">
-            {highlight && (
-              <button
-                className="flex items-center h-[40px] moveHighlight -top-[100px] rounded-full px-[2px] relative overflow-hidden justify-center"
-                style={{ clipPath: 'inset(0)' }}
-              >
-                <div className="h-[500%] absolute rotateInner w-[200%] bg-gradient-to-tr from-transparent via-transparent to-purple-500" />
-                <div
-                  className={`text-center items-center justify-center flex h-[38px] bg-purple-500/20 dark:bg-accent/20 text-purple-600 dark:text-accent-foreground z-[400] rounded-full dark:border self-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold`}
-                >
-                  {highlight}
-                </div>
-              </button>
-            )}
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-accent via-accent to-primary mb-4 sm:mb-6  text-transparent bg-clip-text leading-tight">
-          Seamless Care Coordination for
- {' '}
-            <span className="text-primary enlargeBgText">
-            Wellness and Longevity
-            </span>
-          </h1>
-
-          <p className="max-w-2xl mx-auto text-accent/80 sm:text-lg lg:text-xl mb-8 sm:mb-12 text-balance leading-relaxed">
-            Scriptish provides insurance verification, prior authorizations, and patient intake for IV therapy, ketamine, NAD+, and infusion clinics.
+    <section className="bg-background pt-14 pb-10 sm:pt-20 sm:pb-14">
+      <div className="mx-auto grid max-w-[1120px] items-center gap-12 px-5 sm:px-8 lg:grid-cols-[1.05fr_0.95fr]">
+        <div>
+          <p className="mb-5 text-[13px] font-semibold tracking-[0.04em] text-accent">
+            CARE COORDINATION FOR WELLNESS &amp; LONGEVITY
+            <br />
+            CLINICS
           </p>
+          <h1 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-[56px] lg:text-[64px]">
+            Your providers
+            <br />
+            treat. We handle
+            <br />
+            everything else.
+          </h1>
+          <p className="mt-6 max-w-[460px] text-[16px] leading-7 text-muted-foreground">
+            Intake, scheduling, follow-ups, and every call your front desk misses — run by AI and managed by a dedicated care coordinator who knows your clinic.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="/join-waitlist"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-accent px-5 text-[14px] font-medium text-accent-foreground hover:bg-accent/90"
+            >
+              Book a 20-min workflow review
+            </Link>
+            <Link
+              href="#how-we-work"
+              className="inline-flex h-11 items-center justify-center rounded-md border border-border bg-background px-5 text-[14px] font-medium text-foreground hover:bg-muted"
+            >
+              See how it works
+            </Link>
+          </div>
+          <ul className="mt-6 flex flex-col gap-2 text-[13px] text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-x-5">
+            {['Founded by a registered nurse', 'BAA signed with every clinic', 'Fits your current workflow'].map(
+              (item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-accent" strokeWidth={2.5} />
+                  {item}
+                </li>
+              )
+            )}
+          </ul>
+        </div>
 
-          {/* Stats */}
-          <div className="grid md:grid-cols-3 grid-cols-1 sm:px-18 gap-20 mt-12 sm:-mt-10 pt-12 sm:pt-20 border-t border-border/20">
-            <AnimatedStat value={105} suffix="+" label="Clinics Automated" icon={<Building2 size={80} strokeWidth={1.5} />} index={0} image="/heroImage1.2.png" />
-            <AnimatedStat value={22} suffix="M+" label="Claims Processed" icon={<DollarSign size={80} strokeWidth={1.5} />} index={1} image="/heroImage2.png" />
-            <AnimatedStat value={99.9} suffix="%" label="Uptime Support" icon={<Zap size={80} strokeWidth={1.5} />} index={2} image="/heroImage3.png" />
+        <div className="relative">
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
+            <div className="flex">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between px-5 pt-5 pb-3">
+                  <div>
+                    <p className="text-[15px] font-semibold text-foreground">Today at Lumen Longevity</p>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">Handled while your team was with patients</p>
+                  </div>
+                  <span className="rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-medium text-background">Live</span>
+                </div>
+                <ul>
+                  {feedItems.map((item) => (
+                    <li
+                      key={item.time}
+                      className="flex items-start gap-4 border-t border-border px-5 py-3"
+                    >
+                      <span className="w-[62px] shrink-0 pt-0.5 text-[12px] text-muted-foreground">{item.time}</span>
+                      <p className="min-w-0 flex-1 text-[13px] leading-5 text-foreground">{item.text}</p>
+                      {item.tag === 'AI' ? (
+                        <span className="mt-0.5 shrink-0 rounded-md border border-border px-2 py-0.5 text-[11px] text-foreground">
+                          AI
+                        </span>
+                      ) : (
+                        <span className="mt-0.5 shrink-0 rounded-md bg-accent px-2 py-0.5 text-[11px] text-accent-foreground">
+                          Coordinator
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="w-[10px] bg-foreground" />
+            </div>
+            <div className="flex items-center justify-between bg-foreground px-5 py-3 text-[13px] text-background">
+              <span>6 tasks handled</span>
+              <span>0 provider minutes</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
-    </>
   );
 }
