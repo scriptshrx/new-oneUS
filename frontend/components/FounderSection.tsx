@@ -1,6 +1,7 @@
 export default function FounderSection() {
   return (
     <section id="about" className="border-t border-border bg-background py-20 sm:py-24">
+      
       <div className="mx-auto grid max-w-[1120px] items-center gap-12 px-5 sm:px-8 lg:grid-cols-[0.78fr_1.22fr]">
         <div className="relative mx-auto h-[280px] border border-r-[10px] border-accent w-full max-w-[280px] rounded-xl bg-card lg:mx-0 lg:h-[340px] lg:max-w-none">
           <img src="/images/founder1.jpeg" alt="Founder" className="w-full h-full object-cover" />
