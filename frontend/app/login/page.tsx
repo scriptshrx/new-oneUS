@@ -398,7 +398,7 @@ export default function LoginPage() {
           <p className="text-center text-xs sm:text-sm text-foreground/50 mt-6">
             Need help? Contact{' '}
             <a href="mailto:support@scriptish.com" className="text-brand hover:text-brand/80 transition-colors">
-              support@scriptish.com
+              info@scriptish.com
             </a>
           </p>
         </div>
