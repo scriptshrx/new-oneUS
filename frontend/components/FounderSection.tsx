@@ -2,8 +2,8 @@ export default function FounderSection() {
   return (
     <section id="about" className="border-t border-border bg-background py-20 sm:py-24">
       <div className="mx-auto grid max-w-[1120px] items-center gap-12 px-5 sm:px-8 lg:grid-cols-[0.78fr_1.22fr]">
-        <div className="relative mx-auto h-[280px] w-full max-w-[280px] rounded-xl border border-border bg-card lg:mx-0 lg:h-[340px] lg:max-w-none">
-          <div className="absolute top-4 right-[-6px] bottom-4 w-[8px] rounded-sm bg-accent" />
+        <div className="relative mx-auto h-[280px] border border-r-[10px] border-accent w-full max-w-[280px] rounded-xl bg-card lg:mx-0 lg:h-[340px] lg:max-w-none">
+          <img src="/images/founder.png" alt="Founder" className="w-full h-full object-cover" />
         </div>
         <div className="max-w-[620px]">
           <p className="text-[13px] font-semibold tracking-[0.06em] text-accent">BUILT BY A NURSE</p>

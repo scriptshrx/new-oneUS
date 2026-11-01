@@ -22,7 +22,7 @@ export default function Home() {
       <PipelineSection />
       <FounderSection />
       <FoundingProgramSection />
-      <PricingSection />
+      {/* <PricingSection /> */}
       <FooterSection />
     </main>
   );

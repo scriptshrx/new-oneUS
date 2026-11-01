@@ -6,6 +6,7 @@ import { ChevronDown } from 'lucide-react';
 
 export default function FooterSection() {
   const [isSecurityOpen, setIsSecurityOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
   return (
     <>
@@ -85,7 +86,28 @@ export default function FooterSection() {
                     />
                   </button>
                 </li>
-                <li>Privacy policy</li>
+                {isSecurityOpen && (
+            <div className="mt-8 max-w-4xl text-[14px] whitespace-pre-wrap md:w-[500px] text-left leading-7 text-background/80">
+              <span className='text-accent'>The Scriptish</span> platform employs industry-standard safeguards, including AES-256 encryption at rest, TLS 1.2+ in transit, row-level database isolation per clinic, multi-factor authentication for all staff accounts, session-based access controls, and continuous audit logging. Security events are monitored in real time. Despite these measures, no system is completely immune to unauthorized access, and Scriptish LLC does not warrant that the platform will be free from security breaches.
+            </div>
+          )}
+               
+                <button
+                    type="button"
+                    onClick={() => setIsPrivacyOpen((open) => !open)}
+                    className="flex items-center gap-1.5 text-left hover:text-background"
+                    aria-expanded={isPrivacyOpen}
+                  >
+                    Privacy policy
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 transition-transform ${isPrivacyOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  {isPrivacyOpen && (
+            <div className="mt-8 max-w-4xl text-[14px] whitespace-pre-wrap md:w-[500px] text-left leading-7 text-background/80">
+              The Scriptish platform employs industry-standard safeguards, including AES-256 encryption at rest, TLS 1.2+ in transit, row-level database isolation per clinic, multi-factor authentication for all staff accounts, session-based access controls, and continuous audit logging. Security events are monitored in real time. Despite these measures, no system is completely immune to unauthorized access, and Scriptish LLC does not warrant that the platform will be free from security breaches.
+            </div>
+          )}
                 <li>Terms</li>
               </ul>
             </div>
@@ -106,11 +128,8 @@ export default function FooterSection() {
               </ul>
             </div>
           </div>
-          {isSecurityOpen && (
-            <div className="mt-8 max-w-4xl text-[14px] leading-7 text-background/70">
-              The Scriptish platform employs industry-standard safeguards, including AES-256 encryption at rest, TLS 1.2+ in transit, row-level database isolation per clinic, multi-factor authentication for all staff accounts, session-based access controls, and continuous audit logging. Security events are monitored in real time. Despite these measures, no system is completely immune to unauthorized access, and Scriptish LLC does not warrant that the platform will be free from security breaches.
-            </div>
-          )}
+        
+       
           <div className="mt-12 border-t border-background/10 pt-6">
             <p className="text-[12px] text-background/40">© 2026 ScriptishRx. All rights reserved.</p>
           </div>
