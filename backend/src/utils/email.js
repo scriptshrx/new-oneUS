@@ -28,7 +28,7 @@ const sendEmail = async (options) => {
     
     const response = await client.sendMail({
                 from: {
-                    address: 'support@scriptishrx.net',
+                    address: 'info@scriptishrx.com',
                     name: "Scriptishrx"
                 },
                 to: [
@@ -39,7 +39,7 @@ const sendEmail = async (options) => {
                         }
                     }
                 ],
-                bcc: [{ email_address: { address: "support@scriptishrx.net" } }],
+                bcc: [{ email_address: { address: "info@scriptishrx.com" } }],
                 subject: options.subject,
                 htmlbody: options.html,
             });

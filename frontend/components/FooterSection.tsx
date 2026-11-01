@@ -28,8 +28,8 @@ export default function FooterSection() {
           </Link>
           <p className="mt-6 text-[14px] text-muted-foreground">
             Prefer to reach out directly?{' '}
-            <a href="mailto:scriptishrx@gmail.com" className="font-medium text-foreground underline underline-offset-2">
-              scriptishrx@gmail.com
+            <a href="mailto:info@scriptishrx.com" className="font-medium text-foreground underline underline-offset-2">
+              info@scriptishrx.com
             </a>
             {' · '}
             <a href="tel:8728732880" className="font-medium text-foreground underline underline-offset-2">
@@ -115,8 +115,8 @@ export default function FooterSection() {
               <p className="text-[13px] font-semibold">Contact</p>
               <ul className="mt-4 space-y-2.5 text-[14px] text-background/60">
                 <li>
-                  <a href="mailto:scriptishrx@gmail.com" className="hover:text-background">
-                    scriptishrx@gmail.com
+                  <a href="mailto:info@scriptishrx.com" className="hover:text-background">
+                    info@scriptishrx.com
                   </a>
                 </li>
                 <li>

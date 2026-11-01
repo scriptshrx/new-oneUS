@@ -11,7 +11,9 @@ export default function FounderSection() {
             We know the admin load because we&apos;ve carried it.
           </h2>
           <p className="mt-6 text-[16px] leading-8 text-foreground/80">
-            ScriptishRx was founded by Gil Marquez, RN, MSHI — a registered nurse with a master&apos;s in health informatics. He built it so providers can spend their time on patients, not paperwork.
+            ScriptishRx was founded by Gil Marquez, RN, MSHI — a registered nurse with a master&apos;s in health informatics. 
+            He is an experienced nurse who understands modern healthcare system. He has special skills in navigating the healthcare system nuances in patient care especially during the pandemic when staffing was scarce taking care of Transplant patients in the outpatient setting. He also understands the shortage of primary care in taking care of patients prioritizing preventative care versus chronic care. He would like independent primary care to have access with a coordination care team platform that would be efficient and effective especially for remote areas.
+            He built it so providers can spend their time on patients, not paperwork.
           </p>
           <p className="mt-5 text-[16px] leading-8 text-foreground/80">
             Clinical sense and informatics in one team means we understand what a provider needs to see — and what should never be left to automation.

@@ -65,12 +65,12 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-accent mb-3 text-left">
-              Infusion Clinic
+            Concierge Clinic for Providers
             </h2>
 
             {/* Description */}
             <p className="text-foreground/70 text-sm mb-6 text-left leading-relaxed">
-              In-house clinic center with infusion treatment rooms or infusion chairs. Manage patient appointments, insurance verification, and treatment delivery in one platform.
+            Concierge clinic for providers to manage patient appointments, insurance verification, and treatment delivery in one platform.
             </p>
 
             {/* Features */}
@@ -134,12 +134,12 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-accent mb-3 text-left">
-              Referring Hospital
+            Medspa Clinic
             </h2>
 
             {/* Description */}
             <p className="text-foreground/70 text-sm mb-6 text-left leading-relaxed">
-              Hospital or medical facility that refers infusion patients. Submit patient referrals with clinical & insurance data. Scriptish handles verification and PA processing.
+            Medspa clinic for providers to capture patients and refer to a clinic for treatment. Submit patients forrms for prior authorization and manage patient appointments, insurance verification, and treatment delivery in one platform.
             </p>
 
             {/* Features */}
@@ -164,7 +164,7 @@ export default function TenantTypeSelection({ onSelect }: TenantTypeSelectionPro
 
             {/* CTA */}
             <div className="flex items-center gap-2 text-primary font-bold group-hover:translate-x-1 transition-transform">
-              <span>Register Hospital</span>
+              <span>Register Provider</span>
               <ArrowRight className="w-4 h-4" />
             </div>
           </div>
