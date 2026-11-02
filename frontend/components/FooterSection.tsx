@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function FooterSection() {
   const [isSecurityOpen, setIsSecurityOpen] = useState(false);
@@ -43,9 +44,7 @@ export default function FooterSection() {
         <div className="mx-auto max-w-[1120px] px-5 py-14 sm:px-8">
           <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <div>
-              <p className="text-[20px] font-semibold tracking-tight">
-                Scriptish<span className="text-accent">Rx</span>
-              </p>
+              <BrandLogo size="md" onDark href="/" />
               <p className="mt-4 max-w-[280px] text-[14px] leading-6 text-background/60">
                 Care coordination for wellness and longevity clinics. Providers treat — we handle everything else.
               </p>

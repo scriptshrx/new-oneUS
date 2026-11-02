@@ -8,7 +8,7 @@ import ReferringHospitalRegistrationForm from '@/components/registration/Referri
 import EmailVerificationStep from '@/components/registration/EmailVerificationStep';
 import { routerServerGlobal } from 'next/dist/server/lib/router-utils/router-server-context';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 
 type TenantType = 'clinic' | 'referring-hospital' | null;
 type RegistrationStep = 'type-selection' | 'form' | 'email-verification';
@@ -83,9 +83,9 @@ export default function RegisterPage() {
   return (
     <main className="w-full min-h-screen bg-gradient-to-b from-light-blue-50 via-white to-light-blue-200">
      
-         <Link href="/" className="text-xl absolute top-4 left-4 sm:text-2xl font-bold bg-gradient-to-r from-primary/10 via-primary to-primary/10 moveBg text-transparent bg-clip-text ">
-              Scriptish
-            </Link>
+         <div className="absolute top-4 left-4">
+           <BrandLogo size="sm" />
+         </div>
 
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">

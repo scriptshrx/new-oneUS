@@ -10,6 +10,7 @@ import { authService } from '@/lib/authService';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { getMaxListeners } from 'events';
 import { resolve } from 'path';
+import BrandLogo from '@/components/BrandLogo';
 
 function DevOngoingScreen() {
   return (
@@ -261,9 +262,9 @@ export default function LoginPage() {
    
     <div className="min-h-screen bg-gradient-to-br from-background/50 to-primary/10 flex flex-col">
       <div className="flex items-center justify-center px-4 py-24 sm:py-16">
-          <Link href="/" className="text-xl moveBg absolute top-4 left-4 sm:text-2xl font-bold bg-gradient-to-r from-primary/10 via-primary/80 to-primary/10 text-transparent bg-clip-text ">
-              Scriptish
-            </Link>
+          <div className="absolute top-4 left-4">
+            <BrandLogo size="sm" />
+          </div>
 
         <div className="w-full max-w-md">
           <div 

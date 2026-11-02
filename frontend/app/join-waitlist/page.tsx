@@ -1,8 +1,8 @@
 'use client'
 import { Axis3DIcon, Loader } from 'lucide-react';
-import Link from 'next/link';
 import { useRef, useState } from 'react';
 import axios from 'axios'
+import BrandLogo from '@/components/BrandLogo';
 
 export default function JoinWaitlistPage() {
 
@@ -40,9 +40,9 @@ export default function JoinWaitlistPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-brand/10 via-background to-accent/10 px-4">
-      <Link href="/" className="text-xl moveBg absolute top-4 left-4 sm:text-2xl font-bold bg-gradient-to-r from-primary/10 via-primary/80 to-primary/10 text-transparent bg-clip-text ">
-              Scriptish
-            </Link>
+      <div className="absolute top-4 left-4">
+        <BrandLogo size="sm" />
+      </div>
       <div 
       ref={cardRef} 
       className="max-w-md w-full bg-card/80 rounded-2xl shadow-lg p-8 border border-brand/20">

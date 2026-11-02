@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { authService } from '@/lib/authService';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 
 interface FormData {
   firstName: string;
@@ -243,9 +243,9 @@ export default function StaffRegistrationForm() {
   return (
     <>
    
-                <Link href="/" className="text-xl ml-3 mt-3 moveBg sm:text-2xl font-bold bg-gradient-to-r from-foreground/10 via-foreground/80 to-foreground/10 text-transparent bg-clip-text ">
-                  Scriptish
-                </Link>
+                <div className="ml-3 mt-3">
+                  <BrandLogo size="sm" />
+                </div>
               
    
     <form onSubmit={handleSubmit}

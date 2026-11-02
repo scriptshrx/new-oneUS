@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 
 const navLinks = [
   { href: '/#services', label: 'Services' },
@@ -15,10 +16,8 @@ export default function TopNav() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background">
-      <div className="mx-auto flex h-[72px] max-w-[1120px] items-center justify-between px-5 sm:px-8">
-        <Link href="/" className="text-[22px] font-semibold tracking-tight text-foreground">
-          Scriptish<span className="text-accent">Rx</span>
-        </Link>
+      <div className="mx-auto flex min-h-[72px] max-w-[1120px] items-center justify-between gap-4 py-3 px-5 sm:px-8">
+        <BrandLogo size="sm" />
 
         <div className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (

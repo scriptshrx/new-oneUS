@@ -18,12 +18,12 @@ export const metadata: Metadata = {
         url: '/og-image-1.png',
         width: 1200,
         height: 630,
-        alt: 'Scriptish - Solution for Infusion Clinics',
+        alt: 'ScriptishRx - Coordinating Care, Enhancing Longevity',
       },
     ],
   },
   icons: {
-    icon: '/new-logo.png',
+    icon: '/images/scriptishrx-logo.png',
   },
 }
 
@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/new-logo.png" />
+        <link rel="icon" href="/images/scriptishrx-logo.png" />
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
