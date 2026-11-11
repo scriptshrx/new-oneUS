@@ -115,16 +115,18 @@ HIPAA, and leaves all care decisions to providers. The full policies below gover
 <span className='font-semibold'>Privacy in brief</span><br></br>
 <span className='font-bold'>·</span> We never sell your data or use patient information for marketing.<br></br>
 <span className='font-bold'>·</span> Patient data is handled only for your provider, under a signed HIPAA agreement.<br></br>
-<span className='font-bold'>·</span> Our Al does admin tasks only, says it's automated, and has human backup.<br></br>
-<span className='font-bold'>·</span> Email [PRIVACY EMAIL] to access or delete your information; reply STOP to end texts.<br></br>
+<span className='font-bold'>·</span> Our AI does admin tasks only, is automated, and has human backup.<br></br>
+<span className='font-bold'>·</span> Email <a href='mailto:info@scriptishrx.com' className='text-blue-500 hover:text-blue-400'>info@scriptishrx.com</a> to access or delete your information; reply STOP to end texts.<br></br>
 
 <span className='font-semibold'>Terms in brief</span><br></br>
 
 <span className='font-bold'>·</span> We are not a medical provider and give no medical advice. In emergencies, call 911.<br></br>
-<span className='font-bold'>·</span> Practices review Al and insurance results and obtain required patient consents.<br></br>
+<span className='font-bold'>·</span> Practices review AI and insurance results and obtain required patient consents.<br></br>
 <span className='font-bold'>·</span> Our liability is capped at 12 months of fees paid.<br></br>
 <span className='font-bold'>·</span> Illinois law and Cook County courts apply.<br></br><br></br>
-Questions? Contact <a href='mailto:info@scriptishrx.com' className='text-blue-500 hover:text-blue-400'>info@scriptishrx.com</a> or 872-873-2880.
+Questions? Contact <a href='mailto:info@scriptishrx.com' className='text-blue-500 hover:text-blue-400'>info@scriptishrx.com</a> or  <a href="tel:8728732880" className="text-blue-500 hover:text-blue-400">
+                    872-873-2880
+                  </a>.
             </div>
           )}
             
@@ -132,7 +134,7 @@ Questions? Contact <a href='mailto:info@scriptishrx.com' className='text-blue-50
             </div>
             <div>
               <p className="text-[13px] font-semibold">Contact
-                
+
               </p>
               <ul className="mt-4 space-y-2.5 text-[14px] text-background/60">
                 <li>
