@@ -106,9 +106,7 @@ export default function FooterSection() {
             <div className="mt-8 max-w-4xl text-[14px] whitespace-pre-wrap md:w-[500px] text-left leading-7 text-background/80">
               <span className='font-bold'>ScriptishRx Privacy Policy & Terms of
 Service</span><br></br>
-<span className='italic text-xs'>Nov 7,2026 . @Gil Marquez</span><br></br>
 
-<span className='font-semibold'>At a glance: Privacy & Terms summary</span><br></br>
 ScriptishRx handles admin work for healthcare practices, protects patient data under
 HIPAA, and leaves all care decisions to providers. The full policies below govern.<br></br>
 
