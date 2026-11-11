@@ -97,6 +97,7 @@ export default function FooterSection() {
                     className="flex items-center gap-1.5 text-left hover:text-background"
                     aria-expanded={isPrivacyOpen}
                   >
+                    
                     Privacy Policy & Terms of Service
                     <ChevronDown
                       className={`h-4 w-4 shrink-0 transition-transform ${isPrivacyOpen ? 'rotate-180' : ''}`}
