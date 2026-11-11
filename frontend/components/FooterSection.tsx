@@ -97,17 +97,37 @@ export default function FooterSection() {
                     className="flex items-center gap-1.5 text-left hover:text-background"
                     aria-expanded={isPrivacyOpen}
                   >
-                    Privacy policy
+                    Privacy Policy & Terms of Service
                     <ChevronDown
                       className={`h-4 w-4 shrink-0 transition-transform ${isPrivacyOpen ? 'rotate-180' : ''}`}
                     />
                   </button>
                   {isPrivacyOpen && (
             <div className="mt-8 max-w-4xl text-[14px] whitespace-pre-wrap md:w-[500px] text-left leading-7 text-background/80">
-              {/* The Scriptish platform employs industry-standard safeguards, including AES-256 encryption at rest, TLS 1.2+ in transit, row-level database isolation per clinic, multi-factor authentication for all staff accounts, session-based access controls, and continuous audit logging. Security events are monitored in real time. Despite these measures, no system is completely immune to unauthorized access, and Scriptish LLC does not warrant that the platform will be free from security breaches. */}
+              <span className='font-bold'>ScriptishRx Privacy Policy & Terms of
+Service</span><br></br>
+<span className='italic text-xs'>Nov 7,2026 . @Gil Marquez</span><br></br>
+
+<span className='font-semibold'>At a glance: Privacy & Terms summary</span><br></br>
+ScriptishRx handles admin work for healthcare practices, protects patient data under
+HIPAA, and leaves all care decisions to providers. The full policies below govern.<br></br>
+
+<span className='font-semibold'>Privacy in brief</span><br></br>
+<span className='font-bold'>·</span> We never sell your data or use patient information for marketing.<br></br>
+<span className='font-bold'>·</span> Patient data is handled only for your provider, under a signed HIPAA agreement.<br></br>
+<span className='font-bold'>·</span> Our Al does admin tasks only, says it's automated, and has human backup.<br></br>
+<span className='font-bold'>·</span> Email [PRIVACY EMAIL] to access or delete your information; reply STOP to end texts.<br></br>
+
+<span className='font-semibold'>Terms in brief</span><br></br>
+
+<span className='font-bold'>·</span> We are not a medical provider and give no medical advice. In emergencies, call 911.<br></br>
+<span className='font-bold'>·</span> Practices review Al and insurance results and obtain required patient consents.<br></br>
+<span className='font-bold'>·</span> Our liability is capped at 12 months of fees paid.<br></br>
+<span className='font-bold'>·</span> Illinois law and Cook County courts apply.<br></br><br></br>
+Questions? Contact <a href='mailto:info@scriptishrx.com' className='text-blue-500 hover:text-blue-400'>info@scriptishrx.com</a> or 872-873-2880.
             </div>
           )}
-                <li>Terms</li>
+            
               </ul>
             </div>
             <div>
