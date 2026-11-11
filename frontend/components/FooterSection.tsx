@@ -98,6 +98,7 @@ export default function FooterSection() {
                     aria-expanded={isPrivacyOpen}
                   >
                     
+
                     Privacy Policy & Terms of Service
                     <ChevronDown
                       className={`h-4 w-4 shrink-0 transition-transform ${isPrivacyOpen ? 'rotate-180' : ''}`}
