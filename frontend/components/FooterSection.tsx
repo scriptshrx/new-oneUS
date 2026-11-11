@@ -131,7 +131,9 @@ Questions? Contact <a href='mailto:info@scriptishrx.com' className='text-blue-50
               </ul>
             </div>
             <div>
-              <p className="text-[13px] font-semibold">Contact</p>
+              <p className="text-[13px] font-semibold">Contact
+                
+              </p>
               <ul className="mt-4 space-y-2.5 text-[14px] text-background/60">
                 <li>
                   <a href="mailto:info@scriptishrx.com" className="hover:text-background">
